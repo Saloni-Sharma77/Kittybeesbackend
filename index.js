@@ -10,9 +10,6 @@ const server = app.listen(port, () => {
 
 
 
-
-
-
 require('./src/config/db');
 const routes = require('./src/routes/routes');
 
