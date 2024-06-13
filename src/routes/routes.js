@@ -10,6 +10,7 @@ const otp_controller=require("../controller/client/otpcontroller");
 //client routes
 router.post("/adduserInfo",user_controller.adduserInfo);
 router.post("/sendotp",otp_controller.sendotp);
+router.post("/sendotpwhatsapp",otp_controller.sendotpwhatsapp);
 router.post("/verifyotp",otp_controller.verifyotp);
 
 

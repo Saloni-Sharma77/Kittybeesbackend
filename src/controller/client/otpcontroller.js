@@ -19,47 +19,39 @@ const client = twilio(
   }
   
   
-  // Send OTP
+  // Send TEXT OTP
   exports.sendotp = async (req, res) => {
     const { phoneNumber } = req.body;
+    
     if (!phoneNumber) {
       return res.status(400).send({ error: "Phone number is required" });
     }
+    
     try {
-      const otp = generateSixDigitRandomNumber(); 
-      client.messages
-        .create({
-          body: `Your OTP is ${otp}`,
-          from: "+1 570 682 5480",
-          to: phoneNumber,
-        })
-        .then(async (message) => {
-          await User.findOneAndUpdate(
-            { phoneNumber },
-            { otp, otpExpiresAt: new Date(Date.now() + 10 * 60000) }, // OTP valid for 10 minutes
-            { upsert: true, new: true }
-          );
-  
-          res
-            .status(200)
-            .send({ success: true, message: "OTP sent successfully" });
-        })
-        .catch(async (err) => {
-          await User.findOneAndUpdate(
-            { phoneNumber },
-            { otp, otpExpiresAt: new Date(Date.now() + 10 * 60000) }, // OTP valid for 10 minutes
-            { upsert: true, new: true }
-          );
-  
-          res
-            .status(200)
-            .send({ success: true, message: "OTP sent successfully" });
-        });
+      const otp = generateSixDigitRandomNumber();
+      const otpExpiresAt = new Date(Date.now() + 10 * 60000);
+      
+      // Send OTP via Twilio
+      await client.messages.create({
+        body: `Your OTP is ${otp}`,
+        from: "+1 570 682 5480",
+        to: phoneNumber,
+      });
+      
+      // Update or insert user OTP data
+      const filter = { phoneNumber };
+      const update = { otp, otpExpiresAt };
+      const options = { upsert: true, new: true };
+      const updatedUser = await User.findOneAndUpdate(filter, update, options);
+      
+      res.status(200).send({ success: true, message: "OTP sent successfully" });
     } catch (error) {
-      console.error(error);
+      console.error("Error sending OTP:", error);
       res.status(500).send({ error: "Failed to send OTP" });
     }
   };
+
+
   //verify
   exports.verifyotp = async (req, res) => {
     const { phoneNumber, otp } = req.body;
@@ -85,3 +77,35 @@ const client = twilio(
       res.status(500).send({ error: "Failed to verify OTP" });
     }
   };
+
+    // Send TEXT OTP
+    exports.sendotpwhatsapp = async (req, res) => {
+        const { phoneNumber } = req.body;
+        
+        if (!phoneNumber) {
+          return res.status(400).send({ error: "Phone number is required" });
+        }
+        
+        try {
+          const otp = generateSixDigitRandomNumber();
+          const otpExpiresAt = new Date(Date.now() + 10 * 60000);
+          
+          // Send OTP via Twilio
+          await client.messages.create({
+            body: `Your OTP is ${otp}`,
+            from: 'whatsapp:+14155238886', 
+            to: `whatsapp:${phoneNumber}`,
+          });
+          
+          // Update or insert user OTP data
+          const filter = { phoneNumber };
+          const update = { otp, otpExpiresAt };
+          const options = { upsert: true, new: true };
+          const updatedUser = await User.findOneAndUpdate(filter, update, options);
+          
+          res.status(200).send({ success: true, message: "OTP sent successfully",updatedUser:updatedUser });
+        } catch (error) {
+          console.error("Error sending OTP:", error);
+          res.status(500).send({ error: "Failed to send OTP" });
+        }
+      };
