@@ -8,11 +8,14 @@ const UsersSchema = new mongoose.Schema({
   profession:{type:String},
 //   location:{type:String},
 email:{type:String},
+password:{type:String},
 phoneNumber:{type:String},
 emergencyNumber:{type:String},
 specificintrests:{type:String},
 username:{type:String},
 about:{type:String},
+otp:{type:String},
+otpExpiresAt:{type:String},
 sociallinks: [
     {
       instaurl: { type: String },
