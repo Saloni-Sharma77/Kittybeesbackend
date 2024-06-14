@@ -45,3 +45,26 @@ exports.adduserInfo = async (req, res) => {
       });
   }
 };
+
+exports.sendInterestAndPreference =async(req,res)=>{
+  res.json({
+    "events": [
+        "Party",
+        "Concert",
+        "Festival",
+        "Conference",
+       
+    ],
+    "preferred_party": [
+        "Dance",
+        "Music",
+        "Custom"
+    ],
+    "activities": [
+        "Bowling",
+        "Cricket",
+        "Card Games",
+        "Chess"
+    ]
+});
+}
