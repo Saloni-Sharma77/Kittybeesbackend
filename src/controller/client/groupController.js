@@ -4,6 +4,7 @@ exports.addGroup = async (req, res) => {
   try {
     const {
         name ,
+        userId,
         groupIcon ,
         groupType,
         description,
@@ -17,6 +18,7 @@ exports.addGroup = async (req, res) => {
 
     const newGroup= new Group({
         name ,
+        userId,
         groupIcon ,
         groupType,
         description,
@@ -48,7 +50,6 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-  
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
@@ -71,6 +72,7 @@ exports.updateGroup = async (req, res) => {
         name ,
         groupIcon ,
         groupType,
+        userId,
         description,
       rulesAndRegulation,
       kittyFrequency,
@@ -81,6 +83,7 @@ exports.updateGroup = async (req, res) => {
       req.params.id,
     {
         name ,
+        userId,
         groupIcon ,
         groupType,
         description,
