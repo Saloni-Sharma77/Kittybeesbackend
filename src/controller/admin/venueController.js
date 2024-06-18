@@ -5,29 +5,13 @@ exports.addVenue = async (req, res) => {
     const {
         name ,
         userId,
-        VenueIcon ,
-        VenueType,
-        description,
-      rulesAndRegulation,
-      kittyFrequency,
-      VenueCityArea,
-      contributionAmount,
-      VenueMembers,
-     
+        location,
     } = req.body;
 
     const newVenue= new Venue({
         name ,
         userId,
-        VenueIcon ,
-        VenueType,
-        description,
-      rulesAndRegulation,
-      kittyFrequency,
-      VenueCityArea,
-      contributionAmount,
-      VenueMembers,
-     
+        location,
     });
 
     await newVenue.save();
@@ -70,28 +54,15 @@ exports.updateVenue = async (req, res) => {
   try {
     const {
         name ,
-        VenueIcon ,
-        VenueType,
         userId,
-        description,
-      rulesAndRegulation,
-      kittyFrequency,
-      VenueCityArea,
-      contributionAmount,
+        location,
       VenueMembers} = req.body;
     const updatedVenue = await Venue.findByIdAndUpdate(
       req.params.id,
     {
         name ,
         userId,
-        VenueIcon ,
-        VenueType,
-        description,
-      rulesAndRegulation,
-      kittyFrequency,
-      VenueCityArea,
-      contributionAmount,
-      VenueMembers,
+        location,
     },
       { new: true }
     );
