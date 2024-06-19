@@ -11,6 +11,9 @@ exports.adduserInfo = async (req, res) => {
     email,
     emergencyNumber,
     specificintrests,
+    eventArr,
+    partyArr,
+    activityArr,
     username,
     about,
     sociallinks,
@@ -25,6 +28,9 @@ exports.adduserInfo = async (req, res) => {
       phoneNumber,
       profession,
       email,
+      eventArr,
+      partyArr,
+      activityArr,
       emergencyNumber,
       specificintrests,
       username,
@@ -45,3 +51,26 @@ exports.adduserInfo = async (req, res) => {
       });
   }
 };
+
+exports.sendInterestAndPreference =async(req,res)=>{
+  res.json({
+    "events": [
+        "Party",
+        "Concert",
+        "Festival",
+        "Conference",
+       
+    ],
+    "preferred_party": [
+        "Dance",
+        "Music",
+        "Custom"
+    ],
+    "activities": [
+        "Bowling",
+        "Cricket",
+        "Card Games",
+        "Chess"
+    ]
+});
+}
