@@ -57,6 +57,7 @@ exports.signup = async (req, res) => {
       res.status(200).json({ 
         message: "User information retrieved successfully", 
         data: getAllUsers 
+        
       });
     } catch (err) {
       res.status(500).json({
