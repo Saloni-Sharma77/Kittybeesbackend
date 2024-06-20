@@ -53,7 +53,7 @@ exports.signup = async (req, res) => {
   };
   exports.getAllUsersList = async (req, res) => {
     try {
-      const getAllUsers = await UsersModel.find();
+      const getAllUsers = await UsersModel.find().sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "User information retrieved successfully", 
         data: getAllUsers 
