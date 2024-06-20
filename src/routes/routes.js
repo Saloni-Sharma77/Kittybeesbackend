@@ -25,7 +25,7 @@ router.post("/login",user_admin_controller.login);
 router.get("/getAllUsersList",user_admin_controller.getAllUsersList);
 router.get("/getuserById/:userId",user_admin_controller.getuserById);
 router.put("/updateUserInfo/:userId",user_admin_controller.updateUserInfo);
-router.delete("/deleteUserById/:userId",user_admin_controller.deleteUserById);
+router.delete("/deleteUserById/:id",user_admin_controller.deleteUserById);
 
 
 //groups

@@ -161,7 +161,7 @@ exports.signup = async (req, res) => {
 
   exports.deleteUserById = async (req, res) => {
     const userId = req.params.id; // Capture the ID from request parameters
-  
+  console.log(userId);
     try {
       // Find the user by ID and delete
       const deletedUser = await UsersModel.findByIdAndDelete(userId);
@@ -186,3 +186,4 @@ exports.signup = async (req, res) => {
     }
   };
   
+
