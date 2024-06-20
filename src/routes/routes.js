@@ -22,6 +22,11 @@ router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreferenc
 //admin routes-------------------------------------------->>>>>>>>>>>>>>
 router.post("/signup",user_admin_controller.signup);
 router.post("/login",user_admin_controller.login);
+router.get("/getAllUsersList",user_admin_controller.getAllUsersList);
+router.get("/getuserById/:userId",user_admin_controller.getuserById);
+router.put("/updateUserInfo/:userId",user_admin_controller.updateUserInfo);
+router.delete("/deleteUserById/:userId",user_admin_controller.deleteUserById);
+
 
 //groups
 router.post("/addGroup",group_controller.addGroup);

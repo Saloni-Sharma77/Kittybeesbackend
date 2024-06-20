@@ -52,6 +52,8 @@ exports.adduserInfo = async (req, res) => {
   }
 };
 
+
+
 exports.sendInterestAndPreference =async(req,res)=>{
   res.json({
     "events": [

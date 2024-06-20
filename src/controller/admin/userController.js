@@ -51,3 +51,138 @@ exports.signup = async (req, res) => {
       res.status(500).json({ error: "Error logging in",error:err });
     }
   };
+  exports.getAllUsersList = async (req, res) => {
+    try {
+      const getAllUsers = await UsersModel.find();
+      res.status(200).json({ 
+        message: "User information retrieved successfully", 
+        data: getAllUsers 
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: "Failed to get information",
+        details: err.message,
+      });
+    }
+  };
+
+  exports.getuserById = async(req,res)=>{
+    const userId = req.params.id; // Capture the ID from request parameters
+
+  try {
+    // Fetch user by ID from the database
+    const user = await UsersModel.findById(userId);
+
+    if (!user) {
+      // If user not found, send a 404 response
+      return res.status(404).json({
+        error: "User not found"
+      });
+    }
+
+    // Send the user data with a 200 status code
+    res.status(200).json({
+      message: "User information retrieved successfully",
+      data: user
+    });
+  } catch (err) {
+    // Handle errors that occur during the database query
+    res.status(500).json({
+      error: "Failed to get user information",
+      details: err.message
+    });
+  }
+  }
+
+  exports.updateUserInfo = async (req, res) => {
+    const userId = req.params.id; // Capture the ID from request parameters
+  
+    // Capture the updated user information from the request body
+    const {
+      fullname,
+      dob,
+      phoneNumber,
+      profession,
+      email,
+      emergencyNumber,
+      specificintrests,
+      eventArr,
+      partyArr,
+      activityArr,
+      username,
+      about,
+      sociallinks,
+    } = req.body;
+  
+    console.log(req.body, "response");
+  
+    try {
+      // Find the user by ID and update with new information
+      const updatedUser = await UsersModel.findByIdAndUpdate(
+        userId,
+        {
+          fullname,
+          dob,
+          phoneNumber,
+          profession,
+          email,
+          emergencyNumber,
+          specificintrests,
+          eventArr,
+          partyArr,
+          activityArr,
+          username,
+          about,
+          sociallinks,
+        },
+        { new: true, runValidators: true } // Return the updated document
+      );
+  
+      if (!updatedUser) {
+        // If user not found, send a 404 response
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+  
+      // Send the updated user data with a 200 status code
+      res.status(200).json({
+        message: "User information updated successfully",
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error updating user information:", error);
+      res.status(500).json({
+        error: "Failed to update user information",
+        details: error.message,
+      });
+    }
+  };
+
+  exports.deleteUserById = async (req, res) => {
+    const userId = req.params.id; // Capture the ID from request parameters
+  
+    try {
+      // Find the user by ID and delete
+      const deletedUser = await UsersModel.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        // If user not found, send a 404 response
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+  
+      // Send a success message with a 200 status code
+      res.status(200).json({
+        message: "User deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({
+        error: "Failed to delete user",
+        details: error.message,
+      });
+    }
+  };
+  
