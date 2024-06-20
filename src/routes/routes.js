@@ -22,6 +22,7 @@ router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreferenc
 //admin routes-------------------------------------------->>>>>>>>>>>>>>
 router.post("/signup",user_admin_controller.signup);
 router.post("/login",user_admin_controller.login);
+router.get("/getAllusersList",user_admin_controller.getAllusersList);
 
 //groups
 router.post("/addGroup",group_controller.addGroup);

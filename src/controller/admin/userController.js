@@ -50,3 +50,20 @@ exports.signup = async (req, res) => {
       res.status(500).json({ error: "Error logging in",error:err });
     }
   };
+  exports.getAllusersList = async(req,res)=>{
+    try{
+  
+      const getallusers =await UsersModel.find();
+      res.status(201).json({ message: "user Information  added successfully", data: getallusers });
+  
+    }catch(err){
+      res
+        .status(500)
+        .json({
+          err: "Failed to get information",
+          details: err.message,
+        });
+  
+    }
+  
+  }
