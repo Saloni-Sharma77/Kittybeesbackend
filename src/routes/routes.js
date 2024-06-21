@@ -23,8 +23,8 @@ router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreferenc
 router.post("/signup",user_admin_controller.signup);
 router.post("/login",user_admin_controller.login);
 router.get("/getAllUsersList",user_admin_controller.getAllUsersList);
-router.get("/getuserById/:userId",user_admin_controller.getuserById);
-router.put("/updateUserInfo/:userId",user_admin_controller.updateUserInfo);
+router.get("/getuserById/:id",user_admin_controller.getuserById);
+router.put("/updateUserInfo/:id",user_admin_controller.updateUserInfo);
 router.delete("/deleteUserById/:id",user_admin_controller.deleteUserById);
 
 
