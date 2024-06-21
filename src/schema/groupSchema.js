@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const GroupSchema = new mongoose.Schema({
   name :{type:String},
   groupIcon :{type:String},
-  userId:{type:String,ref:'Users'},
+  userIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
   groupType: { type: String, enum: ['private', 'public'], default: 'private' },
   description:{type:String},
 rulesAndRegulation:{type:String},

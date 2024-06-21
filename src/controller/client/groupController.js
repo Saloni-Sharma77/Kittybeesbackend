@@ -4,7 +4,7 @@ exports.addGroup = async (req, res) => {
   try {
     const {
         name ,
-        userId,
+        userIds,
         groupIcon ,
         groupType,
         description,
@@ -18,7 +18,7 @@ exports.addGroup = async (req, res) => {
 
     const newGroup= new Group({
         name ,
-        userId,
+        userIds,
         groupIcon ,
         groupType,
         description,
@@ -72,7 +72,7 @@ exports.updateGroup = async (req, res) => {
         name ,
         groupIcon ,
         groupType,
-        userId,
+        userIds,
         description,
       rulesAndRegulation,
       kittyFrequency,
@@ -83,7 +83,7 @@ exports.updateGroup = async (req, res) => {
       req.params.id,
     {
         name ,
-        userId,
+        userIds,
         groupIcon ,
         groupType,
         description,
