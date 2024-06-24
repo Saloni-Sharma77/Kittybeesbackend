@@ -31,9 +31,9 @@ router.delete("/deleteUserById/:id",user_admin_controller.deleteUserById);
 //groups
 router.post("/addGroup",group_controller.addGroup);
 router.get("/getAllGroups",group_controller.getAllGroups);
-router.post("/getGroupById/:groupId",group_controller.getGroupById);
+router.get("/getGroupById/:id",group_controller.getGroupById);
 router.put("/updateGroup/:id",group_controller.updateGroup);
-router.delete("/deleteGroup",group_controller.deleteGroup);
+router.delete("/deleteGroup/:id",group_controller.deleteGroup);
 
 router.post("/addVenue",venue_controller.addVenue);
 router.get("/getAllVenues",venue_controller.getAllVenues);
