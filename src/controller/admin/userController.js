@@ -3,6 +3,8 @@ dotenv.config();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const UsersModel = require("../../schema/userSchema");
+const GroupModel = require("../../schema/groupSchema");
+const VenueModel = require("../../schema/venueSchema");
 const jwt = require("jsonwebtoken");
 
 
@@ -66,6 +68,7 @@ exports.signup = async (req, res) => {
       });
     }
   };
+
 
   exports.getuserById = async(req,res)=>{
     const userId = req.params.id; // Capture the ID from request parameters
@@ -188,3 +191,23 @@ exports.signup = async (req, res) => {
   };
   
 
+
+  exports.getUserKittyVenueGroupCount = async (req, res) => {
+    try {
+      const getAllUsers = await UsersModel.find();
+      const getAllGroups = await GroupModel.find();
+      const getAllVenuues = await VenueModel.find();
+      res.status(200).json({ 
+        message: "User information retrieved successfully", 
+        user: getAllUsers.length,
+        group: getAllGroups.length,
+        venue: getAllVenuues.length,
+        
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: "Failed to get information",
+        details: err.message,
+      });
+    }
+  };
