@@ -40,7 +40,7 @@ exports.addGroup = async (req, res) => {
 };
 exports.getAllGroups = async (req, res) => {
   try {
-    const getAllGroup = await Group.find() ;
+    const getAllGroup = await Group.find().populate('userIds') ;
    
     res
       .status(200)
