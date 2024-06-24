@@ -37,9 +37,9 @@ router.delete("/deleteGroup",group_controller.deleteGroup);
 
 router.post("/addVenue",venue_controller.addVenue);
 router.get("/getAllVenues",venue_controller.getAllVenues);
-router.post("/getVenueById/:VenueId",venue_controller.getVenueById);
+router.get("/getVenueById/:id",venue_controller.getVenueById);
 router.put("/updateVenue/:id",venue_controller.updateVenue);
-router.delete("/deleteVenue",venue_controller.deleteVenue);
+router.delete("/deleteVenue/:id",venue_controller.deleteVenue);
 
 
 

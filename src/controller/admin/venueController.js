@@ -4,13 +4,11 @@ exports.addVenue = async (req, res) => {
   try {
     const {
         name ,
-        userId,
         location,
     } = req.body;
 
     const newVenue= new Venue({
-        name ,
-        userId,
+        name,
         location,
     });
 
@@ -36,10 +34,10 @@ exports.getAllVenues = async (req, res) => {
 };
 
 exports.getVenueById = async (req, res) => {
-  const VenueId = req.params.id;
+  const id = req.params.id;
 
   try {
-    const user = await Venue.findById(VenueId);
+    const user = await Venue.findById(id);
     if (!user) {
       return res.status(404).json({ error: "Request not found" });
     }
