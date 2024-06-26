@@ -24,7 +24,8 @@ sociallinks: [
     }
   ],
   isnotvalid :{type:Boolean},
-  phoneOtp:String,
+  phoneOtp:{type:String},
+  isActive:{type:Boolean,default : true},
   eventArr:{type:Array},
   partyArr:{type:Array},
   activityArr:{type:Array},

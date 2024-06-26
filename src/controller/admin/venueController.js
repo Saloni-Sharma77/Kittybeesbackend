@@ -22,7 +22,7 @@ exports.addVenue = async (req, res) => {
 };
 exports.getAllVenues = async (req, res) => {
   try {
-    const getAllVenue = await Venue.find() ;
+    const getAllVenue = await Venue.find().sort({ createdAt: -1 }) ;
    
     res
       .status(200)
@@ -85,6 +85,43 @@ exports.deleteVenue = async (req, res) => {
     res.status(500).json({ error: "Failed to delete Venue" });
   }
 };
+
+exports.updateStatus = async (req, res)=>{
+  const venueId = req.params.id; // Capture the ID from request parameters
+  const {
+    isActive
+  } = req.body;
+
+  console.log(req.body, "response");
+
+  try {
+    const updatedVenue = await Venue.findByIdAndUpdate(
+      venueId,
+      {
+        isActive
+      },
+      { new: true, runValidators: true } 
+    );
+
+    if (!updatedVenue) {
+      return res.status(404).json({
+        error: "Venue not found",
+      });
+    }
+
+    // Send the updated user data with a 200 status code
+    res.status(200).json({
+      message: "Venue information updated successfully",
+      data: updatedVenue,
+    });
+  } catch (error) {
+    console.error("Error updating venue information:", error);
+    res.status(500).json({
+      error: "Failed to update venue information",
+      details: error.message,
+    });
+  }
+}
 
 
 
