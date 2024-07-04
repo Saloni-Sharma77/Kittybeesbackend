@@ -17,6 +17,7 @@ exports.adduserInfo = async (req, res) => {
     username,
     about,
     sociallinks,
+    
   } = req.body;
 
   console.log(req.body, "response");
@@ -36,6 +37,7 @@ exports.adduserInfo = async (req, res) => {
       username,
       about,
       sociallinks,
+      
     });
     await newUser.save();
     res
@@ -76,3 +78,7 @@ exports.sendInterestAndPreference =async(req,res)=>{
     ]
 });
 }
+
+
+
+
