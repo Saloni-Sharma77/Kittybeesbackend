@@ -5,6 +5,7 @@ const GroupSchema = new mongoose.Schema({
   name :{type:String},
   userId:{type:String,ref:'Users'},
   location:{type:String},
+  isActive:{type:Boolean, default: true}
 
 },{timestamps:true} );
 

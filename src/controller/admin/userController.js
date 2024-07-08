@@ -33,6 +33,7 @@ exports.signup = async (req, res) => {
     try {
       const { email, password } = req.body;
       const user = await UsersModel.findOne({ email });
+   
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
@@ -47,6 +48,21 @@ exports.signup = async (req, res) => {
         message: "Login successfull",
         token: token,
         loginid: user._id,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         user,
       });
     } catch (err) {
@@ -189,6 +205,43 @@ exports.signup = async (req, res) => {
       });
     }
   };
+
+  exports.updateStatus = async (req, res)=>{
+    const userId = req.params.id; // Capture the ID from request parameters
+    const {
+      isActive
+    } = req.body;
+  
+    console.log(req.body, "response");
+  
+    try {
+      const updatedUser = await UsersModel.findByIdAndUpdate(
+        userId,
+        {
+          isActive
+        },
+        { new: true, runValidators: true } 
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+  
+      // Send the updated user data with a 200 status code
+      res.status(200).json({
+        message: "User information updated successfully",
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error updating user information:", error);
+      res.status(500).json({
+        error: "Failed to update user information",
+        details: error.message,
+      });
+    }
+  }
   
 
 
@@ -211,3 +264,44 @@ exports.signup = async (req, res) => {
       });
     }
   };
+
+
+  
+// exports.updateUserImage = async (req, res) => {
+//   const { userId }  = req.params;
+//   const { image } = req.body;
+
+//   try {
+//     const user = await UsersModel.findByIdAndUpdate(userId, { image }, { new: true });
+//     if (!user) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+//     res.status(200).json({ message: 'Profile image updated successfully', data: user });
+//   } catch (error) {
+//     console.error('Error updating profile image:', error);
+//     res.status(500).json({ error: 'Failed to update profile image', details: error.message });
+//   }
+// };
+
+
+
+exports.updateUserImage = async (req, res) => {
+  const { id } = req.params; // change userId to id
+  const { image } = req.body;
+
+  if (!id || !image) {
+    return res.status(400).json({ error: 'Invalid input data' });
+  }
+
+  try {
+    const user = await UsersModel.findByIdAndUpdate(id, { image }, { new: true });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json({ message: 'Profile image updated successfully', data: user });
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+    res.status(500).json({ error: 'Failed to update profile image', details: error.message });
+  }
+};
+

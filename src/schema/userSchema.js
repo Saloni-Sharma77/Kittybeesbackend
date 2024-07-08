@@ -5,6 +5,7 @@ const UsersSchema = new mongoose.Schema({
   userId :{type:String},
   fullname:{type:String},
   dob:{type:Date},
+  image:{type:String},
   profession:{type:String},
 //   location:{type:String},
 email:{type:String},
@@ -24,8 +25,10 @@ sociallinks: [
     }
   ],
   isnotvalid :{type:Boolean},
-  phoneOtp:String,
+  phoneOtp:{type:String},
+  isActive:{type:Boolean,default : true},
   eventArr:{type:Array},
+  role:{ type: String,enum:['user','admin'],default:'user'},
   partyArr:{type:Array},
   activityArr:{type:Array},
 
