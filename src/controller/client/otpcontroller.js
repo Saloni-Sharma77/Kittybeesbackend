@@ -22,7 +22,7 @@ const client = twilio(
   // Send TEXT OTP
   exports.sendotp = async (req, res) => {
     const { phoneNumber } = req.body;
-    
+    console.log(phoneNumber);
     if (!phoneNumber) {
       return res.status(400).send({ error: "Phone number is required" });
     }

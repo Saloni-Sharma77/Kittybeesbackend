@@ -4,6 +4,7 @@ exports.addGroup = async (req, res) => {
   try {
     const {
         name ,
+        userIds,
         groupIcon ,
         groupType,
         description,
@@ -17,6 +18,7 @@ exports.addGroup = async (req, res) => {
 
     const newGroup= new Group({
         name ,
+        userIds,
         groupIcon ,
         groupType,
         description,
@@ -38,7 +40,7 @@ exports.addGroup = async (req, res) => {
 };
 exports.getAllGroups = async (req, res) => {
   try {
-    const getAllGroup = await Group.find() ;
+    const getAllGroup = await Group.find().populate('userIds').sort({ createdAt: -1 }) ;
    
     res
       .status(200)
@@ -48,7 +50,6 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-  
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
@@ -71,6 +72,7 @@ exports.updateGroup = async (req, res) => {
         name ,
         groupIcon ,
         groupType,
+        userIds,
         description,
       rulesAndRegulation,
       kittyFrequency,
@@ -81,6 +83,7 @@ exports.updateGroup = async (req, res) => {
       req.params.id,
     {
         name ,
+        userIds,
         groupIcon ,
         groupType,
         description,
@@ -113,6 +116,47 @@ exports.deleteGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to delete group" });
   }
 };
+
+exports.updateStatus = async (req, res)=>{
+  const GroupId = req.params.id; // Capture the ID from request parameters
+  const {
+    isActive
+  } = req.body;
+
+  console.log(req.body, "response");
+
+  try {
+    const updatedGroup = await Group.findByIdAndUpdate(
+      GroupId,
+      {
+        isActive
+      },
+      { new: true, runValidators: true } 
+    );
+
+    if (!updatedGroup) {
+      return res.status(404).json({
+        error: "Group not found",
+      });
+    }
+
+    // Send the updated user data with a 200 status code
+    res.status(200).json({
+      message: "Group information updated successfully",
+      data: updatedGroup,
+    });
+  } catch (error) {
+    console.error("Error updating group information:", error);
+    res.status(500).json({
+      error: "Failed to update group information",
+      details: error.message,
+    });
+  }
+}
+
+
+
+
 
 
 
