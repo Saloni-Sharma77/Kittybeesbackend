@@ -16,6 +16,7 @@
     "express": "^4.19.2",
     "fast-two-sms": "^3.0.0",
     "joi": "^17.13.1",
+    "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.11.3",
     "mongoose": "^8.3.5",
     "twilio": "^5.1.1",

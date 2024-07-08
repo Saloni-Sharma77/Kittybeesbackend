@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const UsersModel = require("../../schema/userSchema");
+// import { Request, Response } from 'express';
 
 exports.adduserInfo = async (req, res) => {
   const {
@@ -74,3 +75,4 @@ exports.sendInterestAndPreference =async(req,res)=>{
     ]
 });
 }
+

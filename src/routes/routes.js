@@ -14,6 +14,8 @@ router.post("/sendotpwhatsapp",otp_controller.sendotpwhatsapp);
 router.post("/verifyotp",otp_controller.verifyotp);
 
 
+
+
 router.post("/adduserInfo",user_controller.adduserInfo);
 router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreference);
 

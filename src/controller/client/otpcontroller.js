@@ -55,7 +55,7 @@ const client = twilio(
   //verify
   exports.verifyotp = async (req, res) => {
     const { phoneNumber, otp } = req.body;
-    if (!phoneNumber || !otp) {
+    if ( !otp) {
       return res.status(400).send({ error: "Phone number and OTP are required" });
     }
     try {
