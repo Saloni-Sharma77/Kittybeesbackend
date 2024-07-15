@@ -1,0 +1,20 @@
+image: node:16.14.0 # specifc node version
+# make these dependecies available and setting up the pem and known host to connect ec2
+before_script:
+  - apt-get update
+  - apt-get install zip
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$DEV_DEPLOYMENT_KEY_PRIVATE" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan $SSH_IP_ADDRESS >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+build-job: # This job runs in the build stage, which runs first.
+  stage: build #name of job
+  only:
+    - tags
+  script: # scripts to run
+    - ssh ad@$SSH_IP_ADDRESS "cd /var/www/fullstack/docker-kittybee-backend/kitty_bee_backend && echo $SUDO_PASS | sudo -S git reset --hard && git pull && cd /var/www/fullstack/docker-kittybee-backend && docker-compose build && docker-compose down && docker-compose up -d"
+    - echo "completed"  

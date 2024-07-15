@@ -34,7 +34,7 @@ const client = twilio(
       // Send OTP via Twilio
       await client.messages.create({
         body: `Your OTP is ${otp}`,
-        from: "+1 570 682 5480",
+        from: "+16283482985",
         to: phoneNumber,
       });
       
@@ -90,11 +90,13 @@ const client = twilio(
           const otp = generateSixDigitRandomNumber();
           const otpExpiresAt = new Date(Date.now() + 10 * 60000);
           
+        const mediaUrl =  'https://dhorandjoy.s3-ap-southeast-1.amazonaws.com/your/subfolder/path/20246281352-239Prescription.pdf'
           // Send OTP via Twilio
           await client.messages.create({
             body: `Your OTP is ${otp}`,
             from: 'whatsapp:+14155238886', 
             to: `whatsapp:${phoneNumber}`,
+            mediaUrl: [mediaUrl],
           });
           
           // Update or insert user OTP data
