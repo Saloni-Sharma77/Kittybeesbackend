@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 
 
 exports.signup = async (req, res) => {
-    const { email, password, username } = req.body;
+    const { email, password, fullname } = req.body;
     try {
       const existingUser = await UsersModel.findOne({ email });
       if (existingUser) {
@@ -18,13 +18,13 @@ exports.signup = async (req, res) => {
       const salt = await bcrypt.genSalt(saltRounds);
       const hashedPassword = await bcrypt.hash(password, salt);
       const newUser = new UsersModel({
-        username,
+        fullname,
         email,
         password: hashedPassword,
       });
   
       const savedUser = await newUser.save();
-      res.status(201).json({ loginid: savedUser._id, email: savedUser.email,message:'Registered Successfully', name:savedUser.username, });
+      res.status(201).json({ loginid: savedUser._id, email: savedUser.email,message:'Registered Successfully', name:savedUser.fullname, });
     } catch (error) {
       res.status(500).json({ error: "Internal server error" });
     }
