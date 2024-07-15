@@ -164,6 +164,7 @@ exports.signup = async (req, res) => {
           error: "User not found",
         });
       }
+     
   
       // Send the updated user data with a 200 status code
       res.status(200).json({
