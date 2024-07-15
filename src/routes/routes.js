@@ -17,8 +17,10 @@ router.post("/verifyotp",otp_controller.verifyotp);
 
 
 router.post("/adduserInfo",user_controller.adduserInfo);
+router.post("/checkGender",user_controller.checkGender);
 router.put("/updateUserInfo",user_controller.updateUserInfo);
 router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreference);
+router.get("/getUserDetailByMobileNumber/:phoneNumber",user_controller.getUserDetailByMobileNumber);
 
 
 //admin routes-------------------------------------------->>>>>>>>>>>>>>

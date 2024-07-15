@@ -1,6 +1,50 @@
 const dotenv = require("dotenv");
+const fs = require('fs').promises;
+const bodyParser = require('body-parser');
+const path = require('path');
+const { spawn } = require('child_process');
+const { v4: uuidv4 } = require('uuid');
+const { exec } = require('child_process');
+
 dotenv.config();
 const UsersModel = require("../../schema/userSchema");
+
+// Ensure bodyParser middleware is used to parse form data
+
+
+
+exports.checkGender = async (req, res) => {
+  const base64Image = req.body.base64Image;
+
+  // Validate base64Image is provided
+  if (!base64Image) {
+      return res.status(400).send('Base64 image is required');
+  }
+
+  // Construct the command to execute the Python script
+  const command = `python object_detection.py "${base64Image}"`;
+
+  console.log(`Executing command: ${command}`);
+
+  // Execute the command
+  exec(command, (error, stdout, stderr) => {
+      if (error) {
+          console.error(`Error: ${error.message}`);
+          return res.status(500).send('An error occurred while detecting gender');
+      }
+      if (stderr) {
+          console.error(`Stderr: ${stderr}`);
+          return res.status(500).send('An error occurred while detecting gender');
+      }
+
+      console.log(`Python script output: ${stdout}`);
+
+      // Assuming stdout contains the result from the Python script
+      res.send(stdout.trim());
+  });
+};
+
+
 
 exports.adduserInfo = async (req, res) => {
   const {
@@ -102,6 +146,21 @@ exports.updateUserInfo = async (req, res) => {
   }
 };
 
+exports.getUserDetailByMobileNumber = async (req, res) => {
+  const numbercheck = req.params.phoneNumber;
+
+  try {
+    const user = await UsersModel.findOne({ phoneNumber: numbercheck });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user by phone number:", error);
+    res.status(500).json({ error: "Failed to fetch user by phone number" });
+  }
+};
 
 
 exports.sendInterestAndPreference =async(req,res)=>{
@@ -126,6 +185,8 @@ exports.sendInterestAndPreference =async(req,res)=>{
     ]
 });
 }
+
+
 
 
 
