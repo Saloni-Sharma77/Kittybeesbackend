@@ -39,7 +39,7 @@ router.put("/users/:id",user_admin_controller.updateUserImage)
 //interest
 router.get("/sendInterestAndPreference",interest_controller.sendInterestAndPreference);
 router.post("/addInterest",interest_controller.addInterest);
-router.get("/getInterestById/:id",interest_controller.sendInterestAndPreference);
+router.get("/getInterestById/:id",interest_controller.getInterestById);
 router.put("/updateInterest/:id",interest_controller.updateInterest);
 router.delete("/deleteInterest/:id",interest_controller.deleteInterest);
 

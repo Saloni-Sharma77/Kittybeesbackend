@@ -164,20 +164,7 @@ exports.getUserDetailByMobileNumber = async (req, res) => {
 };
 
 
-// exports.sendInterestAndPreference =async(req,res)=>{
-//   try {
-//   } catch (error) {
-//     res.status(500).json({ error: "Internal Serval Error" });
-//   }
-// //   res.json({
-// //     "events": [
-// //         "Party",
-// //         "Concert",
-// //         "Festival",
-// //         "Conference",
-// //     ],
-// // });
-// }
+
 
 
 
