@@ -4,6 +4,7 @@ const router = express.Router();
 const user_admin_controller=require("../controller/admin/userController");
 const venue_controller=require("../controller/admin/venueController");
 const kitty_controller=require("../controller/admin/kittyController");
+const interest_controller=require("../controller/admin/interestController");
 
 //client
 const user_controller=require("../controller/client/usercontroller");
@@ -21,8 +22,9 @@ router.post("/verifyotp",otp_controller.verifyotp);
 router.post("/adduserInfo",user_controller.adduserInfo);
 router.post("/checkGender",user_controller.checkGender);
 router.put("/updateUserInfo",user_controller.updateUserInfo);
-router.get("/sendInterestAndPreference",user_controller.sendInterestAndPreference);
 router.get("/getUserDetailByMobileNumber/:phoneNumber",user_controller.getUserDetailByMobileNumber);
+
+
 
 
 //admin routes-------------------------------------------->>>>>>>>>>>>>>
@@ -35,6 +37,13 @@ router.put("/updateUserInfo/:id",user_admin_controller.updateUserInfo);
 router.delete("/deleteUserById/:id",user_admin_controller.deleteUserById);
 router.patch("/updateStatus/:id",user_admin_controller.updateStatus);
 router.put("/users/:id",user_admin_controller.updateUserImage)
+
+//interest
+router.get("/sendInterestAndPreference",interest_controller.sendInterestAndPreference);
+router.post("/addInterest",interest_controller.addInterest);
+router.get("/getInterestById/:id",interest_controller.getInterestById);
+router.put("/updateInterest/:id",interest_controller.updateInterest);
+router.delete("/deleteInterest/:id",interest_controller.deleteInterest);
 
 
 //groups
