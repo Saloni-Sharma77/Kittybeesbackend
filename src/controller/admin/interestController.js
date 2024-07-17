@@ -5,7 +5,7 @@ exports.addInterest = async (req, res) => {
     try {
         const { name } = req.body;
   
-        const newInterest = new Interest({
+        const newInterest = new InterestModel({
             name,
         });
   
@@ -22,7 +22,7 @@ exports.addInterest = async (req, res) => {
     try {
         const { id } = req.params;
   
-        const interest = await Interest.findById(id);
+        const interest = await InterestModel.findById(id);
   
         if (!interest) {
             return res.status(404).json({ error: 'Interest not found' });
@@ -40,7 +40,7 @@ exports.addInterest = async (req, res) => {
         const { id } = req.params;
         const { name } = req.body;
   
-        const updatedInterest = await Interest.findByIdAndUpdate(
+        const updatedInterest = await InterestModel.findByIdAndUpdate(
             id,
             { name },
             { new: true, runValidators: true }
@@ -78,7 +78,7 @@ exports.addInterest = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const deletedInterest = await Interest.findByIdAndDelete(id);
+        const deletedInterest = await InterestModel.findByIdAndDelete(id);
 
         if (!deletedInterest) {
             return res.status(404).json({ error: 'Interest not found' });
