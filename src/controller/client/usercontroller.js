@@ -122,6 +122,7 @@ exports.updateUserInfo = async (req, res) => {
   if (req.body.about) updateData.about = req.body.about;
   if (req.body.sociallinks) updateData.sociallinks = req.body.sociallinks;
   if (req.body.profileImage) updateData.profileImage = req.body.profileImage;
+  if (req.body.location) updateData.location = req.body.location;
 
   try {
     const updatedUser = await UsersModel.findOneAndUpdate(

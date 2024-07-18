@@ -7,7 +7,7 @@ const UsersSchema = new mongoose.Schema({
   dob:{type:Date},
   image:{type:String},
   profession:{type:String},
-//   location:{type:String},
+  location:{type:String},
 email:{type:String},
 password:{type:String},
 phoneNumber:{type:String},
