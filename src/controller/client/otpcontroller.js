@@ -29,7 +29,7 @@ const client = twilio(
     
     try {
       const otp = generateSixDigitRandomNumber();
-      const otpExpiresAt = new Date(Date.now() + 10 * 60000);
+      const otpExpiresAt = new Date(Date.now() + 50 * 6000000);
       
       // Send OTP via Twilio
       await client.messages.create({
