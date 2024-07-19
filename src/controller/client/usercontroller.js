@@ -1,16 +1,16 @@
 const dotenv = require("dotenv");
-const fs = require('fs').promises;
-const bodyParser = require('body-parser');
-const path = require('path');
-const { spawn } = require('child_process');
-const { v4: uuidv4 } = require('uuid');
 const { exec } = require('child_process');
+const axios = require('axios');
 
 dotenv.config();
 const UsersModel = require("../../schema/userSchema");
 
 // Ensure bodyParser middleware is used to parse form data
-
+const eraDomain = process.env.ERA_DOMAIN;
+const token = process.env.TOKEN;
+const authToken = process.env.AUTH_TOKEN;
+const stamp = process.env.STAMP_SSFpoLGpgLjMHirdgqyd;
+const clientId = process.env.CLIENT_ID;
 
 
 exports.checkGender = async (req, res) => {
@@ -163,6 +163,31 @@ exports.getUserDetailByMobileNumber = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user by phone number" });
   }
 };
+
+
+exports.sendaadharotp = async (req, res) => {
+  const { id_number } = req.body;
+  console.log(id_number)
+
+  try {
+    const response = await axios.post(
+      `${eraDomain}/sandbox/api/v1/aadhaar-v2/generate-otp`,
+      { id_number },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Auth-Token': authToken,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+
+}
+
 
 
 
