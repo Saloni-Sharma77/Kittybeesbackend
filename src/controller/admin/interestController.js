@@ -90,3 +90,41 @@ exports.addInterest = async (req, res) => {
         res.status(500).json({ error: 'Failed to delete interest' });
     }
 };
+
+exports.updateStatus = async (req, res)=>{
+  const interestId = req.params.id; // Capture the ID from request parameters
+  console.log("ghmx,jns,",interestId)
+  const {
+    isActive
+  } = req.body;
+
+  console.log(req.body, "response");
+
+  try {
+    const updatedInterest = await InterestModel.findByIdAndUpdate(
+      interestId,
+      {
+        isActive
+      },
+      { new: true, runValidators: true } 
+    );
+
+    if (!updatedInterest) {
+      return res.status(404).json({
+        error: "Interest not found",
+      });
+    }
+
+    // Send the updated user data with a 200 status code
+    res.status(200).json({
+      message: "Interest information updated successfully",
+      data: updatedInterest,
+    });
+  } catch (error) {
+    console.error("Error updating interest information:", error);
+    res.status(500).json({
+      error: "Failed to update interest information",
+      details: error.message,
+    });
+  }
+}
