@@ -21,7 +21,6 @@ router.post("/adduserInfo",user_controller.adduserInfo);
 router.post("/checkGender",user_controller.checkGender);
 router.put("/updateUserInfo",user_controller.updateUserInfo);
 router.get("/getUserDetailByMobileNumber/:phoneNumber",user_controller.getUserDetailByMobileNumber);
-router.post("/sendaadharotp",user_controller.sendaadharotp);
 
 
 
