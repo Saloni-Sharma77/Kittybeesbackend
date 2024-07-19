@@ -64,7 +64,7 @@ exports.addInterest = async (req, res) => {
       const getAllInterest = await InterestModel.find().sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "Interest retrieved successfully", 
-        data: getAllInterest 
+        data: {events:getAllInterest} 
       });
     } catch (err) {
       res.status(500).json({
