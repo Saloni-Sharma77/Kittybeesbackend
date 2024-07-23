@@ -14,10 +14,10 @@ exports.addVenue = async (req, res) => {
 
     await newVenue.save();
 
-    res.status(201).json({ message: "Venue added successfully", task: newVenue });
+    res.status(201).json({ message: "Data added successfully", task: newVenue });
   } catch (err) {
     console.error("Error adding task:", err);
-    res.status(500).json({ error: "Failed to add Venue" });
+    res.status(500).json({ error: "Failed to add data" });
   }
 };
 exports.getAllVenues = async (req, res) => {
@@ -26,7 +26,7 @@ exports.getAllVenues = async (req, res) => {
    
     res
       .status(200)
-      .json({ message: "Venue List fetched successfully", data: getAllVenue });
+      .json({ message: "Data fetched successfully", data: getAllVenue });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
