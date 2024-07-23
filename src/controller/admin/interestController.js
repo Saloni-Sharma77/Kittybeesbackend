@@ -2,22 +2,58 @@
 const InterestModel = require("../../schema/interestSchema");
 
 exports.addInterest = async (req, res) => {
-    try {
-        const { name } = req.body;
-  
-        const newInterest = new InterestModel({
-            name,
-        });
-  
-        await newInterest.save();
-  
-        res.status(201).json(newInterest);
-    } catch (error) {
-        console.error('Error adding interest:', error);
-        res.status(500).json({ error: 'Failed to add interest' });
-    }
-  };
-  
+  try {
+      const { name } = req.body;
+
+      // Check if the interest name already exists
+      const existingInterest = await InterestModel.findOne({ name });
+      if (existingInterest) {
+          return res.status(400).json({ error: 'Interest name already exists' });
+      }
+
+      const newInterest = new InterestModel({
+          name,
+      });
+
+      await newInterest.save();
+
+      res.status(201).json(newInterest);
+  } catch (error) {
+      console.error('Error adding interest:', error);
+      res.status(500).json({ error: 'Failed to add interest' });
+  }
+};
+
+ 
+exports.updateInterest = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { name } = req.body;
+
+      // Check if the new interest name already exists (and is not the current one)
+      const existingInterest = await InterestModel.findOne({ name });
+      if (existingInterest && existingInterest._id.toString() !== id) {
+          return res.status(400).json({ error: 'Interest name already exists' });
+      }
+
+      const updatedInterest = await InterestModel.findByIdAndUpdate(
+          id,
+          { name },
+          { new: true, runValidators: true }
+      );
+
+      if (!updatedInterest) {
+          return res.status(404).json({ error: 'Interest not found' });
+      }
+
+      res.json(updatedInterest);
+  } catch (error) {
+      console.error('Error updating interest:', error);
+      res.status(500).json({ error: 'Failed to update interest' });
+  }
+};
+
+
   exports.getInterestById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -35,28 +71,6 @@ exports.addInterest = async (req, res) => {
     }
   };
   
-  exports.updateInterest = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name } = req.body;
-  
-        const updatedInterest = await InterestModel.findByIdAndUpdate(
-            id,
-            { name },
-            { new: true, runValidators: true }
-        );
-  
-        if (!updatedInterest) {
-            return res.status(404).json({ error: 'Interest not found' });
-        }
-  
-        res.json(updatedInterest);
-    } catch (error) {
-        console.error('Error updating interest:', error);
-        res.status(500).json({ error: 'Failed to update interest' });
-    }
-  };
-  
   
   
   exports.sendInterestAndPreference = async (req, res) => {
@@ -64,7 +78,7 @@ exports.addInterest = async (req, res) => {
       const getAllInterest = await InterestModel.find().sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "Interest retrieved successfully", 
-        data: getAllInterest 
+        data: {events:getAllInterest} 
       });
     } catch (err) {
       res.status(500).json({

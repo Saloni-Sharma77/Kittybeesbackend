@@ -1,17 +1,10 @@
 const dotenv = require("dotenv");
-const fs = require('fs').promises;
-const bodyParser = require('body-parser');
-const path = require('path');
-const { spawn } = require('child_process');
-const { v4: uuidv4 } = require('uuid');
 const { exec } = require('child_process');
 
 dotenv.config();
 const UsersModel = require("../../schema/userSchema");
 
 // Ensure bodyParser middleware is used to parse form data
-
-
 
 exports.checkGender = async (req, res) => {
   const base64Image = req.body.base64Image;
@@ -163,6 +156,10 @@ exports.getUserDetailByMobileNumber = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user by phone number" });
   }
 };
+
+
+
+
 
 
 
