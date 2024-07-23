@@ -232,11 +232,11 @@ exports.signup = async (req, res) => {
   
       // Send the updated user data with a 200 status code
       res.status(200).json({
-        message: "User information updated successfully",
+        message: "Data updated successfully",
         data: updatedUser,
       });
     } catch (error) {
-      console.error("Error updating user information:", error);
+      console.error("Error updating data", error);
       res.status(500).json({
         error: "Failed to update user information",
         details: error.message,
