@@ -32,11 +32,11 @@ const client = twilio(
       const otpExpiresAt = new Date(Date.now() + 50 * 6000000);
       
       // Send OTP via Twilio
-      // await client.messages.create({
-      //   body: `Your OTP is ${otp}`,
-      //   from: "+16283482985",
-      //   to: phoneNumber,
-      // });
+      await client.messages.create({
+        body: `Your OTP is ${otp}`,
+        from: "+12055129013",
+        to: phoneNumber,
+      });
       
       // Update or insert user OTP data
       const filter = { phoneNumber };
