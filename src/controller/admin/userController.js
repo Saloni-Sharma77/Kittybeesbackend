@@ -96,7 +96,7 @@ exports.signup = async (req, res) => {
     if (!user) {
       // If user not found, send a 404 response
       return res.status(404).json({
-        error: "User not found"
+        error: "Data not found"
       });
     }
 
@@ -161,18 +161,18 @@ exports.signup = async (req, res) => {
       if (!updatedUser) {
         // If user not found, send a 404 response
         return res.status(404).json({
-          error: "User not found",
+          error: "Data not found",
         });
       }
      
   
       // Send the updated user data with a 200 status code
       res.status(200).json({
-        message: "User information updated successfully",
+        message: "Data updated successfully",
         data: updatedUser,
       });
     } catch (error) {
-      console.error("Error updating user information:", error);
+      console.error("Error updating data", error);
       res.status(500).json({
         error: "Failed to update user information",
         details: error.message,
@@ -226,17 +226,17 @@ exports.signup = async (req, res) => {
   
       if (!updatedUser) {
         return res.status(404).json({
-          error: "User not found",
+          error: "Data not found",
         });
       }
   
       // Send the updated user data with a 200 status code
       res.status(200).json({
-        message: "User information updated successfully",
+        message: "Data updated successfully",
         data: updatedUser,
       });
     } catch (error) {
-      console.error("Error updating user information:", error);
+      console.error("Error updating data", error);
       res.status(500).json({
         error: "Failed to update user information",
         details: error.message,
@@ -299,9 +299,9 @@ exports.updateUserImage = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(200).json({ message: 'Profile image updated successfully', data: user });
+    res.status(200).json({ message: 'Data updated successfully', data: user });
   } catch (error) {
-    console.error('Error updating profile image:', error);
+    console.error('Error updating data', error);
     res.status(500).json({ error: 'Failed to update profile image', details: error.message });
   }
 };

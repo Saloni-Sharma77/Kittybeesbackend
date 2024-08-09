@@ -10,6 +10,8 @@ const interest_controller=require("../controller/admin/interestController");
 const user_controller=require("../controller/client/usercontroller");
 const otp_controller=require("../controller/client/otpcontroller");
 const group_controller=require("../controller/client/groupController");
+const chat_controller=require("../controller/client/chatController");
+const message_controller=require("../controller/client/messageController");
 
 //client routes------------------------------------------->>>>>>>>>>>
 router.post("/sendotp",otp_controller.sendotp);
@@ -24,7 +26,13 @@ router.post("/checkGender",user_controller.checkGender);
 router.put("/updateUserInfo",user_controller.updateUserInfo);
 router.get("/getUserDetailByMobileNumber/:phoneNumber",user_controller.getUserDetailByMobileNumber);
 
+//chat routes
+router.post("/createChat", chat_controller.createChat);
+router.get("/getChats", chat_controller.getChats);
 
+// Message routes
+router.post("/createMessage", message_controller.createMessage);
+router.get("/getMessages/:chatId", message_controller.getMessages);
 
 
 //admin routes-------------------------------------------->>>>>>>>>>>>>>
@@ -44,6 +52,7 @@ router.post("/addInterest",interest_controller.addInterest);
 router.get("/getInterestById/:id",interest_controller.getInterestById);
 router.put("/updateInterest/:id",interest_controller.updateInterest);
 router.delete("/deleteInterest/:id",interest_controller.deleteInterest);
+router.patch("/updateInterestStatus/:id",interest_controller.updateStatus);
 
 
 //groups

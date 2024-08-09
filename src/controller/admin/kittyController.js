@@ -17,10 +17,10 @@ exports.addKitty = async (req, res) => {
 
     await newKitty.save();
 
-    res.status(201).json({ message: "Kitty added successfully", task: newKitty });
+    res.status(201).json({ message: "Data added successfully", task: newKitty });
   } catch (err) {
-    console.error("Error adding Kitty:", err);
-    res.status(500).json({ error: "Failed to add Kitty" });
+    console.error("Error adding data", err);
+    res.status(500).json({ error: "Failed to add data" });
   }
 };
 
@@ -39,7 +39,7 @@ exports.getAllKittys = async (req, res) => {
       .populate('userId') 
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ message: "Kitty List fetched successfully", data: getAllKitty });
+    res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -162,13 +162,13 @@ exports.updateKittyStatus = async (req, res)=>{
 
     // Send the updated user data with a 200 status code
     res.status(200).json({
-      message: "Kitty information updated successfully",
+      message: "Data updated successfully",
       data: updatedKitty,
     });
   } catch (error) {
-    console.error("Error updating kitty information:", error);
+    console.error("Error updating data", error);
     res.status(500).json({
-      error: "Failed to update kitty information",
+      error: "Failed to update data",
       details: error.message,
     });
   }
