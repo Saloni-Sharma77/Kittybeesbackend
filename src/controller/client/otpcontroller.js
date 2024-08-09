@@ -2,7 +2,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 const User = require("../../schema/userSchema");
 const twilio = require("twilio");
-
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const client = twilio(
     process.env.TWILIO_ACCOUNT_SID,
@@ -32,18 +34,19 @@ const client = twilio(
       const otpExpiresAt = new Date(Date.now() + 50 * 6000000);
       
       // Send OTP via Twilio
-      await client.messages.create({
-        body: `Your OTP is ${otp}`,
-        from: "+12055129013",
-        to: phoneNumber,
-      });
+      // await client.messages.create({
+      //   body: `Your OTP is ${otp}`,
+      //   from: "+12055129013",
+      //   to: phoneNumber,
+      // });
       
       // Update or insert user OTP data
+
       const filter = { phoneNumber };
       const update = { otp, otpExpiresAt };
       const options = { upsert: true, new: true };
       const updatedUser = await User.findOneAndUpdate(filter, update, options);
-      
+     
       res.status(200).send({ success: true, message: "OTP sent successfully" ,otp:otp});
     } catch (error) {
       console.error("Error sending OTP:", error);
@@ -66,12 +69,15 @@ const client = twilio(
       if (user.otp !== otp || new Date() > user.otpExpiresAt) {
         return res.status(400).send({ error: "Invalid or expired OTP" });
       }
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
       user.otp = undefined;
       user.otpExpiresAt = undefined;
       await user.save();
       res
         .status(200)
-        .send({ success: true, message: "OTP verified successfully" });
+        .send({ success: true, message: "OTP verified successfully" ,token:token});
     } catch (error) {
       console.error(error);
       res.status(500).send({ error: "Failed to verify OTP" });
