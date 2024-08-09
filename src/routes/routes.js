@@ -17,6 +17,7 @@ const message_controller=require("../controller/client/messageController");
 router.post("/sendotp",otp_controller.sendotp);
 router.post("/sendotpwhatsapp",otp_controller.sendotpwhatsapp);
 router.post("/verifyotp",otp_controller.verifyotp);
+router.post("/isUserLoggedIn",otp_controller.isUserLoggedIn);
 
 
 router.post("/adduserInfo",user_controller.adduserInfo);

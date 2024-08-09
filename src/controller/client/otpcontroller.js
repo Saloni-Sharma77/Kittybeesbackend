@@ -84,6 +84,27 @@ const client = twilio(
     }
   };
 
+  exports.isUserLoggedIn = async (req,res)=>{
+    const { phoneNumber } = req.body;
+
+    try {
+      let isLoggedIn = false;
+      const user = await User.findOne({ phoneNumber });
+      if(user){
+        isLoggedIn = true
+      }
+      res
+      .status(200)
+      .send({isLoggedIn:isLoggedIn});
+
+      
+    } catch (error) {
+      res.status(500).send({ error: error });
+      
+    }
+
+  }
+
     // Send TEXT OTP
     exports.sendotpwhatsapp = async (req, res) => {
         const { phoneNumber } = req.body;
