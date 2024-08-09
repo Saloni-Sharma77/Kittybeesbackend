@@ -96,9 +96,13 @@ const client = twilio(
         if (user.otp !== otp || new Date() > user.otpExpiresAt) {
             return res.status(400).send({ error: "Invalid or expired OTP" });
         }
+       let fullnameExists = false;
+        if(user.fullname){
+          fullnameExists = true
+
+        }
 
         // OTP is verified, now check if the user exists
-        const userExists = await User.findOne({ phoneNumber });
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
             expiresIn: "1h",
         });
@@ -113,7 +117,7 @@ const client = twilio(
             fullname:user?.fullname,
             username:user?.username,
             token: token,
-            userExists: !!userExists  // true if user exists, false otherwise
+            fullnameExists: fullnameExists  // true if user exists, false otherwise
         });
     } catch (error) {
         console.error(error);
