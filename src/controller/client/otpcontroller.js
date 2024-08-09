@@ -56,33 +56,67 @@ const client = twilio(
 
 
   //verify
+  // exports.verifyotp = async (req, res) => {
+  //   const { phoneNumber, otp } = req.body;
+  //   if (!phoneNumber || !otp) {
+  //     return res.status(400).send({ error: "Phone number and OTP are required" });
+  //   }
+  //   try {
+  //     const user = await User.findOne({ phoneNumber });
+  //     if (!user) {
+  //       return res.status(400).send({ error: "Phone number not found" });
+  //     }
+  //     if (user.otp !== otp || new Date() > user.otpExpiresAt) {
+  //       return res.status(400).send({ error: "Invalid or expired OTP" });
+  //     }
+  //     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+  //       expiresIn: "1h",
+  //     });
+  //     user.otp = undefined;
+  //     user.otpExpiresAt = undefined;
+  //     await user.save();
+  //     res
+  //       .status(200)
+  //       .send({ success: true, message: "OTP verified successfully" ,token:token});
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).send({ error: "Failed to verify OTP" });
+  //   }
+  // };
   exports.verifyotp = async (req, res) => {
     const { phoneNumber, otp } = req.body;
-    if (!phoneNumber || !otp) {
-      return res.status(400).send({ error: "Phone number and OTP are required" });
+    if (!otp) {
+        return res.status(400).send({ error: "Phone number and OTP are required" });
     }
     try {
-      const user = await User.findOne({ phoneNumber });
-      if (!user) {
-        return res.status(400).send({ error: "Phone number not found" });
-      }
-      if (user.otp !== otp || new Date() > user.otpExpiresAt) {
-        return res.status(400).send({ error: "Invalid or expired OTP" });
-      }
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-      user.otp = undefined;
-      user.otpExpiresAt = undefined;
-      await user.save();
-      res
-        .status(200)
-        .send({ success: true, message: "OTP verified successfully" ,token:token});
+        const user = await User.findOne({ phoneNumber });
+        if (!user) {
+            return res.status(400).send({ error: "Phone number not found" });
+        }
+        if (user.otp !== otp || new Date() > user.otpExpiresAt) {
+            return res.status(400).send({ error: "Invalid or expired OTP" });
+        }
+
+        // OTP is verified, now check if the user exists
+        const userExists = await User.findOne({ phoneNumber });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "1h",
+        });
+        user.otp = undefined;
+        user.otpExpiresAt = undefined;
+        await user.save();
+
+        res.status(200).send({ 
+            success: true, 
+            message: "OTP verified successfully", 
+            token: token,
+            userExists: !!userExists  // true if user exists, false otherwise
+        });
     } catch (error) {
-      console.error(error);
-      res.status(500).send({ error: "Failed to verify OTP" });
+        console.error(error);
+        res.status(500).send({ error: "Failed to verify OTP" });
     }
-  };
+};
 
   exports.isUserLoggedIn = async (req,res)=>{
     const { phoneNumber } = req.body;
