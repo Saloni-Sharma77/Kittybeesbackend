@@ -110,6 +110,8 @@ const client = twilio(
             success: true, 
             message: "OTP verified successfully", 
             user:user,
+            fullname:user?.fullname,
+            username:user?.username,
             token: token,
             userExists: !!userExists  // true if user exists, false otherwise
         });
