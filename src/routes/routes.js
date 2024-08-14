@@ -5,6 +5,7 @@ const user_admin_controller=require("../controller/admin/userController");
 const venue_controller=require("../controller/admin/venueController");
 const kitty_controller=require("../controller/admin/kittyController");
 const interest_controller=require("../controller/admin/interestController");
+const activity_controller=require("../controller/admin/activityController");
 
 //client
 const user_controller=require("../controller/client/usercontroller");
@@ -53,6 +54,14 @@ router.put("/updateInterest/:id",interest_controller.updateInterest);
 router.delete("/deleteInterest/:id",interest_controller.deleteInterest);
 router.patch("/updateInterestStatus/:id",interest_controller.updateStatus);
 
+
+//activity
+router.get("/getAllActivity",activity_controller.getAllActivity);
+router.post("/addActivity",activity_controller.addActivity);
+router.get("/getActivityById/:id",activity_controller.getActivityById);
+router.put("/updateActivity/:id",activity_controller.updateActivity);
+router.delete("/deleteActivity/:id",activity_controller.deleteActivity);
+router.patch("/updateActivityStatus/:id",activity_controller.updateActivityStatus);
 
 //groups
 router.post("/addGroup",group_controller.addGroup);
