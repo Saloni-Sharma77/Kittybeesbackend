@@ -6,6 +6,7 @@ const venue_controller=require("../controller/admin/venueController");
 const kitty_controller=require("../controller/admin/kittyController");
 const interest_controller=require("../controller/admin/interestController");
 const activity_controller=require("../controller/admin/activityController");
+const themes_controller=require("../controller/admin/themesController");
 
 //client
 const user_controller=require("../controller/client/usercontroller");
@@ -62,6 +63,14 @@ router.get("/getActivityById/:id",activity_controller.getActivityById);
 router.put("/updateActivity/:id",activity_controller.updateActivity);
 router.delete("/deleteActivity/:id",activity_controller.deleteActivity);
 router.patch("/updateActivityStatus/:id",activity_controller.updateActivityStatus);
+
+//activity
+router.get("/getAllThemes",themes_controller.getAllThemes);
+router.post("/addThemes",themes_controller.addThemes);
+router.get("/getThemesById/:id",themes_controller.getThemesById);
+router.put("/updateThemes/:id",themes_controller.updateThemes);
+router.delete("/deleteThemes/:id",themes_controller.deleteThemes);
+router.patch("/updateThemesStatus/:id",themes_controller.updateThemesStatus);
 
 //groups
 router.post("/addGroup",group_controller.addGroup);
