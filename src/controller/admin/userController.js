@@ -6,6 +6,7 @@ const UsersModel = require("../../schema/userSchema");
 const GroupModel = require("../../schema/groupSchema");
 const VenueModel = require("../../schema/venueSchema");
 const jwt = require("jsonwebtoken");
+const kittySchema = require("../../schema/kittySchema");
 
 
 exports.signup = async (req, res) => {
@@ -251,11 +252,13 @@ exports.signup = async (req, res) => {
       const getAllUsers = await UsersModel.find();
       const getAllGroups = await GroupModel.find();
       const getAllVenuues = await VenueModel.find();
+      const getAllKittys = await kittySchema.find();
       res.status(200).json({ 
         message: "User information retrieved successfully", 
         user: getAllUsers.length,
         group: getAllGroups.length,
         venue: getAllVenuues.length,
+        kitty: getAllKittys.length
         
       });
     } catch (err) {
