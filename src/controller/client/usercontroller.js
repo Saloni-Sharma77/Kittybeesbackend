@@ -54,6 +54,7 @@ exports.adduserInfo = async (req, res) => {
     username,
     about,
     sociallinks,
+    location
     
   } = req.body;
 
@@ -74,6 +75,7 @@ exports.adduserInfo = async (req, res) => {
       username,
       about,
       sociallinks,
+      location
       
     });
     await newUser.save();
@@ -111,6 +113,7 @@ exports.updateUserInfo = async (req, res) => {
   if (req.body.eventArr) updateData.eventArr = req.body.eventArr;
   if (req.body.partyArr) updateData.partyArr = req.body.partyArr;
   if (req.body.activityArr) updateData.activityArr = req.body.activityArr;
+  if (req.body.location) updateData.location = req.body.location;
   if (req.body.username) updateData.username = req.body.username;
   if (req.body.about) updateData.about = req.body.about;
   if (req.body.sociallinks) updateData.sociallinks = req.body.sociallinks;
