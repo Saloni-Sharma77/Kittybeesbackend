@@ -5,7 +5,9 @@ const KittySchema = new mongoose.Schema({
     name :{type:String},
     groupId: [{ type: mongoose.Schema.Types.ObjectId, ref: "groups" }],
     userId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
-
+    date :{type:String},
+    time :{type:String},
+    image :{type:String},
     isActive:{type:Boolean,default : true},
 
 },{timestamps:true} );
