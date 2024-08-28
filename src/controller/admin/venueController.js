@@ -26,6 +26,7 @@ exports.addVenue = async (req, res) => {
   } catch (err) {
     console.error("Error adding task:", err);
     res.status(500).json({ error: "Failed to add data" });
+    
   }
 };
 exports.getAllVenues = async (req, res) => {
