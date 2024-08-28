@@ -5,6 +5,9 @@ exports.addKitty = async (req, res) => {
     const {
         name ,
         groupId,
+        date,
+        time,
+        image
       
      
     } = req.body;
@@ -12,6 +15,9 @@ exports.addKitty = async (req, res) => {
     const newKitty= new Kitty({
         name ,
         groupId,
+        date,
+        time,
+        image
      
     });
 
