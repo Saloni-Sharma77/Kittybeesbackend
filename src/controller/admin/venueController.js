@@ -5,11 +5,19 @@ exports.addVenue = async (req, res) => {
     const {
         name ,
         location,
+        lat,
+        long,
+        startTime,
+        endTime,
     } = req.body;
 
     const newVenue= new Venue({
         name,
         location,
+        lat,
+        long,
+        startTime,
+        endTime,
     });
 
     await newVenue.save();
@@ -54,6 +62,10 @@ exports.updateVenue = async (req, res) => {
         name ,
         userId,
         location,
+        lat,
+        long,
+        startTime,
+        endTime,
       VenueMembers} = req.body;
     const updatedVenue = await Venue.findByIdAndUpdate(
       req.params.id,
@@ -61,6 +73,10 @@ exports.updateVenue = async (req, res) => {
         name ,
         userId,
         location,
+        lat,
+        long,
+        startTime,
+        endTime,
     },
       { new: true }
     );
