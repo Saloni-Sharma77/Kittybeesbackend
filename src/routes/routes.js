@@ -5,6 +5,8 @@ const user_admin_controller=require("../controller/admin/userController");
 const venue_controller=require("../controller/admin/venueController");
 const kitty_controller=require("../controller/admin/kittyController");
 const interest_controller=require("../controller/admin/interestController");
+const banner_controller=require("../controller/admin/bannerController");
+const roles_controller=require("../controller/admin/roleController");
 const activity_controller=require("../controller/admin/activityController");
 const themes_controller=require("../controller/admin/themesController");
 
@@ -53,7 +55,17 @@ router.post("/addInterest",interest_controller.addInterest);
 router.get("/getInterestById/:id",interest_controller.getInterestById);
 router.put("/updateInterest/:id",interest_controller.updateInterest);
 router.delete("/deleteInterest/:id",interest_controller.deleteInterest);
-router.patch("/updateInterestStatus/:id",interest_controller.updateStatus);
+router.patch("/updateInterestStatus/:id",interest_controller.updateInterestStatus);
+
+
+//Banner
+router.get("/getAllBanner",banner_controller.getAllBanner);
+router.post("/addBanner",banner_controller.addBanner);
+router.get("/getBannerById/:id",banner_controller.getBannerById);
+router.put("/updateBanner/:id",banner_controller.updateBanner);
+router.delete("/deleteBanner/:id",banner_controller.deleteBanner);
+router.patch("/updateBannerStatus/:id",banner_controller.updateBannerStatus);
+
 
 
 //activity
@@ -63,6 +75,15 @@ router.get("/getActivityById/:id",activity_controller.getActivityById);
 router.put("/updateActivity/:id",activity_controller.updateActivity);
 router.delete("/deleteActivity/:id",activity_controller.deleteActivity);
 router.patch("/updateActivityStatus/:id",activity_controller.updateActivityStatus);
+
+
+//Roles
+router.get("/getAllRoles",roles_controller.getAllRoles);
+router.post("/addRoles",roles_controller.addRoles);
+router.get("/getRolesById/:id",roles_controller.getRolesById);
+router.put("/updateRoles/:id",roles_controller.updateRoles);
+router.delete("/deleteRoles/:id",roles_controller.deleteRoles);
+
 
 //activity
 router.get("/getAllThemes",themes_controller.getAllThemes);
