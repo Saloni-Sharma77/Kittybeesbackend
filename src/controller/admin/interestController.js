@@ -107,7 +107,7 @@ exports.updateInterest = async (req, res) => {
     }
 };
 
-exports.updateStatus = async (req, res)=>{
+exports.updateInterestStatus = async (req, res)=>{
   const interestId = req.params.id; // Capture the ID from request parameters
   console.log("ghmx,jns,",interestId)
   const {
