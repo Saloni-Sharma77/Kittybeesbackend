@@ -7,8 +7,9 @@ exports.addVenue = async (req, res) => {
         location,
         lat,
         long,
-        startTime,
-        endTime,
+        image,
+        pricing,
+        contactNo,
     } = req.body;
 
     const newVenue= new Venue({
@@ -16,8 +17,9 @@ exports.addVenue = async (req, res) => {
         location,
         lat,
         long,
-        startTime,
-        endTime,
+        image,
+        pricing,
+        contactNo,
     });
 
     await newVenue.save();
@@ -26,7 +28,7 @@ exports.addVenue = async (req, res) => {
   } catch (err) {
     console.error("Error adding task:", err);
     res.status(500).json({ error: "Failed to add data" });
-    
+
   }
 };
 exports.getAllVenues = async (req, res) => {
@@ -65,8 +67,9 @@ exports.updateVenue = async (req, res) => {
         location,
         lat,
         long,
-        startTime,
-        endTime,
+        image,
+        pricing,
+        contactNo,
       VenueMembers} = req.body;
     const updatedVenue = await Venue.findByIdAndUpdate(
       req.params.id,
@@ -76,8 +79,10 @@ exports.updateVenue = async (req, res) => {
         location,
         lat,
         long,
-        startTime,
-        endTime,
+        image,
+        pricing,
+        contactNo,
+
     },
       { new: true }
     );

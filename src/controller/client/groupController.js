@@ -1,9 +1,11 @@
 const Group = require("../../schema/groupSchema");
+const mongoose = require("mongoose");
 
 exports.addGroup = async (req, res) => {
   try {
     const {
         name ,
+        userId,
         userIds,
         groupIcon ,
         groupType,
@@ -13,12 +15,14 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       groupMembers,
+      image
      
     } = req.body;
 
     const newGroup= new Group({
         name ,
         userIds,
+        userId,
         groupIcon ,
         groupType,
         description,
@@ -27,6 +31,7 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       groupMembers,
+      image
      
     });
 
@@ -66,18 +71,47 @@ exports.getGroupById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user by ID" });
   }
 };
+
+
+exports.getGroupHostedByMe = async (req, res) => {
+  try {
+    const userId  = req.params.id;
+
+
+    // Find groups where userId exactly matches the specified userId field
+    const groups = await Group.find({ userId: userId });
+
+    if (groups.length === 0) {
+      return res.status(404).json({ message: "No groups found with this user ID as the main user." });
+    }
+
+    res.status(200).json(groups);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+
+
+
+
 exports.updateGroup = async (req, res) => {
   try {
     const {
         name ,
         groupIcon ,
         groupType,
+        useId,
         userIds,
         description,
       rulesAndRegulation,
       kittyFrequency,
       groupCityArea,
       contributionAmount,
+      image,
       groupMembers} = req.body;
     const updatedGroup = await Group.findByIdAndUpdate(
       req.params.id,
@@ -85,12 +119,15 @@ exports.updateGroup = async (req, res) => {
         name ,
         userIds,
         groupIcon ,
+        useId,
+
         groupType,
         description,
       rulesAndRegulation,
       kittyFrequency,
       groupCityArea,
       contributionAmount,
+      image,
       groupMembers,
     },
       { new: true }
