@@ -98,6 +98,13 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
+router.post("/addGroupCategory", group_controller.addGroupCategory);
+router.get("/getAllGroupsCategory", group_controller.getAllGroupsCategory);
+router.get("/getGroupCategoryById/:id", group_controller.getGroupCategoryById);
+router.put("/updateCategoryGroup/:id", group_controller.updateCategoryGroup);
+router.delete("/deleteCategoryGroup/:id", group_controller.deleteCategoryGroup);
+
+
 // Venue routes
 router.post("/addVenue", venue_controller.addVenue);
 router.get("/getAllVenues", venue_controller.getAllVenues);
