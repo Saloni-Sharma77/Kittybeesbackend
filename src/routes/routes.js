@@ -98,11 +98,19 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
+// gorup category routes
 router.post("/addGroupCategory", group_controller.addGroupCategory);
 router.get("/getAllGroupsCategory", group_controller.getAllGroupsCategory);
 router.get("/getGroupCategoryById/:id", group_controller.getGroupCategoryById);
 router.put("/updateCategoryGroup/:id", group_controller.updateCategoryGroup);
 router.delete("/deleteCategoryGroup/:id", group_controller.deleteCategoryGroup);
+
+// gorup interest routes
+router.post("/addGroupInterest", group_controller.addGroupInterest);
+router.get("/getAllGroupsInterest", group_controller.getAllGroupsInterest);
+router.get("/getGroupInterestById/:id", group_controller.getGroupInterestById);
+router.put("/updateInterestGroup/:id", group_controller.updateInterestGroup);
+router.delete("/deleteInterestGroup/:id", group_controller.deleteInterestGroup);
 
 
 // Venue routes
