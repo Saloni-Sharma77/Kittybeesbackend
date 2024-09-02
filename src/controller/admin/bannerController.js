@@ -3,9 +3,9 @@ const BannerModel = require('../../schema/bannerSchema');
 
 exports.addBanner = async (req, res) => {
     try {
-        const { image} = req.body;
+        const { image,video} = req.body;
         const newBanner = new BannerModel({
-            image,
+            image,video
         });
   
         await newBanner.save();
@@ -21,11 +21,11 @@ exports.addBanner = async (req, res) => {
   exports.updateBanner = async (req, res) => {
     try {
         const { id } = req.params;
-        const { image } = req.body;
+        const { image,video } = req.body;
   
         const updatedBanner = await BannerModel.findByIdAndUpdate(
             id,
-            { image },
+            { image ,video},
             { new: true, runValidators: true }
         );
   
