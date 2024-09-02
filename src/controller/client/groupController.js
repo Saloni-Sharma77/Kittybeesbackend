@@ -1,5 +1,6 @@
 const Group = require("../../schema/groupSchema");
 const GroupCategoryModel = require("../../schema/groupCategorySchema");
+const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
 
 exports.addGroup = async (req, res) => {
@@ -198,6 +199,85 @@ exports.deleteCategoryGroup = async (req, res) => {
   try {
     const deletedgroupcat = await GroupCategoryModel.findByIdAndDelete(req.params.id);
     if (!deletedgroupcat) {
+      return res.status(404).json({ error: "Data not found" });
+    }
+    res.status(200).json({ message: "Data deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting group:", err);
+    res.status(500).json({ error: "Failed to delete group" });
+  }
+};
+
+//group Interest
+exports.addGroupInterest = async (req, res) => {
+  try {
+    const {
+        name ,
+    } = req.body;
+    const newGroupInt= new GroupInterestModel({
+        name ,
+    });
+
+    await newGroupInt.save();
+
+    res.status(201).json({ message: "Group Interest added successfully", task: newGroupInt });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add GroupInterest" });
+  }
+};
+exports.getAllGroupsInterest = async (req, res) => {
+  try {
+    const getAllGroupInt = await GroupInterestModel.find().sort({ createdAt: -1 }) ;
+   
+    res
+      .status(200)
+      .json({ message: "Group Interest List fetched successfully", data: getAllGroupInt });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getGroupInterestById = async (req, res) => {
+  const groupintId = req.params.id;
+
+  try {
+    const groupint = await GroupInterestModel.findById(groupintId);
+    if (!groupint) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    res.status(200).json(groupint);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user by ID" });
+  }
+};
+
+exports.updateInterestGroup = async (req, res) => {
+  try {
+    const {
+        name ,
+      } = req.body;
+    const updatedcatGroup = await GroupInterestModel.findByIdAndUpdate(
+      req.params.id,
+    {
+        name ,
+    },
+      { new: true }
+    );
+    if (!updatedintGroup) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+    res.status(200).json(updatedintGroup);
+  } catch (err) {
+    console.error("Error updating Group:", err);
+    res.status(500).json({ error: "Failed to update Group" });
+  }
+};
+exports.deleteInterestGroup = async (req, res) => {
+  try {
+    const deletedgroupint = await GroupInterestModel.findByIdAndDelete(req.params.id);
+    if (!deletedgroupint) {
       return res.status(404).json({ error: "Data not found" });
     }
     res.status(200).json({ message: "Data deleted successfully" });
