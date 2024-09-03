@@ -92,6 +92,7 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 // Group routes
 router.post("/addGroup", group_controller.addGroup);
 router.get("/getAllGroups", group_controller.getAllGroups);
+router.get("/searchGroups", group_controller.searchGroups);
 router.get("/getGroupById/:id", group_controller.getGroupById);
 router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);

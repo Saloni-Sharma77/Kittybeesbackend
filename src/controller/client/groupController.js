@@ -57,6 +57,22 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+exports.searchGroups = async (req, res) => {
+  try {
+    const { name } = req.query; // Get the search term from the query parameters
+    const query = name ? { name: { $regex: name, $options: "i" } } : {};
+    const getAllGroup = await Group.find(query)
+      .populate('userIds')
+      .sort({ createdAt: -1 });
+    res
+      .status(200)
+      .json({ message: "Group List fetched successfully", data: getAllGroup });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
@@ -129,6 +145,7 @@ exports.deleteGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to delete group" });
   }
 };
+
 //group Category
 exports.addGroupCategory = async (req, res) => {
   try {
