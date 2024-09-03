@@ -18,6 +18,7 @@ const user_controller = require("../controller/client/usercontroller");
 const otp_controller = require("../controller/client/otpcontroller");
 const group_controller = require("../controller/client/groupController");
 const post_controller = require("../controller/client/postController");
+const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
 const message_controller = require("../controller/client/messageController");
 
@@ -122,6 +123,13 @@ router.get("/getPostById/:id", post_controller.getPostById);
 router.put("/updatePostById/:id", post_controller.updatePostById);
 router.delete("/deletePostById/:id", post_controller.deletePostById);
 
+//wishlist routes
+router.post("/addWishlist", wishlist_controller.addWishlist);
+router.get("/getAllWishlist", wishlist_controller.getAllWishlist);
+router.get("/getAllWishlistByme/:id", wishlist_controller.getAllWishlistByme);
+router.get("/getWishlistById/:id", wishlist_controller.getWishlistById);
+router.put("/updateWishlistById/:id", wishlist_controller.updateWishlistById);
+router.delete("/deleteWishlistById/:id", wishlist_controller.deleteWishlistById);
 
 // Venue routes
 router.post("/addVenue", venue_controller.addVenue);
