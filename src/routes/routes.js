@@ -17,6 +17,7 @@ const venueCategory_controller = require("../controller/admin/venueCategoryContr
 const user_controller = require("../controller/client/usercontroller");
 const otp_controller = require("../controller/client/otpcontroller");
 const group_controller = require("../controller/client/groupController");
+const post_controller = require("../controller/client/postController");
 const chat_controller = require("../controller/client/chatController");
 const message_controller = require("../controller/client/messageController");
 
@@ -112,6 +113,14 @@ router.get("/getAllGroupsInterest", group_controller.getAllGroupsInterest);
 router.get("/getGroupInterestById/:id", group_controller.getGroupInterestById);
 router.put("/updateInterestGroup/:id", group_controller.updateInterestGroup);
 router.delete("/deleteInterestGroup/:id", group_controller.deleteInterestGroup);
+
+//post routes
+router.post("/addPost", post_controller.addPost);
+router.get("/getAllPost", post_controller.getAllPost);
+router.get("/getAllPostByme/:id", post_controller.getAllPostByme);
+router.get("/getPostById/:id", post_controller.getPostById);
+router.put("/updatePostById/:id", post_controller.updatePostById);
+router.delete("/deletePostById/:id", post_controller.deletePostById);
 
 
 // Venue routes
