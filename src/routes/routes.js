@@ -92,11 +92,27 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 // Group routes
 router.post("/addGroup", group_controller.addGroup);
 router.get("/getAllGroups", group_controller.getAllGroups);
+router.get("/searchGroups", group_controller.searchGroups);
 router.get("/getGroupById/:id", group_controller.getGroupById);
 router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+
+// gorup category routes
+router.post("/addGroupCategory", group_controller.addGroupCategory);
+router.get("/getAllGroupsCategory", group_controller.getAllGroupsCategory);
+router.get("/getGroupCategoryById/:id", group_controller.getGroupCategoryById);
+router.put("/updateCategoryGroup/:id", group_controller.updateCategoryGroup);
+router.delete("/deleteCategoryGroup/:id", group_controller.deleteCategoryGroup);
+
+// gorup interest routes
+router.post("/addGroupInterest", group_controller.addGroupInterest);
+router.get("/getAllGroupsInterest", group_controller.getAllGroupsInterest);
+router.get("/getGroupInterestById/:id", group_controller.getGroupInterestById);
+router.put("/updateInterestGroup/:id", group_controller.updateInterestGroup);
+router.delete("/deleteInterestGroup/:id", group_controller.deleteInterestGroup);
+
 
 // Venue routes
 router.post("/addVenue", venue_controller.addVenue);
