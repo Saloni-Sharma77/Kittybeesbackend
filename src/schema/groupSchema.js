@@ -21,7 +21,7 @@ const GroupSchema = new mongoose.Schema(
     contributionAmount: { type: String },
     groupMembers: { type: String },
     isActive:{type:Boolean,default : true},
-    // interests: {  type: [String], default: []},
+    interests: {type:String,},
     // GroupStatus: {type: String,enum: ['JoiniSatus', 'Requested'],required: true },
 
   },

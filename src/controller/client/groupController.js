@@ -54,11 +54,16 @@ exports.getAllGroups = async (req, res) => {
     const { name } = req.query; // Get the search term from the query parameters
 
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
-    const getAllGroup = await Group.find().populate('userIds').sort({ createdAt: -1 }) ;
+    const getAllGroup = await Group.find().populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
+
+    const groupsWithUserCount = getAllGroup.map(group => ({
+      ...group.toObject(),
+      userCount: group.userIds.length, // Add userCount property
+    }));
    
     res
       .status(200)
-      .json({ message: "Group List fetched successfully", data: getAllGroup });
+      .json({ message: "Group List fetched successfully", data: getAllGroup,members:groupsWithUserCount });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -76,7 +81,7 @@ exports.getGroupById = async (req, res) => {
       return res.status(404).json({ error: "Request not found" });
     }
 
-    res.status(200).json(user);
+    res.status(200).json({data:user,members:user.userIds.length});
   } catch (error) {
     console.error("Error fetching Group Request by ID:", error);
     res.status(500).json({ error: "Failed to fetch user by ID" });
