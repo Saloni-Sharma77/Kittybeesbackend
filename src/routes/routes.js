@@ -79,11 +79,12 @@ router.delete("/deleteColor/:id", color_controller.deleteColor);
 router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
 
 //address routes
-router.post('/address', address_controller.createAddress);
-router.get('/addresses', address_controller.getAllAddresses);
-router.get('/address/:id', address_controller.getAddressById);
-router.put('/address/:id', address_controller.updateAddressById);
-router.delete('/address/:id', address_controller.deleteAddressById);
+router.post('/createAddress', address_controller.createAddress);
+router.get('/getAllAddresses', address_controller.getAllAddresses);
+router.get('/getAddressById/:id', address_controller.getAddressById);
+router.put('/updateAddressById/:id', address_controller.updateAddressById);
+router.delete('/deleteAddressById/:id', address_controller.deleteAddressById);
+router.get('/getAddressByUserId/:userId', address_controller.getAddressByUserId);
 
 // Activity routes
 router.get("/getAllActivity", activity_controller.getAllActivity);
@@ -117,12 +118,12 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
-// gorup category routes
-router.post("/addGroupCategory", group_controller.addGroupCategory);
-router.get("/getAllGroupsCategory", group_controller.getAllGroupsCategory);
-router.get("/getGroupCategoryById/:id", group_controller.getGroupCategoryById);
-router.put("/updateCategoryGroup/:id", group_controller.updateCategoryGroup);
-router.delete("/deleteCategoryGroup/:id", group_controller.deleteCategoryGroup);
+// gorup frequency routes
+router.post("/addGroupFrequency", group_controller.addGroupFrequency);
+router.get("/getAllGroupsFrequency", group_controller.getAllGroupsFrequency);
+router.get("/getGroupFrequencyById/:id", group_controller.getGroupFrequencyById);
+router.put("/updateFrequencyGroup/:id", group_controller.updateFrequencyGroup);
+router.delete("/deleteFrequencyGroup/:id", group_controller.deleteFrequencyGroup);
 
 // gorup interest routes
 router.post("/addGroupInterest", group_controller.addGroupInterest);

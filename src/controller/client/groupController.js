@@ -1,5 +1,5 @@
 const Group = require("../../schema/groupSchema");
-const GroupCategoryModel = require("../../schema/groupCategorySchema");
+const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
 
@@ -10,7 +10,7 @@ exports.addGroup = async (req, res) => {
         userId,
         userIds,
         groupInterestId,
-        groupCategoryId,
+        groupFrequencyId,
         groupIcon ,
         groupType,
         description,
@@ -28,7 +28,7 @@ exports.addGroup = async (req, res) => {
         userIds,
         userId,
         groupInterestId,
-        groupCategoryId,
+        groupFrequencyId,
         groupIcon ,
         groupType,
         description,
@@ -71,7 +71,7 @@ exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
 
   try {
-    const user = await Group.findById(groupId);
+    const user = await Group.findById(groupId).populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId');
     if (!user) {
       return res.status(404).json({ error: "Request not found" });
     }
@@ -93,7 +93,7 @@ exports.updateGroup = async (req, res) => {
         userIds,
         description,
         groupInterestId,
-        groupCategoryId,
+        groupFrequencyId,
       rulesAndRegulation,
       kittyFrequency,
       groupCityArea,
@@ -108,7 +108,7 @@ exports.updateGroup = async (req, res) => {
         groupIcon ,
         useId,
         groupInterestId,
-        groupCategoryId,
+        groupFrequencyId,
         groupType,
         description,
       rulesAndRegulation,
@@ -142,41 +142,41 @@ exports.deleteGroup = async (req, res) => {
   }
 };
 
-//group Category
-exports.addGroupCategory = async (req, res) => {
+//group Frequency
+exports.addGroupFrequency = async (req, res) => {
   try {
     const {
         name ,
     } = req.body;
-    const newGroupCat= new GroupCategoryModel({
+    const newGroupCat= new GroupFrequencyModel({
         name ,
     });
 
     await newGroupCat.save();
 
-    res.status(201).json({ message: "Group Category added successfully", task: newGroupCat });
+    res.status(201).json({ message: "Group Frequency added successfully", task: newGroupCat });
   } catch (err) {
-    res.status(500).json({ error: "Failed to add GroupCategory" });
+    res.status(500).json({ error: "Failed to add GroupFrequency" });
   }
 };
-exports.getAllGroupsCategory = async (req, res) => {
+exports.getAllGroupsFrequency = async (req, res) => {
   try {
-    const getAllGroupCat = await GroupCategoryModel.find().sort({ createdAt: -1 }) ;
+    const getAllGroupCat = await GroupFrequencyModel.find().sort({ createdAt: -1 }) ;
    
     res
       .status(200)
-      .json({ message: "Group Category List fetched successfully", data: getAllGroupCat });
+      .json({ message: "Group Frequency List fetched successfully", data: getAllGroupCat });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-exports.getGroupCategoryById = async (req, res) => {
+exports.getGroupFrequencyById = async (req, res) => {
   const groupcatId = req.params.id;
 
   try {
-    const groupc = await GroupCategoryModel.findById(groupcatId);
+    const groupc = await GroupFrequencyModel.findById(groupcatId);
     if (!groupc) {
       return res.status(404).json({ error: "Request not found" });
     }
@@ -187,12 +187,12 @@ exports.getGroupCategoryById = async (req, res) => {
   }
 };
 
-exports.updateCategoryGroup = async (req, res) => {
+exports.updateFrequencyGroup = async (req, res) => {
   try {
     const {
         name ,
       } = req.body;
-    const updatedcatGroup = await GroupCategoryModel.findByIdAndUpdate(
+    const updatedcatGroup = await GroupFrequencyModel.findByIdAndUpdate(
       req.params.id,
     {
         name ,
@@ -208,9 +208,9 @@ exports.updateCategoryGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to update Group" });
   }
 };
-exports.deleteCategoryGroup = async (req, res) => {
+exports.deleteFrequencyGroup = async (req, res) => {
   try {
-    const deletedgroupcat = await GroupCategoryModel.findByIdAndDelete(req.params.id);
+    const deletedgroupcat = await GroupFrequencyModel.findByIdAndDelete(req.params.id);
     if (!deletedgroupcat) {
       return res.status(404).json({ error: "Data not found" });
     }
@@ -220,6 +220,9 @@ exports.deleteCategoryGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to delete group" });
   }
 };
+
+
+
 
 //group Interest
 exports.addGroupInterest = async (req, res) => {

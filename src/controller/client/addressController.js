@@ -60,6 +60,22 @@ exports.createAddress = async (req, res) => {
     }
   };
 
+
+  exports.getAddressByUserId = async (req, res) => {
+    try {
+      const address = await AddressModel.findOne({ userId: req.params.userId });
+  
+      if (!address) {
+        return res.status(404).json({ error: 'Address not found' });
+      }
+  
+      res.status(200).json(address);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
+
   
   exports.deleteAddressById = async (req, res) => {
     try {
