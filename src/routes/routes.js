@@ -8,6 +8,7 @@ const venue_controller = require("../controller/admin/venueController");
 const kitty_controller = require("../controller/admin/kittyController");
 const interest_controller = require("../controller/admin/interestController");
 const banner_controller = require("../controller/admin/bannerController");
+const color_controller = require("../controller/admin/colorController");
 const roles_controller = require("../controller/admin/roleController");
 const activity_controller = require("../controller/admin/activityController");
 const themes_controller = require("../controller/admin/themesController");
@@ -20,6 +21,7 @@ const group_controller = require("../controller/client/groupController");
 const post_controller = require("../controller/client/postController");
 const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
+const address_controller = require("../controller/client/addressController");
 const message_controller = require("../controller/client/messageController");
 
 // Client routes
@@ -68,6 +70,22 @@ router.put("/updateBanner/:id", banner_controller.updateBanner);
 router.delete("/deleteBanner/:id", banner_controller.deleteBanner);
 router.patch("/updateBannerStatus/:id", banner_controller.updateBannerStatus);
 
+// Color routes
+router.get("/getAllColor", color_controller.getAllColor);
+router.post("/addColor", color_controller.addColor);
+router.get("/getColorById/:id", color_controller.getColorById);
+router.put("/updateColor/:id", color_controller.updateColor);
+router.delete("/deleteColor/:id", color_controller.deleteColor);
+router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
+
+//address routes
+router.post('/createAddress', address_controller.createAddress);
+router.get('/getAllAddresses', address_controller.getAllAddresses);
+router.get('/getAddressById/:id', address_controller.getAddressById);
+router.put('/updateAddressById/:id', address_controller.updateAddressById);
+router.delete('/deleteAddressById/:id', address_controller.deleteAddressById);
+router.get('/getAddressByUserId/:userId', address_controller.getAddressByUserId);
+
 // Activity routes
 router.get("/getAllActivity", activity_controller.getAllActivity);
 router.post("/addActivity", activity_controller.addActivity);
@@ -94,19 +112,18 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 // Group routes
 router.post("/addGroup", group_controller.addGroup);
 router.get("/getAllGroups", group_controller.getAllGroups);
-router.get("/searchGroups", group_controller.searchGroups);
 router.get("/getGroupById/:id", group_controller.getGroupById);
 router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
-// gorup category routes
-router.post("/addGroupCategory", group_controller.addGroupCategory);
-router.get("/getAllGroupsCategory", group_controller.getAllGroupsCategory);
-router.get("/getGroupCategoryById/:id", group_controller.getGroupCategoryById);
-router.put("/updateCategoryGroup/:id", group_controller.updateCategoryGroup);
-router.delete("/deleteCategoryGroup/:id", group_controller.deleteCategoryGroup);
+// gorup frequency routes
+router.post("/addGroupFrequency", group_controller.addGroupFrequency);
+router.get("/getAllGroupsFrequency", group_controller.getAllGroupsFrequency);
+router.get("/getGroupFrequencyById/:id", group_controller.getGroupFrequencyById);
+router.put("/updateFrequencyGroup/:id", group_controller.updateFrequencyGroup);
+router.delete("/deleteFrequencyGroup/:id", group_controller.deleteFrequencyGroup);
 
 // gorup interest routes
 router.post("/addGroupInterest", group_controller.addGroupInterest);

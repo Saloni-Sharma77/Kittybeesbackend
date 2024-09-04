@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const groupCategorySchema = new mongoose.Schema({
+const groupFrequencySchema = new mongoose.Schema({
     name :{type:String,
         unique: true, // Ensure the name is unique
         trim: true
@@ -8,4 +8,4 @@ const groupCategorySchema = new mongoose.Schema({
     isActive:{type:Boolean,default : true},
 },{timestamps:true} );
 
-module.exports = mongoose.model('groupcategory', groupCategorySchema);
+module.exports = mongoose.model('groupfrequency', groupFrequencySchema);
