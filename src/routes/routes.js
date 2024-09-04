@@ -21,6 +21,7 @@ const group_controller = require("../controller/client/groupController");
 const post_controller = require("../controller/client/postController");
 const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
+const address_controller = require("../controller/client/addressController");
 const message_controller = require("../controller/client/messageController");
 
 // Client routes
@@ -76,6 +77,13 @@ router.get("/getColorById/:id", color_controller.getColorById);
 router.put("/updateColor/:id", color_controller.updateColor);
 router.delete("/deleteColor/:id", color_controller.deleteColor);
 router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
+
+//address routes
+router.post('/address', address_controller.createAddress);
+router.get('/addresses', address_controller.getAllAddresses);
+router.get('/address/:id', address_controller.getAddressById);
+router.put('/address/:id', address_controller.updateAddressById);
+router.delete('/address/:id', address_controller.deleteAddressById);
 
 // Activity routes
 router.get("/getAllActivity", activity_controller.getAllActivity);
