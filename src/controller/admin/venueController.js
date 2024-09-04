@@ -4,6 +4,7 @@ exports.addVenue = async (req, res) => {
   try {
     const {
         name ,
+        userId,
         location,
         lat,
         long,
@@ -15,6 +16,8 @@ exports.addVenue = async (req, res) => {
     const newVenue= new Venue({
         name,
         location,
+        userId,
+
         lat,
         long,
         image,
@@ -34,6 +37,21 @@ exports.addVenue = async (req, res) => {
 exports.getAllVenues = async (req, res) => {
   try {
     const getAllVenue = await Venue.find().sort({ createdAt: -1 }) ;
+   
+    res
+      .status(200)
+      .json({ message: "Data fetched successfully", data: getAllVenue });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getAllVenuesHostedbyMe = async (req, res) => {
+  try {
+    const userId  = req.params.id;
+
+    const getAllVenue = await Venue.find({ userId: userId }).sort({ createdAt: -1 }) ;
    
     res
       .status(200)
