@@ -9,6 +9,7 @@ const kitty_controller = require("../controller/admin/kittyController");
 const interest_controller = require("../controller/admin/interestController");
 const banner_controller = require("../controller/admin/bannerController");
 const color_controller = require("../controller/admin/colorController");
+const city_controller = require("../controller/admin/cityController");
 const roles_controller = require("../controller/admin/roleController");
 const activity_controller = require("../controller/admin/activityController");
 const themes_controller = require("../controller/admin/themesController");
@@ -77,6 +78,14 @@ router.get("/getColorById/:id", color_controller.getColorById);
 router.put("/updateColor/:id", color_controller.updateColor);
 router.delete("/deleteColor/:id", color_controller.deleteColor);
 router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
+
+// City routes
+router.get("/getAllCity", city_controller.getAllCity);
+router.post("/addCity", city_controller.addCity);
+router.get("/getCityById/:id", city_controller.getCityById);
+router.put("/updateCity/:id", city_controller.updateCity);
+router.delete("/deleteCity/:id", city_controller.deleteCity);
+router.patch("/updateCityStatus/:id", city_controller.updateCityStatus);
 
 //address routes
 router.post('/createAddress', address_controller.createAddress);

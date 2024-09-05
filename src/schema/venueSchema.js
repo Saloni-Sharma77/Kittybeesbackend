@@ -5,6 +5,7 @@ const GroupSchema = new mongoose.Schema({
   name :{type:String},
   userId:{type:String,ref:'Users'},
   venueCatId:{type:String,ref:'venueCategory'},
+  cityId:{type:String,ref:'city'},
   location:{type:String},
   lat:{type:String},
   long:{type:String},

@@ -322,7 +322,7 @@ exports.getGroupHostedByMe = async (req, res) => {
       return res.status(404).json({ message: "No groups found with this user ID as the main user." });
     }
 
-    res.status(200).json(groups);
+    res.status(200).json(groups).sort({ createdAt: -1 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

@@ -50,6 +50,20 @@ exports.getAllVenues = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getAllCities = async (req, res) => {
+  try {
+  
+    const getAllCity = await Venue.find();
+   
+    res
+      .status(200)
+      .json({ message: "Data fetched successfully", data: getAllCity });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 //
 
 // Helper function to calculate distance between two coordinates
