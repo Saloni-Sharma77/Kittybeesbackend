@@ -79,13 +79,13 @@ router.put("/updateColor/:id", color_controller.updateColor);
 router.delete("/deleteColor/:id", color_controller.deleteColor);
 router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
 
-// City routes
-router.get("/getAllCity", city_controller.getAllCity);
-router.post("/addCity", city_controller.addCity);
-router.get("/getCityById/:id", city_controller.getCityById);
-router.put("/updateCity/:id", city_controller.updateCity);
-router.delete("/deleteCity/:id", city_controller.deleteCity);
-router.patch("/updateCityStatus/:id", city_controller.updateCityStatus);
+// // City routes
+// router.get("/getAllCity", city_controller.getAllCity);
+// router.post("/addCity", city_controller.addCity);
+// router.get("/getCityById/:id", city_controller.getCityById);
+// router.put("/updateCity/:id", city_controller.updateCity);
+// router.delete("/deleteCity/:id", city_controller.deleteCity);
+// router.patch("/updateCityStatus/:id", city_controller.updateCityStatus);
 
 //address routes
 router.post('/createAddress', address_controller.createAddress);
