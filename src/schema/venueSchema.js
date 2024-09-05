@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const GroupSchema = new mongoose.Schema({
   name :{type:String},
   userId:{type:String,ref:'Users'},
+  venueCatId:{type:String,ref:'venueCategory'},
   location:{type:String},
   lat:{type:String},
   long:{type:String},
