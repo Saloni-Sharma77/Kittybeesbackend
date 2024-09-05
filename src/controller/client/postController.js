@@ -1,27 +1,29 @@
 const PostModel = require("../../schema/postSchema");
 // Add a new post
 exports.addPost = async (req, res) => {
-    try {
-      const { name, userId, description, image, isActive } = req.body;
-  
-      // Create a new post
-      const newPost = new PostModel({
-        name,
-        userId,
-        description,
-        image,
-        isActive
-      });
-  
-      // Save the post to the database
-      await newPost.save();
-  
-      res.status(201).json({ message: 'Post created successfully', data: newPost });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
+  try {
+    const { name, userId, description, image, isActive, poll } = req.body;
+
+    // Create a new post
+    const newPost = new PostModel({
+      name,
+      userId,
+      description,
+      image,
+      isActive,
+      poll // Add the poll data here
+    });
+
+    // Save the post to the database
+    await newPost.save();
+
+    res.status(201).json({ message: 'Post created successfully', data: newPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 
   // Get all posts
 exports.getAllPost = async (req, res) => {
