@@ -54,7 +54,7 @@ exports.getAllGroups = async (req, res) => {
     const { name } = req.query; // Get the search term from the query parameters
 
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
-    const getAllGroup = await Group.find().populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
+    const getAllGroup = await Group.find(query).populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
 
     const groupsWithUserCount = getAllGroup.map(group => ({
       ...group.toObject(),

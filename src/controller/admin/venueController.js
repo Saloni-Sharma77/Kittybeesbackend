@@ -36,7 +36,10 @@ exports.addVenue = async (req, res) => {
 };
 exports.getAllVenues = async (req, res) => {
   try {
-    const getAllVenue = await Venue.find().sort({ createdAt: -1 }) ;
+    const { name } = req.query; // Get the search term from the query parameters
+
+    const query = name ? { name: { $regex: name, $options: "i" } } : {};
+    const getAllVenue = await Venue.find(query).sort({ createdAt: -1 }) ;
    
     res
       .status(200)
