@@ -1,4 +1,4 @@
-const CityModel = require('../../schema/CitySchema');
+const CityModel = require('../../schema/citySchema');
 
 
 exports.addCity = async (req, res) => {
