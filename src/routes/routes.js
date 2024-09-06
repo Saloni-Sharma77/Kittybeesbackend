@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
+
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
 const venue_controller = require("../controller/admin/venueController");
@@ -24,6 +25,8 @@ const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
 const address_controller = require("../controller/client/addressController");
 const message_controller = require("../controller/client/messageController");
+const postTagController = require('../controller/client/postTagControllers');
+const feedbackController = require('../controller/client/feedbackController');
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -35,6 +38,7 @@ router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);
 router.put("/updateUserInfo", user_controller.updateUserInfo);
 router.get("/getUserDetailByMobileNumber/:phoneNumber", user_controller.getUserDetailByMobileNumber);
+
 
 // Chat routes
 router.post("/createChat", chat_controller.createChat);
@@ -178,5 +182,28 @@ router.post("/addKitty", kitty_controller.addKitty);
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
+
+
+
+//PostTag Routes
+router.post('/posttags', postTagController.createPostTag); // Create post tag
+router.get('/posttags', postTagController.getAllPostTags); // Get all post tags
+router.get('/posttags/:id', postTagController.getPostTagById); // Get post tag by ID
+router.put('/posttags/:id', postTagController.updatePostTag); // Update post tag by ID
+router.delete('/posttags/:id', postTagController.deletePostTag); // Delete post tag by ID
+
+//FeedBack Route
+router.post('/feedback', feedbackController.createFeedback);
+router.get('/feedback', feedbackController.getFeedbacks);
+router.get('/feedback/:id', feedbackController.getFeedbackById);
+router.put('/feedback/:id', feedbackController.updateFeedback);
+router.delete('/feedback/:id', feedbackController.deleteFeedback);
+
+
+
+
+
+
+
 
 module.exports = router;
