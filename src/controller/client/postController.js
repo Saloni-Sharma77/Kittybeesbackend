@@ -69,7 +69,7 @@ exports.toggleLike = async (req, res) => {
     const { postId, userId } = req.body;
 
     // Find the post by ID
-    const post = await Post.findById(postId);
+    const post = await PostModel.findById(postId);
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -103,7 +103,7 @@ exports.addComment = async (req, res) => {
     const { postId, userId, text } = req.body;
 
     // Find the post by ID
-    const post = await Post.findById(postId);
+    const post = await PostModel.findById(postId);
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -129,7 +129,7 @@ exports.deleteComment = async (req, res) => {
     const { postId, commentId, userId } = req.body;
 
     // Find the post by ID
-    const post = await Post.findById(postId);
+    const post = await PostModel.findById(postId);
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
