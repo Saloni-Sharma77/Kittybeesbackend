@@ -148,6 +148,9 @@ router.delete("/deleteInterestGroup/:id", group_controller.deleteInterestGroup);
 //post routes
 router.post("/addPost", post_controller.addPost);
 router.post("/voteForPost", post_controller.voteForPost);
+router.post("/toggleLike", post_controller.toggleLike);
+router.post("/addComment", post_controller.addComment);
+router.post("/deleteComment", post_controller.deleteComment);
 router.get("/getAllPost", post_controller.getAllPost);
 router.get("/getAllPostByme/:id", post_controller.getAllPostByme);
 router.get("/getPostById/:id", post_controller.getPostById);
