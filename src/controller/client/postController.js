@@ -26,7 +26,7 @@ exports.addPost = async (req, res) => {
 
 exports.voteForPost = async (req, res) => {
   try {
-    const { postId, optionId } = req.body;
+    const { postId, optionId, userId } = req.body; // Include userId to track who voted
 
     // Find the post by ID
     const post = await PostModel.findById(postId);
@@ -35,26 +35,125 @@ exports.voteForPost = async (req, res) => {
       return res.status(404).json({ message: 'Post or poll not found' });
     }
 
-    // Find the option by ID and increment its vote count
+    // Find the option by ID
     const option = post.poll.options.id(optionId);
     if (!option) {
       return res.status(404).json({ message: 'Option not found' });
     }
 
-    option.votes += 1;
+    // Check if the user has already voted for this option
+    const hasVotedIndex = option.voters.findIndex(voter => voter.toString() === userId); // Ensure string comparison
+
+    if (hasVotedIndex !== -1) {
+      // If the user has already voted, remove their vote
+      option.votes -= 1;
+      option.voters.splice(hasVotedIndex, 1); // Remove the user from voters array
+    } else {
+      // If the user hasn't voted, add their vote
+      option.votes += 1;
+      option.voters.push(userId); // Add userId to voters array
+    }
 
     // Save the updated post
     await post.save();
 
-    res.status(200).json({ message: 'Vote recorded successfully', post });
+    res.status(200).json({ message: 'Vote updated successfully', post });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+// Like or Unlike a Post
+exports.toggleLike = async (req, res) => {
+  try {
+    const { postId, userId } = req.body;
 
+    // Find the post by ID
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if the user has already liked the post
+    const likeIndex = post.likes.findIndex(like => like.toString() === userId);
+
+    if (likeIndex !== -1) {
+      // User has already liked the post, so unlike (remove the like)
+      post.likes.splice(likeIndex, 1);
+    } else {
+      // User has not liked the post yet, so add the like
+      post.likes.push(userId);
+    }
+
+    // Save the updated post
+    await post.save();
+
+    res.status(200).json({ message: 'Like status updated successfully', post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 
+// Add a comment to a post
+exports.addComment = async (req, res) => {
+  try {
+    const { postId, userId, text } = req.body;
+
+    // Find the post by ID
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Add the new comment to the post
+    post.comments.push({ userId, text });
+
+    // Save the updated post
+    await post.save();
+
+    res.status(200).json({ message: 'Comment added successfully', post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+// Delete a comment from a post
+exports.deleteComment = async (req, res) => {
+  try {
+    const { postId, commentId, userId } = req.body;
+
+    // Find the post by ID
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Find the comment and check if the user is the owner of the comment
+    const commentIndex = post.comments.findIndex(comment => comment._id.toString() === commentId && comment.userId.toString() === userId);
+
+    if (commentIndex === -1) {
+      return res.status(403).json({ message: 'Comment not found or you do not have permission to delete this comment' });
+    }
+
+    // Remove the comment from the comments array
+    post.comments.splice(commentIndex, 1);
+
+    // Save the updated post
+    await post.save();
+
+    res.status(200).json({ message: 'Comment deleted successfully', post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 
   // Get all posts

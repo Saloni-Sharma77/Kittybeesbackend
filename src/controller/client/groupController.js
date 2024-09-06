@@ -316,13 +316,13 @@ exports.getGroupHostedByMe = async (req, res) => {
 
 
     // Find groups where userId exactly matches the specified userId field
-    const groups = await Group.find({ userId: userId });
+    const groups = await Group.find({ userId: userId }).sort({ createdAt: -1 });
 
     if (groups.length === 0) {
       return res.status(404).json({ message: "No groups found with this user ID as the main user." });
     }
 
-    res.status(200).json(groups).sort({ createdAt: -1 });
+    res.status(200).json(groups);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

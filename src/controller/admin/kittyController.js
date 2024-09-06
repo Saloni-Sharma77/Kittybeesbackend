@@ -7,7 +7,14 @@ exports.addKitty = async (req, res) => {
         groupId,
         date,
         time,
-        image
+        image,
+        themeId,
+        instructions,
+        colorId,
+        venueId,
+        activityId,
+        templateId
+
       
      
     } = req.body;
@@ -17,7 +24,15 @@ exports.addKitty = async (req, res) => {
         groupId,
         date,
         time,
-        image
+        image,
+        themeId,
+        instructions,
+        colorId,
+        venueId,
+        activityId,
+        templateId
+
+
      
     });
 
