@@ -28,7 +28,8 @@ const message_controller = require("../controller/client/messageController");
 const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
-const theamepollcontrollers = require('../controller/client/theamPollController');
+const faqController = require('../controller/client/faqControllers');
+
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -212,13 +213,13 @@ router.put('/updateTemplateById/:id', templateController.updateTemplateById);
 router.delete('/deleteTemplateById/:id', templateController.deleteTemplateById);
 
 
-//Theam Poll Routes
-router.post('/polls', theamepollcontrollers.createPoll);
-router.get('/polls', theamepollcontrollers.getAllPolls);
-router.get('/polls/:id', theamepollcontrollers.getPollById);
-router.put('/polls/:id', theamepollcontrollers.updatePoll);
-router.delete('/polls/:id', theamepollcontrollers.deletePoll);
 
+//FAQ Routes
+router.post('/addFAQ', faqController.addFAQ);
+router.get('/getAllFAQs', faqController.getAllFAQs);
+router.get('/getFAQById/:id', faqController.getFAQById);
+router.put('/updateFAQ/:id', faqController.updateFAQ);
+router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
 
 
 
