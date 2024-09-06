@@ -7,6 +7,8 @@ const KittySchema = new mongoose.Schema({
     userId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
     date :{type:String},
     time :{type:String},
+    themeId: { type: mongoose.Schema.Types.ObjectId, ref: "theme" },
+
     image :{type:String},
     isActive:{type:Boolean,default : true},
 

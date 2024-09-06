@@ -7,7 +7,8 @@ exports.addKitty = async (req, res) => {
         groupId,
         date,
         time,
-        image
+        image,
+        themeId
       
      
     } = req.body;
@@ -17,7 +18,8 @@ exports.addKitty = async (req, res) => {
         groupId,
         date,
         time,
-        image
+        image,
+        themeId
      
     });
 
