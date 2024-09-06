@@ -54,7 +54,7 @@ exports.getAllGroups = async (req, res) => {
     const { name } = req.query; // Get the search term from the query parameters
 
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
-    const getAllGroup = await Group.find().populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
+    const getAllGroup = await Group.find(query).populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
 
     const groupsWithUserCount = getAllGroup.map(group => ({
       ...group.toObject(),
@@ -322,7 +322,7 @@ exports.getGroupHostedByMe = async (req, res) => {
       return res.status(404).json({ message: "No groups found with this user ID as the main user." });
     }
 
-    res.status(200).json(groups);
+    res.status(200).json(groups).sort({ createdAt: -1 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

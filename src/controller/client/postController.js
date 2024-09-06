@@ -1,27 +1,61 @@
 const PostModel = require("../../schema/postSchema");
 // Add a new post
 exports.addPost = async (req, res) => {
-    try {
-      const { name, userId, description, image, isActive } = req.body;
-  
-      // Create a new post
-      const newPost = new PostModel({
-        name,
-        userId,
-        description,
-        image,
-        isActive
-      });
-  
-      // Save the post to the database
-      await newPost.save();
-  
-      res.status(201).json({ message: 'Post created successfully', data: newPost });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
+  try {
+    const { name, userId, description, image, isActive, poll } = req.body;
+
+    // Create a new post
+    const newPost = new PostModel({
+      name,
+      userId,
+      description,
+      image,
+      isActive,
+      poll // Add the poll data here
+    });
+
+    // Save the post to the database
+    await newPost.save();
+
+    res.status(201).json({ message: 'Post created successfully', data: newPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.voteForPost = async (req, res) => {
+  try {
+    const { postId, optionId } = req.body;
+
+    // Find the post by ID
+    const post = await PostModel.findById(postId);
+
+    if (!post || !post.poll) {
+      return res.status(404).json({ message: 'Post or poll not found' });
     }
-  };
+
+    // Find the option by ID and increment its vote count
+    const option = post.poll.options.id(optionId);
+    if (!option) {
+      return res.status(404).json({ message: 'Option not found' });
+    }
+
+    option.votes += 1;
+
+    // Save the updated post
+    await post.save();
+
+    res.status(200).json({ message: 'Vote recorded successfully', post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+
+};
+
+
+
 
   // Get all posts
 exports.getAllPost = async (req, res) => {
