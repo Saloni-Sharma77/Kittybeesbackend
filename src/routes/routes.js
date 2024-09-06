@@ -28,6 +28,7 @@ const message_controller = require("../controller/client/messageController");
 const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
+const theamepollcontrollers = require('../controller/client/theamPollController');
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -190,11 +191,11 @@ router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
 
 
 //PostTag Routes
-router.post('/posttags', postTagController.createPostTag); // Create post tag
-router.get('/posttags', postTagController.getAllPostTags); // Get all post tags
-router.get('/posttags/:id', postTagController.getPostTagById); // Get post tag by ID
-router.put('/posttags/:id', postTagController.updatePostTag); // Update post tag by ID
-router.delete('/posttags/:id', postTagController.deletePostTag); // Delete post tag by ID
+router.post('/createPostTag', postTagController.createPostTag); // Create post tag
+router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
+router.get('/getPostTagById/:id', postTagController.getPostTagById); // Get post tag by ID
+router.put('/updatePostTag/:id', postTagController.updatePostTag); // Update post tag by ID
+router.delete('/deletePostTag/:id', postTagController.deletePostTag); // Delete post tag by ID
 
 //FeedBack Route
 router.post('/createFeedback', feedbackController.createFeedback);
@@ -204,11 +205,19 @@ router.put('/updateFeedback/:id', feedbackController.updateFeedback);
 router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
 
 //Template Routes 
-router.post('/templates', templateController.createTemplate);
-router.get('/templates', templateController.getAllTemplates);
-router.get('/templates/:id', templateController.getTemplateById);
-router.put('/templates/:id', templateController.updateTemplateById);
-router.delete('/templates/:id', templateController.deleteTemplateById);
+router.post('/createTemplate', templateController.createTemplate);
+router.get('/getAllTemplates', templateController.getAllTemplates);
+router.get('/getTemplateById/:id', templateController.getTemplateById);
+router.put('/updateTemplateById/:id', templateController.updateTemplateById);
+router.delete('/deleteTemplateById/:id', templateController.deleteTemplateById);
+
+
+//Theam Poll Routes
+router.post('/polls', theamepollcontrollers.createPoll);
+router.get('/polls', theamepollcontrollers.getAllPolls);
+router.get('/polls/:id', theamepollcontrollers.getPollById);
+router.put('/polls/:id', theamepollcontrollers.updatePoll);
+router.delete('/polls/:id', theamepollcontrollers.deletePoll);
 
 
 
