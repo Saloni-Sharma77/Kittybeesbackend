@@ -197,11 +197,11 @@ router.put('/posttags/:id', postTagController.updatePostTag); // Update post tag
 router.delete('/posttags/:id', postTagController.deletePostTag); // Delete post tag by ID
 
 //FeedBack Route
-router.post('/feedback', feedbackController.createFeedback);
-router.get('/feedback', feedbackController.getFeedbacks);
-router.get('/feedback/:id', feedbackController.getFeedbackById);
-router.put('/feedback/:id', feedbackController.updateFeedback);
-router.delete('/feedback/:id', feedbackController.deleteFeedback);
+router.post('/createFeedback', feedbackController.createFeedback);
+router.get('/getFeedbacks', feedbackController.getFeedbacks);
+router.get('/getFeedbackById/:id', feedbackController.getFeedbackById);
+router.put('/updateFeedback/:id', feedbackController.updateFeedback);
+router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
 
 //Template Routes 
 router.post('/templates', templateController.createTemplate);

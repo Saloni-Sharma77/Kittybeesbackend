@@ -13,7 +13,6 @@ const KittySchema = new mongoose.Schema({
     venueId: { type: mongoose.Schema.Types.ObjectId, ref: "venues" },
     activityId: [{ type: mongoose.Schema.Types.ObjectId, ref: "activity" }],
     templateId: [{ type: mongoose.Schema.Types.ObjectId, ref: "template" }],
-
     image :{type:String},
     isActive:{type:Boolean,default : true},
 
