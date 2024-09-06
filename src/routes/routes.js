@@ -27,6 +27,7 @@ const address_controller = require("../controller/client/addressController");
 const message_controller = require("../controller/client/messageController");
 const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
+const templateController = require('../controller/client/templateController');
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -198,6 +199,13 @@ router.get('/feedback', feedbackController.getFeedbacks);
 router.get('/feedback/:id', feedbackController.getFeedbackById);
 router.put('/feedback/:id', feedbackController.updateFeedback);
 router.delete('/feedback/:id', feedbackController.deleteFeedback);
+
+//Template Routes 
+router.post('/templates', templateController.createTemplate);
+router.get('/templates', templateController.getAllTemplates);
+router.get('/templates/:id', templateController.getTemplateById);
+router.put('/templates/:id', templateController.updateTemplateById);
+router.delete('/templates/:id', templateController.deleteTemplateById);
 
 
 
