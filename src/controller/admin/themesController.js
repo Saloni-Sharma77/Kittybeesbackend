@@ -3,10 +3,11 @@ const ThemesModel = require("../../schema/themeSchema");
 
 exports.addThemes = async (req, res) => {
   try {
-      const { name ,image} = req.body;
+      const { name ,image,backgroundimage} = req.body;
       const newThemes = new ThemesModel({
           name,
-          image
+          image,
+          backgroundimage,
       });
 
       await newThemes.save();
@@ -22,11 +23,11 @@ exports.addThemes = async (req, res) => {
 exports.updateThemes = async (req, res) => {
   try {
       const { id } = req.params;
-      const { name,image } = req.body;
+      const { name,image ,backgroundimage} = req.body;
 
       const updatedThemes = await ThemesModel.findByIdAndUpdate(
           id,
-          { name,image },
+          { name,image,backgroundimage },
           { new: true, runValidators: true }
       );
 
