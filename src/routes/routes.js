@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
+
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
 const venue_controller = require("../controller/admin/venueController");
@@ -24,6 +25,11 @@ const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
 const address_controller = require("../controller/client/addressController");
 const message_controller = require("../controller/client/messageController");
+const postTagController = require('../controller/client/postTagControllers');
+const feedbackController = require('../controller/client/feedbackController');
+const templateController = require('../controller/client/templateController');
+const faqController = require('../controller/client/faqControllers');
+
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -35,6 +41,7 @@ router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);
 router.put("/updateUserInfo", user_controller.updateUserInfo);
 router.get("/getUserDetailByMobileNumber/:phoneNumber", user_controller.getUserDetailByMobileNumber);
+
 
 // Chat routes
 router.post("/createChat", chat_controller.createChat);
@@ -144,6 +151,9 @@ router.delete("/deleteInterestGroup/:id", group_controller.deleteInterestGroup);
 //post routes
 router.post("/addPost", post_controller.addPost);
 router.post("/voteForPost", post_controller.voteForPost);
+router.post("/toggleLike", post_controller.toggleLike);
+router.post("/addComment", post_controller.addComment);
+router.post("/deleteComment", post_controller.deleteComment);
 router.get("/getAllPost", post_controller.getAllPost);
 router.get("/getAllPostByme/:id", post_controller.getAllPostByme);
 router.get("/getPostById/:id", post_controller.getPostById);
@@ -178,5 +188,43 @@ router.post("/addKitty", kitty_controller.addKitty);
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
+
+
+
+//PostTag Routes
+router.post('/createPostTag', postTagController.createPostTag); // Create post tag
+router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
+router.get('/getPostTagById/:id', postTagController.getPostTagById); // Get post tag by ID
+router.put('/updatePostTag/:id', postTagController.updatePostTag); // Update post tag by ID
+router.delete('/deletePostTag/:id', postTagController.deletePostTag); // Delete post tag by ID
+
+//FeedBack Route
+router.post('/createFeedback', feedbackController.createFeedback);
+router.get('/getFeedbacks', feedbackController.getFeedbacks);
+router.get('/getFeedbackById/:id', feedbackController.getFeedbackById);
+router.put('/updateFeedback/:id', feedbackController.updateFeedback);
+router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
+
+//Template Routes 
+router.post('/createTemplate', templateController.createTemplate);
+router.get('/getAllTemplates', templateController.getAllTemplates);
+router.get('/getTemplateById/:id', templateController.getTemplateById);
+router.put('/updateTemplateById/:id', templateController.updateTemplateById);
+router.delete('/deleteTemplateById/:id', templateController.deleteTemplateById);
+
+
+
+//FAQ Routes
+router.post('/addFAQ', faqController.addFAQ);
+router.get('/getAllFAQs', faqController.getAllFAQs);
+router.get('/getFAQById/:id', faqController.getFAQById);
+router.put('/updateFAQ/:id', faqController.updateFAQ);
+router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
+
+
+
+
+
+
 
 module.exports = router;
