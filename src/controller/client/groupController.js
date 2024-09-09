@@ -368,6 +368,52 @@ exports.updateStatus = async (req, res)=>{
 
 
 
+exports.addUserRequest = async (req, res) => {
+  const { groupId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Check if the user request already exists
+    const existingRequest = group.userIds.find(
+      (userRequest) => userRequest.userId.toString() === userId.toString()
+    );
+
+    if (existingRequest) {
+      return res.status(400).json({ message: 'User request already exists' });
+    }
+
+    // Add the new user request
+    group.userIds.push({
+      userId,
+      status: 'pending',
+    });
+
+    await group.save();
+
+    // Notify admin
+    const admin = await User.findOne({ isAdmin: true });
+    if (admin) {
+      const notification = new Notification({
+        userId: admin._id,
+        groupId,
+        requestUserId: userId,
+        message: `User ${userId} has requested to join the group ${groupId}. Please review their request.`,
+      });
+      await notification.save();
+    }
+
+    res.status(200).json({ message: 'User request added and admin notified' });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 
 

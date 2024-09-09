@@ -4,6 +4,11 @@ const ColorModel = require('../../schema/colorSchema');
 exports.addColor = async (req, res) => {
     try {
         const { name} = req.body;
+        let alreadyexist = await ColorModel.findOne({name: name});
+        if(alreadyexist){
+          return res.status(200).json({error:"Color Already Exists"})
+        }
+        
         const newColor = new ColorModel({
             name
         });
