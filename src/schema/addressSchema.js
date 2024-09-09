@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const addressSchema = new mongoose.Schema({
     title: { type: String }, // Title field
     address: { type: String }, // Address field
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true }, // User who made the comment
     location: { type: String }, // Location field
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });

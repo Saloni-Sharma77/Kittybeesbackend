@@ -6,6 +6,7 @@ exports.createAddress = async (req, res) => {
         const newAddress = new AddressModel({
             title: req.body.title, // Updated to title
             address: req.body.address, // Address field
+            userId:req.body.userId,
             location: req.body.location, // Location field
             isActive: req.body.isActive,
         });
@@ -50,6 +51,8 @@ exports.updateAddressById = async (req, res) => {
                 address: req.body.address, // Address field
                 location: req.body.location, // Location field
                 isActive: req.body.isActive,
+                 userId:req.body.userId,
+
             },
             { new: true }
         );
