@@ -204,8 +204,8 @@ router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
 router.post('/createPostTag', postTagController.createPostTag); // Create post tag
 router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
 router.get('/getPostTagById/:id', postTagController.getPostTagById); // Get post tag by ID
-router.put('/updatePostTag/:id', postTagController.updatePostTag); // Update post tag by ID
-router.delete('/deletePostTag/:id', postTagController.deletePostTag); // Delete post tag by ID
+router.put('/updatePostTag/:id', postTagController.updatePostTag); 
+router.delete('/deletePostTag/:id', postTagController.deletePostTag);
 
 //FeedBack Route
 router.post('/createFeedback', feedbackController.createFeedback);
@@ -236,11 +236,5 @@ router.post('/addUserToGroup', addUserToGroup);
 router.get('/pendingUserIds/:groupId', getPendingUserIds);
 
 router.put('/updateUserStatus', updateUserStatus);
-
-
-
-
-
-
 
 module.exports = router;
