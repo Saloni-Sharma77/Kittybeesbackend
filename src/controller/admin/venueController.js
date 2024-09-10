@@ -36,44 +36,43 @@ exports.addVenue = async (req, res) => {
   }
 };
 
+
 exports.getAllVenues = async (req, res) => {
   try {
-    const { name, page = 1 } = req.query; 
+    const { name, page = 1, limit = 10 } = req.query; // Get the search term and pagination parameters from the query
 
-    // Set limit to fetch 2 venues at a time
-    const limit = 5;
+    // Convert page and limit to integers
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
 
-    // Search query for venues by name
+    // Validate page and limit values
+    if (pageNumber < 1 || pageSize < 1) {
+      return res.status(400).json({ message: "Invalid page or limit value" });
+    }
+
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
 
-    // Convert page to a number
-    const pageNumber = parseInt(page);
+    // Get the total number of documents that match the query
+    const totalDocuments = await Venue.countDocuments(query);
 
-    // Calculate how many documents to skip
-    const skip = (pageNumber - 1) * limit;
-
-    // Fetch paginated data (2 venues at a time)
-    const getAllVenue = await Venue.find(query)
-      .populate('venueCatId') // Populate venueCatId
-      .sort({ createdAt: -1 }) // Sort by creation date
-      .skip(skip) // Skip records based on the page
-      .limit(limit); // Limit to 2 records per request
-
-    // Get total number of documents for pagination info
-    const totalVenues = await Venue.countDocuments(query);
+    // Fetch the paginated data
+    const venues = await Venue.find(query)
+      .populate('venueCatId')
+      .sort({ createdAt: -1 })
+      .skip((pageNumber - 1) * pageSize) // Skip the documents for previous pages
+      .limit(pageSize); // Limit the number of documents returned
 
     // Calculate total pages
-    const totalPages = Math.ceil(totalVenues / limit);
+    const totalPages = Math.ceil(totalDocuments / pageSize);
 
-    // Send the response with paginated data
     res.status(200).json({
       message: "Data fetched successfully",
-      data: getAllVenue,
+      data: venues,
       pagination: {
-        totalVenues,
+        totalDocuments,
         totalPages,
         currentPage: pageNumber,
-        pageSize: limit,
+        pageSize
       }
     });
   } catch (err) {
@@ -81,7 +80,6 @@ exports.getAllVenues = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 
 exports.getAllCities = async (req, res) => {
