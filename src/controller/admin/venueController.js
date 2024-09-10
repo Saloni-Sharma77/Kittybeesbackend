@@ -39,11 +39,11 @@ exports.addVenue = async (req, res) => {
 
 exports.getAllVenues = async (req, res) => {
   try {
-    const { name, page = 1, limit = 10 } = req.query; // Get the search term and pagination parameters from the query
+    const { name, page = 1, limit = 5 } = req.query; // Get the search term and pagination parameters from the query
 
     // Convert page and limit to integers
-    const pageNumber = parseInt(page, 10);
-    const pageSize = parseInt(limit, 10);
+    const pageNumber = parseInt(page, 5);
+    const pageSize = parseInt(limit, 5);
 
     // Validate page and limit values
     if (pageNumber < 1 || pageSize < 1) {
