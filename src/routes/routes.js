@@ -23,12 +23,16 @@ const group_controller = require("../controller/client/groupController");
 const post_controller = require("../controller/client/postController");
 const wishlist_controller = require("../controller/client/wishlistController");
 const chat_controller = require("../controller/client/chatController");
-const address_controller = require("../controller/client/addressController");
+const addressController = require('../controller/client/addressController');
 const message_controller = require("../controller/client/messageController");
 const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
+const requestToJoinGroupController = require('../controller/client/requesttojoingroupControllers');
+// const NotificationController = require('../controller/client/notificationcontroller');
+
+
 
 
 // Client routes
@@ -95,12 +99,13 @@ router.patch("/updateColorStatus/:id", color_controller.updateColorStatus);
 // router.patch("/updateCityStatus/:id", city_controller.updateCityStatus);
 
 //address routes
-router.post('/createAddress', address_controller.createAddress);
-router.get('/getAllAddresses', address_controller.getAllAddresses);
-router.get('/getAddressById/:id', address_controller.getAddressById);
-router.put('/updateAddressById/:id', address_controller.updateAddressById);
-router.delete('/deleteAddressById/:id', address_controller.deleteAddressById);
-router.get('/getAddressByUserId/:userId', address_controller.getAddressByUserId);
+router.post('/createAddress', addressController.createAddress);
+router.get('/getAllAddresses', addressController.getAllAddresses);
+router.get('/getAddressById/:id', addressController.getAddressById);
+router.put('/updateAddressById/:id', addressController.updateAddressById);
+router.delete('/deleteAddressById/:id', addressController.deleteAddressById);
+router.get('/getAddressByUserId/:userId', addressController.getAddressByUserId);
+
 
 // Activity routes
 router.get("/getAllActivity", activity_controller.getAllActivity);
@@ -133,6 +138,8 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+router.post('/group/:groupId/request', group_controller.addUserRequest);
+
 
 // gorup frequency routes
 router.post("/addGroupFrequency", group_controller.addGroupFrequency);
@@ -221,7 +228,19 @@ router.get('/getFAQById/:id', faqController.getFAQById);
 router.put('/updateFAQ/:id', faqController.updateFAQ);
 router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
 
+//Request To Join Group Routes 
 
+// Create a new join request and add user to group
+router.post('/request/join', requestToJoinGroupController.createJoinRequest);
+
+// Get all join requests (Optional)
+router.get('/request/join', requestToJoinGroupController.getAllJoinRequests);
+
+// Get a single join request by ID
+router.get('/request/join/:id', requestToJoinGroupController.getJoinRequestById);
+
+// Delete a join request by ID
+router.delete('/request/join/:id', requestToJoinGroupController.deleteJoinRequest);
 
 
 

@@ -35,6 +35,8 @@ exports.addVenue = async (req, res) => {
 
   }
 };
+
+
 exports.getAllVenues = async (req, res) => {
   try {
     const { name } = req.query; // Get the search term from the query parameters

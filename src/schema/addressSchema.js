@@ -1,11 +1,11 @@
-
 const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
-    address :{type:String},
-    description: { type: String },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    isActive:{type:Boolean,default : true},
-},{timestamps:true} );
+    title: { type: String }, // Title field
+    address: { type: String }, // Address field
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true }, // User who made the comment
+    location: { type: String }, // Location field
+    isActive: { type: Boolean, default: true },
+}, { timestamps: true });
 
-module.exports = mongoose.model('address', addressSchema);
+module.exports = mongoose.model('Address', addressSchema);
