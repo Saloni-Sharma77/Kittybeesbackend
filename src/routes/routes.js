@@ -30,6 +30,10 @@ const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
 const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
+const bookingRequestController = require('../controller/client/bookingrequestControllers');
+const { filterVenues } = require('../controller/client/filterController');
+const typeController = require('../controller/client/typeofvanueControllers');
+
 
 
 
@@ -236,5 +240,41 @@ router.post('/addUserToGroup', addUserToGroup);
 router.get('/pendingUserIds/:groupId', getPendingUserIds);
 
 router.put('/updateUserStatus', updateUserStatus);
+
+
+
+
+
+//Booking request routes 
+router.post('/createBookingRequest', bookingRequestController.createBookingRequest);
+router.get('/getAllBookingRequests', bookingRequestController.getAllBookingRequests);
+router.get('/getBookingRequestById/:id', bookingRequestController.getBookingRequestById);
+router.put('/updateBookingRequestById/:id', bookingRequestController.updateBookingRequestById);
+router.delete('/deleteBookingRequestById/:id', bookingRequestController.deleteBookingRequestById);
+
+//filter Toutes
+
+router.get('/filter', filterVenues);
+
+
+//
+
+
+// Create a new Type
+router.post('/type', typeController.createType);
+
+// Get all Types
+router.get('/types', typeController.getAllTypes);
+
+// Get Type by ID
+router.get('/type/:id', typeController.getTypeById);
+
+// Update Type by ID
+router.put('/type/:id', typeController.updateTypeById);
+
+// Delete Type by ID
+router.delete('/type/:id', typeController.deleteTypeById);
+
+
 
 module.exports = router;
