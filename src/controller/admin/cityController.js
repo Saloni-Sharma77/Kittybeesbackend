@@ -1,12 +1,25 @@
 const City = require('../../schema/citySchema'); // Adjust path if necessary
 
 // Create a new city
+
 exports.createCity = async (req, res) => {
   try {
+    const { name } = req.body;
+
+    // Check if a city with the same name already exists
+    const existingCity = await City.findOne({ name });
+    if (existingCity) {
+      return res.status(400).json({ message: "City already exists" });
+    }
+
     const city = new City(req.body);
     await city.save();
     res.status(201).json({ message: "City created successfully", city });
   } catch (err) {
+    // Handle duplicate key error for schema-level validation
+    if (err.code === 11000) {
+      return res.status(400).json({ message: "City already exists" });
+    }
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
