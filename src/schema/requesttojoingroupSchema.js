@@ -1,21 +1,14 @@
-// models/requesttojoingroupschema.js
+// models/groupSchema.js
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const requestToJoinGroupSchema = new mongoose.Schema({
-    groupId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'groups', // This refers to the Group model
-        required: true 
-    },
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'users', // This refers to the User model
-        required: true 
-    },
-    requestDate: { 
-        type: Date, 
-        default: Date.now 
+const groupSchema = new Schema({
+  userIds: [
+    {
+      userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      status: { type: String, enum: ['pending', 'approved'], required: true }
     }
+  ]
 });
 
-module.exports = mongoose.model('RequestToJoinGroup', requestToJoinGroupSchema);
+module.exports = mongoose.model('Group', groupSchema);

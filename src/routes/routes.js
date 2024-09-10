@@ -29,8 +29,9 @@ const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
-const requestToJoinGroupController = require('../controller/client/requesttojoingroupControllers');
-// const NotificationController = require('../controller/client/notificationcontroller');
+const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
+
+
 
 
 
@@ -138,7 +139,8 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
-router.post('/group/:groupId/request', group_controller.addUserRequest);
+
+
 
 
 // gorup frequency routes
@@ -228,19 +230,14 @@ router.get('/getFAQById/:id', faqController.getFAQById);
 router.put('/updateFAQ/:id', faqController.updateFAQ);
 router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
 
-//Request To Join Group Routes 
+// request to add user in group routes
 
-// Create a new join request and add user to group
-router.post('/request/join', requestToJoinGroupController.createJoinRequest);
+router.post('/addUserToGroup', addUserToGroup);
+router.get('/pendingUserIds/:groupId', getPendingUserIds);
 
-// Get all join requests (Optional)
-router.get('/request/join', requestToJoinGroupController.getAllJoinRequests);
+router.put('/updateUserStatus', updateUserStatus);
 
-// Get a single join request by ID
-router.get('/request/join/:id', requestToJoinGroupController.getJoinRequestById);
 
-// Delete a join request by ID
-router.delete('/request/join/:id', requestToJoinGroupController.deleteJoinRequest);
 
 
 

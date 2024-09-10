@@ -14,6 +14,7 @@ exports.addKitty = async (req, res) => {
       venueId,
       activityId,
       templateId,
+      addressId,
       theamepoll,
       locationpoll,
       venuepoll
@@ -26,6 +27,7 @@ exports.addKitty = async (req, res) => {
       time,
       image,
       themeId,
+      addressId,
       instructions,
       colorId,
       venueId,

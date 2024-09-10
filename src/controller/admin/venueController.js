@@ -35,21 +35,54 @@ exports.addVenue = async (req, res) => {
 
   }
 };
+
 exports.getAllVenues = async (req, res) => {
   try {
-    const { name } = req.query; // Get the search term from the query parameters
+    const { name, page = 1 } = req.query; // Get search term and page from query parameters
 
+    // Set limit to fetch 2 venues at a time
+    const limit = 5;
+
+    // Search query for venues by name
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
-    const getAllVenue = await Venue.find(query).populate('venueCatId').sort({ createdAt: -1 }) ;
-   
-    res
-      .status(200)
-      .json({ message: "Data fetched successfully", data: getAllVenue });
+
+    // Convert page to a number
+    const pageNumber = parseInt(page);
+
+    // Calculate how many documents to skip
+    const skip = (pageNumber - 1) * limit;
+
+    // Fetch paginated data (2 venues at a time)
+    const getAllVenue = await Venue.find(query)
+      .populate('venueCatId') // Populate venueCatId
+      .sort({ createdAt: -1 }) // Sort by creation date
+      .skip(skip) // Skip records based on the page
+      .limit(limit); // Limit to 2 records per request
+
+    // Get total number of documents for pagination info
+    const totalVenues = await Venue.countDocuments(query);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalVenues / limit);
+
+    // Send the response with paginated data
+    res.status(200).json({
+      message: "Data fetched successfully",
+      data: getAllVenue,
+      pagination: {
+        totalVenues,
+        totalPages,
+        currentPage: pageNumber,
+        pageSize: limit,
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 exports.getAllCities = async (req, res) => {
   try {
