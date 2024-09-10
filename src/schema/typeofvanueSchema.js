@@ -1,14 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // Import mongoose
+
 
 const typeSchema = new mongoose.Schema({
-    type: { 
-        type: String,  // No enum restriction
-        required: true 
-    },
-    isActive: { 
-        type: Boolean, 
-        default: true 
-    }
+    type: { type: String, required: true },
+    isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Type', typeSchema);
+module.exports = mongoose.model('VenueType', typeSchema);

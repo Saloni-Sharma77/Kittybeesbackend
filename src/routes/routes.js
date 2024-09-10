@@ -31,7 +31,7 @@ const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
 const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
 const bookingRequestController = require('../controller/client/bookingrequestControllers');
-const { filterVenues } = require('../controller/client/filterController');
+const venueController = require('../controller/client/filterController'); // Path to your controller
 const typeController = require('../controller/client/typeofvanueControllers');
 
 
@@ -188,6 +188,8 @@ router.get("/getVenueById/:id", venue_controller.getVenueById);
 router.put("/updateVenue/:id", venue_controller.updateVenue);
 router.delete("/deleteVenue/:id", venue_controller.deleteVenue);
 router.patch("/updateVenueStatus/:id", venue_controller.updateStatus);
+// router.post('/filter', venue_controller.filterVenues);
+
 
 // VenueCategory routes
 router.post("/addVenueCategory", venueCategory_controller.createVenueCategory);
@@ -252,12 +254,6 @@ router.get('/getBookingRequestById/:id', bookingRequestController.getBookingRequ
 router.put('/updateBookingRequestById/:id', bookingRequestController.updateBookingRequestById);
 router.delete('/deleteBookingRequestById/:id', bookingRequestController.deleteBookingRequestById);
 
-//filter Toutes
-
-router.get('/filter', filterVenues);
-
-
-//
 
 
 // Create a new Type
