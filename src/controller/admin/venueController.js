@@ -39,7 +39,7 @@ exports.addVenue = async (req, res) => {
 
 exports.getAllVenues = async (req, res) => {
   try {
-    const { name, page = 1, limit = 5 } = req.query; // Get the search term and pagination parameters from the query
+    const { name, page = 1, limit = 5 } = req.query; 
 
     // Convert page and limit to integers
     const pageNumber = parseInt(page, 10);
@@ -95,9 +95,8 @@ exports.getAllCities = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//
 
-// Helper function to calculate distance between two coordinates
+
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371; // Radius of Earth in km
