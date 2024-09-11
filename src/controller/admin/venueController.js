@@ -304,6 +304,42 @@ exports.updateStatus = async (req, res)=>{
 
 
 
+//filter venues based on city name, venue type, and pricing
+exports.filterVenues = async (req, res) => {
+    try {
+        const { cityName, venueTypeName, pricing } = req.body;
+
+        // Step 1: Find City ID based on city name
+        const city = await City.findOne({ name: cityName });
+        if (!city) {
+            return res.status(404).json({ message: 'City not found' });
+        }
+
+        // Step 2: Find VenueType ID based on venue type name
+        const venueType = await VenueType.findOne({ type: venueTypeName });
+        if (!venueType) {
+            return res.status(404).json({ message: 'Venue type not found' });
+        }
+
+        // Step 3: Find venues based on cityId, venueTypeId, and pricing
+        const filters = {
+            cityId: city._id,
+            venueTypeId: venueType._id
+        };
+        if (pricing) filters.pricing = pricing;
+
+        const venues = await Venue.find(filters);
+        res.status(200).json(venues);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+// //{
+//   "cityName": "Udaipur",
+//   "venueTypeName": "Conference",
+//   "pricing": "5000"
+// }
+
 
 
 

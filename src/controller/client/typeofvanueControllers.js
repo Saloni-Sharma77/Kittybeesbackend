@@ -1,67 +1,67 @@
-const Type = require('../../schema/typeofvanueSchema'); // Adjust path as necessary
+const VenueType = require('../../schema/typeofvanueSchema'); // Adjust path as necessary
 
-// Create a new Type
-exports.createType = async (req, res) => {
+// Create a new VenueType
+exports.createVenueType = async (req, res) => {
     try {
-        const newType = new Type(req.body);
-        await newType.save();
-        res.status(201).json({ message: "Type created successfully", data: newType });
+        const newVenueType = new VenueType(req.body);
+        await newVenueType.save();
+        res.status(201).json({ message: "VenueType created successfully", data: newVenueType });
     } catch (err) {
         console.error(err);
-        res.status(400).json({ message: "Error creating type", error: err.message });
+        res.status(400).json({ message: "Error creating VenueType", error: err.message });
     }
 };
 
-// Get all Types
-exports.getAllTypes = async (req, res) => {
+// Get all VenueTypes
+exports.getAllVenueTypes = async (req, res) => {
     try {
-        const types = await Type.find();
-        res.status(200).json({ message: "Types fetched successfully", data: types });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-// Get Type by ID
-exports.getTypeById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const type = await Type.findById(id);
-        if (!type) {
-            return res.status(404).json({ message: "Type not found" });
-        }
-        res.status(200).json({ message: "Type fetched successfully", data: type });
+        const venueTypes = await VenueType.find();
+        res.status(200).json({ message: "VenueTypes fetched successfully", data: venueTypes });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal server error" });
     }
 };
 
-// Update Type by ID
-exports.updateTypeById = async (req, res) => {
+// Get VenueType by ID
+exports.getVenueTypeById = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedType = await Type.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updatedType) {
-            return res.status(404).json({ message: "Type not found" });
+        const venueType = await VenueType.findById(id);
+        if (!venueType) {
+            return res.status(404).json({ message: "VenueType not found" });
         }
-        res.status(200).json({ message: "Type updated successfully", data: updatedType });
+        res.status(200).json({ message: "VenueType fetched successfully", data: venueType });
     } catch (err) {
         console.error(err);
-        res.status(400).json({ message: "Error updating type", error: err.message });
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
-// Delete Type by ID
-exports.deleteTypeById = async (req, res) => {
+// Update VenueType by ID
+exports.updateVenueTypeById = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedType = await Type.findByIdAndDelete(id);
-        if (!deletedType) {
-            return res.status(404).json({ message: "Type not found" });
+        const updatedVenueType = await VenueType.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedVenueType) {
+            return res.status(404).json({ message: "VenueType not found" });
         }
-        res.status(200).json({ message: "Type deleted successfully" });
+        res.status(200).json({ message: "VenueType updated successfully", data: updatedVenueType });
+    } catch (err) {
+        console.error(err);
+        res.status(400).json({ message: "Error updating VenueType", error: err.message });
+    }
+};
+
+// Delete VenueType by ID
+exports.deleteVenueTypeById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedVenueType = await VenueType.findByIdAndDelete(id);
+        if (!deletedVenueType) {
+            return res.status(404).json({ message: "VenueType not found" });
+        }
+        res.status(200).json({ message: "VenueType deleted successfully" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal server error" });
