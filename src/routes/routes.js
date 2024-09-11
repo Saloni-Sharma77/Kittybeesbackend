@@ -34,6 +34,8 @@ const bookingRequestController = require('../controller/client/bookingrequestCon
 const postShareController = require('../controller/client/postshareControllers');
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
 const kittyDetailControllers = require('../controller/client/kittydetailController');
+const pastFunController = require('../controller/client/pastfunControllers');
+
 
 
 
@@ -288,6 +290,14 @@ router.get('/getAllKittyDetails', kittyDetailControllers.getAllKittyDetails);
 router.get('/getKittyDetailById/:id', kittyDetailControllers.getKittyDetailById);
 router.put('/updateKittyDetail/:id', kittyDetailControllers.updateKittyDetail);
 router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail);
+
+
+//past fun routes
+router.post('/createPastFun', pastFunController.createPastFun);
+router.get('/getAllPastFun', pastFunController.getAllPastFun);
+router.get('/getPastFunById/:id', pastFunController.getPastFunById);
+router.put('/updatePastFunById/:id', pastFunController.updatePastFunById);
+router.delete('/deletePastFunById/:id', pastFunController.deletePastFunById);
 
 
 
