@@ -31,10 +31,10 @@ const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
 const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
 const bookingRequestController = require('../controller/client/bookingrequestControllers');
-// const venueController = require('../controller/client/filterController'); 
-// const typeController = require('../controller/client/typeofvanueControllers');
 const postShareController = require('../controller/client/postshareControllers');
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
+const kittyDetailControllers = require('../controller/client/kittydetailController');
+
 
 
 
@@ -268,18 +268,10 @@ router.delete('/deleteBookingRequestById/:id', bookingRequestController.deleteBo
 // Create a new Type
 // Create a new VenueType
 router.post('/createVenueType', venueTypeController.createVenueType);
-
-// Get all VenueTypes
-router.get('/', venueTypeController.getAllVenueTypes);
-
-// Get VenueType by ID
-router.get('/:id', venueTypeController.getVenueTypeById);
-
-// Update VenueType by ID
-router.put('/:id', venueTypeController.updateVenueTypeById);
-
-// Delete VenueType by ID
-router.delete('/:id', venueTypeController.deleteVenueTypeById);
+router.get('/getAllVenueTypes', venueTypeController.getAllVenueTypes);
+router.get('/getVenueTypeById/:id', venueTypeController.getVenueTypeById);
+router.put('/updateVenueTypeById/:id', venueTypeController.updateVenueTypeById);
+router.delete('/deleteVenueTypeById/:id', venueTypeController.deleteVenueTypeById);
 
 
 
@@ -289,6 +281,13 @@ router.get('/getPostShares', postShareController.getPostShares);
 router.get('/getPostShareById/:id', postShareController.getPostShareById);
 router.put('/updatePostShare/:id', postShareController.updatePostShare);
 router.delete('/deletePostShare/:id', postShareController.deletePostShare);
+
+//kitty detail routes 
+router.post('/createKittyDetail', kittyDetailControllers.createKittyDetail);
+router.get('/getAllKittyDetails', kittyDetailControllers.getAllKittyDetails);
+router.get('/getKittyDetailById/:id', kittyDetailControllers.getKittyDetailById);
+router.put('/updateKittyDetail/:id', kittyDetailControllers.updateKittyDetail);
+router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail);
 
 
 
