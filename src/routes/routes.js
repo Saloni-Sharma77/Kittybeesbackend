@@ -31,8 +31,15 @@ const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
 const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
 const bookingRequestController = require('../controller/client/bookingrequestControllers');
-const venueController = require('../controller/client/filterController'); // Path to your controller
-const typeController = require('../controller/client/typeofvanueControllers');
+const postShareController = require('../controller/client/postshareControllers');
+const venueTypeController = require('../controller/client/typeofvanueControllers'); 
+const kittyDetailControllers = require('../controller/client/kittydetailController');
+const pastFunController = require('../controller/client/pastfunControllers');
+
+
+
+
+
 
 
 
@@ -50,6 +57,7 @@ router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);
 router.put("/updateUserInfo", user_controller.updateUserInfo);
 router.get("/getUserDetailByMobileNumber/:phoneNumber", user_controller.getUserDetailByMobileNumber);
+const messageController = require('../controller/client/postshareControllers');
 
 
 // Chat routes
@@ -189,6 +197,9 @@ router.put("/updateVenue/:id", venue_controller.updateVenue);
 router.delete("/deleteVenue/:id", venue_controller.deleteVenue);
 router.patch("/updateVenueStatus/:id", venue_controller.updateStatus);
 // router.post('/filter', venue_controller.filterVenues);
+router.post('/filterVenues', venue_controller.filterVenues);
+
+
 
 
 // VenueCategory routes
@@ -257,19 +268,36 @@ router.delete('/deleteBookingRequestById/:id', bookingRequestController.deleteBo
 
 
 // Create a new Type
-router.post('/type', typeController.createType);
+// Create a new VenueType
+router.post('/createVenueType', venueTypeController.createVenueType);
+router.get('/getAllVenueTypes', venueTypeController.getAllVenueTypes);
+router.get('/getVenueTypeById/:id', venueTypeController.getVenueTypeById);
+router.put('/updateVenueTypeById/:id', venueTypeController.updateVenueTypeById);
+router.delete('/deleteVenueTypeById/:id', venueTypeController.deleteVenueTypeById);
 
-// Get all Types
-router.get('/types', typeController.getAllTypes);
 
-// Get Type by ID
-router.get('/type/:id', typeController.getTypeById);
 
-// Update Type by ID
-router.put('/type/:id', typeController.updateTypeById);
+//Share Post Routes 
+router.post('/createPostShare', postShareController.createPostShare);
+router.get('/getPostShares', postShareController.getPostShares);
+router.get('/getPostShareById/:id', postShareController.getPostShareById);
+router.put('/updatePostShare/:id', postShareController.updatePostShare);
+router.delete('/deletePostShare/:id', postShareController.deletePostShare);
 
-// Delete Type by ID
-router.delete('/type/:id', typeController.deleteTypeById);
+//kitty detail routes 
+router.post('/createKittyDetail', kittyDetailControllers.createKittyDetail);
+router.get('/getAllKittyDetails', kittyDetailControllers.getAllKittyDetails);
+router.get('/getKittyDetailById/:id', kittyDetailControllers.getKittyDetailById);
+router.put('/updateKittyDetail/:id', kittyDetailControllers.updateKittyDetail);
+router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail);
+
+
+//past fun routes
+router.post('/createPastFun', pastFunController.createPastFun);
+router.get('/getAllPastFun', pastFunController.getAllPastFun);
+router.get('/getPastFunById/:id', pastFunController.getPastFunById);
+router.put('/updatePastFunById/:id', pastFunController.updatePastFunById);
+router.delete('/deletePastFunById/:id', pastFunController.deletePastFunById);
 
 
 
