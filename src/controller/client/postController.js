@@ -245,3 +245,41 @@ exports.deletePostById = async (req, res) => {
     }
   };
   
+
+  exports.addReply = async (req, res) => {
+    try {
+      const { postId, commentId, userId, text } = req.body;
+  
+      if (!postId || !commentId || !userId || !text) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+  
+      const post = await PostModel.findById(postId);
+  
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+  
+      const comment = post.comments.id(commentId);
+  
+      if (!comment) {
+        return res.status(404).json({ message: 'Comment not found' });
+      }
+  
+      comment.replies.push({
+        userId: userId,
+        text: text,
+        createdAt: new Date()
+      });
+  
+      await post.save();
+  
+      res.status(200).json({
+        message: 'Reply added successfully',
+        post
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };

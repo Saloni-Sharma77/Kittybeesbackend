@@ -309,25 +309,33 @@ exports.deleteInterestGroup = async (req, res) => {
 };
 
 
-
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const userId  = req.params.id;
+    const userId = req.params.id;
 
+    // Find groups where userId matches as the host (hosted by me)
+    const hostedGroups = await Group.find({ userId: userId }).sort({ createdAt: -1 });
 
-    // Find groups where userId exactly matches the specified userId field
-    const groups = await Group.find({ userId: userId }).sort({ createdAt: -1 });
+    // Find groups where the userId is found in the userIds array with status 'approved' (joined by me)
+    const joinedGroups = await Group.find({ 
+      'userIds.userId': userId, 
+      'userIds.status': 'approved' 
+    }).sort({ createdAt: -1 });
 
-    if (groups.length === 0) {
-      return res.status(404).json({ message: "No groups found with this user ID as the main user." });
+    // Combine both results into a single array
+    const allGroups = [...hostedGroups, ...joinedGroups];
+
+    if (allGroups.length === 0) {
+      return res.status(404).json({ message: "No groups found hosted or joined by this user." });
     }
 
-    res.status(200).json(groups);
+    res.status(200).json(allGroups);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.updateStatus = async (req, res)=>{
   const GroupId = req.params.id; // Capture the ID from request parameters

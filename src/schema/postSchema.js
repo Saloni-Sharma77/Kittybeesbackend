@@ -1,9 +1,17 @@
 const mongoose = require('mongoose');
 
+// Define the schema for replies
+const replySchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true }, // User who made the reply
+  text: { type: String, required: true }, // Reply text
+  createdAt: { type: Date, default: Date.now } // Timestamp
+});
+
 // Define the schema for comments
 const commentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true }, // User who made the comment
   text: { type: String, required: true }, // Comment text
+  replies: [replySchema], // Array of replies
   createdAt: { type: Date, default: Date.now } // Timestamp
 });
 
@@ -32,4 +40,4 @@ const postSchema = new mongoose.Schema({
   comments: [commentSchema] // Array of comments
 }, { timestamps: true });
 
-module.exports = mongoose.model('post', postSchema);
+module.exports = mongoose.model('Post', postSchema);
