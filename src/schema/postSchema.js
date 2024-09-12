@@ -9,7 +9,11 @@ const replySchema = new mongoose.Schema({
 
 // Define the schema for comments
 const commentSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true }, // User who made the comment
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Users",
+    required: true,
+  }, // User who made the comment
   text: { type: String, required: true }, // Comment text
   replies: [replySchema], // Array of replies
   createdAt: { type: Date, default: Date.now } // Timestamp
@@ -19,25 +23,28 @@ const commentSchema = new mongoose.Schema({
 const optionSchema = new mongoose.Schema({
   text: { type: String },
   votes: { type: Number, default: 0 },
-  voters: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }] // Track users who voted for this option
+  voters: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Track users who voted for this option
 });
 
 // Define the schema for polls
 const pollSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  options: [optionSchema]
+  options: [optionSchema],
 });
 
 // Define the schema for posts
-const postSchema = new mongoose.Schema({
-  name: { type: String },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-  description: { type: String },
-  image: { type: String },
-  isActive: { type: Boolean, default: true },
-  poll: pollSchema, // Poll field
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }], // Array of users who liked the post
-  comments: [commentSchema] // Array of comments
-}, { timestamps: true });
+const postSchema = new mongoose.Schema(
+  {
+    name: { type: String },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    description: { type: String },
+    image: { type: String },
+    isActive: { type: Boolean, default: true },
+    poll: pollSchema, // Poll field
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Array of users who liked the post
+    comments: [commentSchema], // Array of comments
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model('Post', postSchema);

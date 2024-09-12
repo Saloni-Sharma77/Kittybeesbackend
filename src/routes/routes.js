@@ -198,6 +198,7 @@ router.post("/addPost", post_controller.addPost);
 router.post("/voteForPost", post_controller.voteForPost);
 router.post("/toggleLike", post_controller.toggleLike);
 router.post("/addComment", post_controller.addComment);
+router.post("/getAllComments",post_controller.getAllComments);
 router.post("/deleteComment", post_controller.deleteComment);
 router.get("/getAllPost", post_controller.getAllPost);
 router.get("/getAllPostByme/:id", post_controller.getAllPostByme);

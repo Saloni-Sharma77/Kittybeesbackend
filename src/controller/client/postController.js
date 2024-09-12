@@ -123,6 +123,22 @@ exports.addComment = async (req, res) => {
 };
 
 
+exports.getAllComments = async (req,res) =>{
+  try {
+    const {postId} = req.body
+    const post = await PostModel.findById(postId)
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    const comments = post.comments;
+    res.status(200).json({ message: 'All commentes fetched successfully', data: comments });
+
+  } catch (error) {
+    console.error(err);
+    res.status(500).json({ message: 'Error in fetching all comments' });
+  }
+}
+
 // Delete a comment from a post
 exports.deleteComment = async (req, res) => {
   try {
@@ -159,8 +175,11 @@ exports.deleteComment = async (req, res) => {
   // Get all posts
 exports.getAllPost = async (req, res) => {
     try {
+      const { description } = req.query; // Get the search term from the query parameters
+
+      const query = description ? { description: { $regex: description, $options: "i" } } : {};
       // Fetch all posts, populate userId with user information
-      const posts = await PostModel.find().populate('userId');
+      const posts = await PostModel.find(query).populate('userId').sort({ createdAt: -1 });
   
       res.status(200).json({ message: 'All posts fetched successfully', data: posts });
     } catch (err) {
