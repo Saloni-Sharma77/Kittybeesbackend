@@ -43,6 +43,9 @@ const {
     deleteTermsAndServices
   } = require('../controller/client/termsandserviceControllers');
 
+  const walletTransactionController = require('../controller/client/wallettransectionhistoryControllers');
+
+
 
 
 
@@ -322,6 +325,27 @@ router.put('/:id', updateTermsAndServices);
 
 // Delete a Terms and Services document by ID
 router.delete('/:id', deleteTermsAndServices);
+
+
+
+
+// Create a new transaction
+router.post('/transactions', walletTransactionController.createTransaction);
+
+// Get all transactions
+router.get('/transactions', walletTransactionController.getAllTransactions);
+
+// Get transactions by user ID
+router.get('/transactions/user/:userId', walletTransactionController.getTransactionsByUser);
+
+// Get a specific transaction by ID
+router.get('/transactions/:id', walletTransactionController.getTransactionById);
+
+// Update a transaction by ID
+router.put('/transactions/:id', walletTransactionController.updateTransaction);
+
+// Delete a transaction by ID
+router.delete('/transactions/:id', walletTransactionController.deleteTransaction);
 
 
 
