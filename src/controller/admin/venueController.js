@@ -1,12 +1,17 @@
+const mongoose = require('mongoose'); // Ensure mongoose is imported
+const City = require('../../schema/citySchema');
+const VenueType = require('../../schema/typeofvanueSchema');
 const Venue = require("../../schema/venueSchema");
 
 exports.addVenue = async (req, res) => {
   try {
     const {
-        name ,
+        name,
         userId,
-        location,
+        cityId,
+        venueTypeId,
         venueCatId,
+        location,
         lat,
         long,
         image,
@@ -14,72 +19,84 @@ exports.addVenue = async (req, res) => {
         contactNo,
     } = req.body;
 
-    const newVenue= new Venue({
+    // Validation check for cityId and venueTypeId
+    if (!mongoose.Types.ObjectId.isValid(cityId) || !mongoose.Types.ObjectId.isValid(venueTypeId)) {
+        return res.status(400).json({ error: "Invalid cityId or venueTypeId" });
+    }
+
+    const newVenue = new Venue({
         name,
-        location,
         userId,
+        cityId,
+        venueTypeId,
         venueCatId,
+        location,
         lat,
         long,
         image,
         pricing,
-        contactNo,
+        contactNo
     });
 
     await newVenue.save();
 
-    res.status(201).json({ message: "Data added successfully", task: newVenue });
+    res.status(201).json({ message: "Venue added successfully", venue: newVenue });
   } catch (err) {
-    console.error("Error adding task:", err);
-    res.status(500).json({ error: "Failed to add data" });
-
+    console.error("Error adding venue:", err);
+    res.status(500).json({ error: "Failed to add venue", details: err.message });
   }
 };
 
 
+
+
+
+
+
+
+
+
+
+// Get all venues
 exports.getAllVenues = async (req, res) => {
   try {
-    const { name, page = 1, limit = 5 } = req.query; 
+    // Extract query parameters
+    const { page = 1, limit = 5, name = '' } = req.query;
 
-    // Convert page and limit to integers
+    // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    // Validate page and limit values
-    if (pageNumber < 1 || pageSize < 1) {
-      return res.status(400).json({ message: "Invalid page or limit value" });
-    }
+    // Build the search query
+    const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
 
-    const query = name ? { name: { $regex: name, $options: "i" } } : {};
+    // Fetch venues with pagination and search
+    const venues = await Venue.find(searchQuery)
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize);
 
-    // Get the total number of documents that match the query
-    const totalDocuments = await Venue.countDocuments(query);
-
-    // Fetch the paginated data
-    const venues = await Venue.find(query)
-      .populate('venueCatId')
-      .sort({ createdAt: -1 })
-      .skip((pageNumber - 1) * pageSize) // Skip the documents for previous pages
-      .limit(pageSize); // Limit the number of documents returned
+    // Count total number of documents matching the search query
+    const totalCount = await Venue.countDocuments(searchQuery);
 
     // Calculate total pages
-    const totalPages = Math.ceil(totalDocuments / pageSize);
+    const totalPages = Math.ceil(totalCount / pageSize);
 
+    // Send response with pagination info
     res.status(200).json({
-      message: "Data fetched successfully",
       data: venues,
       pagination: {
-        totalDocuments,
+        page: pageNumber,
+        limit: pageSize,
         totalPages,
-        currentPage: pageNumber,
-        pageSize
+        totalCount
       }
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
+
+
 
 
 exports.getAllCities = async (req, res) => {
@@ -282,6 +299,7 @@ exports.updateStatus = async (req, res)=>{
     });
   }
 }
+
 
 
 
