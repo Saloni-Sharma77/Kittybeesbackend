@@ -35,7 +35,13 @@ const postShareController = require('../controller/client/postshareControllers')
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
 const kittyDetailControllers = require('../controller/client/kittydetailController');
 const pastFunController = require('../controller/client/pastfunControllers');
-
+const {
+    createTermsAndServices,
+    getTermsAndServices,
+    getTermsAndServicesById,
+    updateTermsAndServices,
+    deleteTermsAndServices
+  } = require('../controller/client/termsandserviceControllers');
 
 
 
@@ -180,6 +186,9 @@ router.get("/getAllPostByme/:id", post_controller.getAllPostByme);
 router.get("/getPostById/:id", post_controller.getPostById);
 router.put("/updatePostById/:id", post_controller.updatePostById);
 router.delete("/deletePostById/:id", post_controller.deletePostById);
+// router.post('/comments',post_controller.addComment);
+router.post('/replies', post_controller.addReply);
+
 
 //wishlist routes
 router.post("/addWishlist", wishlist_controller.addWishlist);
@@ -298,6 +307,21 @@ router.get('/getAllPastFun', pastFunController.getAllPastFun);
 router.get('/getPastFunById/:id', pastFunController.getPastFunById);
 router.put('/updatePastFunById/:id', pastFunController.updatePastFunById);
 router.delete('/deletePastFunById/:id', pastFunController.deletePastFunById);
+
+// Create a new Terms and Services document
+router.post('/', createTermsAndServices);
+
+// Get all Terms and Services documents
+router.get('/', getTermsAndServices);
+
+// Get a single Terms and Services document by ID
+router.get('/:id', getTermsAndServicesById);
+
+// Update a Terms and Services document by ID
+router.put('/:id', updateTermsAndServices);
+
+// Delete a Terms and Services document by ID
+router.delete('/:id', deleteTermsAndServices);
 
 
 
