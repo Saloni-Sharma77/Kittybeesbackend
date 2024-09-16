@@ -346,7 +346,7 @@ router.delete('/deletePastFunById/:id', pastFunController.deletePastFunById);
 router.post('/createTermsAndServices', createTermsAndServices);
 
 // Get all Terms and Services documents
-router.get('/', getTermsAndServices);
+router.get('/getTermsAndServices', getTermsAndServices);
 
 // Get a single Terms and Services document by ID
 router.get('/getTermsAndServices/:id', getTermsAndServicesById);
