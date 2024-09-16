@@ -2,6 +2,8 @@
 const express = require("express");
 const router = express.Router();
 
+// Upload images to S3 bucket
+const uploadImage = require("../controller/admin/s3UploadController")
 
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
@@ -61,7 +63,8 @@ const {
 
 
 
-
+// S3bucket image upload route
+router.post("/postImage",uploadImage.uploadImage);
 
 
 // Client routes

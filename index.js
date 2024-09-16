@@ -1,4 +1,3 @@
-
 const dotenv = require('dotenv');
 dotenv.config();
 const express = require('express');
@@ -10,11 +9,16 @@ const port = process.env.PORT || 4000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+const bodyParser = require('body-parser'); 
 
 app.use(express.json());
 app.use(cors());
+app.use(bodyParser.json({ limit: '500mb' })); // or a suitable size
+app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
+
 
 require('./src/config/db'); 
+
 const routes = require('./src/routes/routes');
 app.use('/', routes);
 app.get('/', (req, res) => {
@@ -22,6 +26,8 @@ app.get('/', (req, res) => {
 });
 
 socketHandler(io);
+
+
 
 app.listen(port, () => {
   console.log(`Your server is running on port ${port}`);
