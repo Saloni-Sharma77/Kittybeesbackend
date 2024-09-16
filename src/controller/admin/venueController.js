@@ -304,41 +304,76 @@ exports.updateStatus = async (req, res)=>{
 
 
 
-//filter venues based on city name, venue type, and pricing
-exports.filterVenues = async (req, res) => {
-    try {
-        const { cityName, venueTypeName, pricing } = req.body;
 
-        // Step 1: Find City ID based on city name
-        const city = await City.findOne({ name: cityName });
-        if (!city) {
-            return res.status(404).json({ message: 'City not found' });
-        }
 
-        // Step 2: Find VenueType ID based on venue type name
-        const venueType = await VenueType.findOne({ type: venueTypeName });
-        if (!venueType) {
-            return res.status(404).json({ message: 'Venue type not found' });
-        }
-
-        // Step 3: Find venues based on cityId, venueTypeId, and pricing
-        const filters = {
-            cityId: city._id,
-            venueTypeId: venueType._id
-        };
-        if (pricing) filters.pricing = pricing;
-
-        const venues = await Venue.find(filters);
-        res.status(200).json(venues);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+//  Function to calculate distance using Haversine formula
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Radius of the Earth in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
 };
-// //{
+
+exports.filterVenues = async (req, res) => {
+  try {
+      const { cityName, venueTypeName, pricing, userLat, userLong, maxDistance } = req.body;
+
+      const filters = {};
+
+      // Step 1: Apply city filter if cityName is provided
+      if (cityName) {
+          const city = await City.findOne({ name: cityName });
+          if (!city) {
+              return res.status(404).json({ message: 'City not found' });
+          }
+          filters.cityId = city._id;
+      }
+
+      // Step 2: Apply venue type filter if venueTypeName is provided
+      if (venueTypeName) {
+          const venueType = await VenueType.findOne({ type: venueTypeName });
+          if (!venueType) {
+              return res.status(404).json({ message: 'Venue type not found' });
+          }
+          filters.venueTypeId = venueType._id;
+      }
+
+      // Step 3: Apply price range filter if pricing object is provided
+      if (pricing && (pricing.minPrice !== undefined || pricing.maxPrice !== undefined)) {
+          filters.pricing = {
+              $gte: pricing.minPrice || 0,
+              $lte: pricing.maxPrice || Infinity
+          };
+      }
+
+      // Step 4: Find venues based on the applied filters
+      let venues = await Venue.find(filters);
+
+      // Step 5: Apply distance filter if userLat, userLong, and maxDistance are provided
+      if (userLat && userLong && maxDistance) {
+          venues = venues.filter((venue) => {
+              const distance = calculateDistance(userLat, userLong, venue.lat, venue.long);
+              return distance <= maxDistance;
+          });
+      }
+
+      res.status(200).json(venues);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+// {
 //   "cityName": "Udaipur",
 //   "venueTypeName": "Conference",
 //   "pricing": "5000"
 // }
+
+
 
 
 

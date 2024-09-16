@@ -1,74 +1,65 @@
-const WalletTransaction = require('../../schema/wallettransectionhistorySchema');
+const WalletTransaction = require('../../schema/wallettransectionhistorySchema'); // Adjust the path to where your schema file is located
 
-// Create a new transaction
-exports.createTransaction = async (req, res) => {
+// Create a new wallet transaction
+exports.createWalletTransaction = async (req, res) => {
     try {
-        const transaction = new WalletTransaction(req.body);
-        await transaction.save();
-        res.status(201).json(transaction);
+        const walletTransaction = new WalletTransaction(req.body);
+        await walletTransaction.save();
+        res.status(201).json(walletTransaction);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// Get all transactions
-exports.getAllTransactions = async (req, res) => {
+// Get all wallet transactions
+exports.getAllWalletTransactions = async (req, res) => {
     try {
-        const transactions = await WalletTransaction.find();
-        res.status(200).json(transactions);
+        const walletTransactions = await WalletTransaction.find();
+        res.status(200).json(walletTransactions);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// Get transactions by user ID
-exports.getTransactionsByUser = async (req, res) => {
+// Get wallet transactions by user ID
+exports.getWalletTransactionsByUserId = async (req, res) => {
     try {
-        const transactions = await WalletTransaction.find({ userId: req.params.userId });
-        if (transactions.length === 0) {
+        const { userId } = req.params;
+        const walletTransactions = await WalletTransaction.find({ userId }).populate('userId').populate('kittyTransactions.kittyGroupId');
+        if (walletTransactions.length === 0) {
             return res.status(404).json({ message: 'No transactions found for this user' });
         }
-        res.status(200).json(transactions);
+
+        res.status(200).json(walletTransactions);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// Get a specific transaction by ID
-exports.getTransactionById = async (req, res) => {
+// Update a wallet transaction by ID
+exports.updateWalletTransaction = async (req, res) => {
     try {
-        const transaction = await WalletTransaction.findById(req.params.id);
-        if (!transaction) {
+        const { id } = req.params;
+        const walletTransaction = await WalletTransaction.findByIdAndUpdate(id, req.body, { new: true });
+        if (!walletTransaction) {
             return res.status(404).json({ message: 'Transaction not found' });
         }
-        res.status(200).json(transaction);
+        res.status(200).json(walletTransaction);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// Update a transaction by ID
-exports.updateTransaction = async (req, res) => {
+// Delete a wallet transaction by ID
+exports.deleteWalletTransaction = async (req, res) => {
     try {
-        const transaction = await WalletTransaction.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!transaction) {
-            return res.status(404).json({ message: 'Transaction not found' });
-        }
-        res.status(200).json(transaction);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-};
-
-// Delete a transaction by ID
-exports.deleteTransaction = async (req, res) => {
-    try {
-        const transaction = await WalletTransaction.findByIdAndDelete(req.params.id);
-        if (!transaction) {
+        const { id } = req.params;
+        const walletTransaction = await WalletTransaction.findByIdAndDelete(id);
+        if (!walletTransaction) {
             return res.status(404).json({ message: 'Transaction not found' });
         }
         res.status(200).json({ message: 'Transaction deleted successfully' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ message: error.message });
     }
 };
