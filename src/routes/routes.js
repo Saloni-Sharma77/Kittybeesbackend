@@ -35,6 +35,8 @@ const postShareController = require('../controller/client/postshareControllers')
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
 const kittyDetailControllers = require('../controller/client/kittydetailController');
 const pastFunController = require('../controller/client/pastfunControllers');
+const venuereview_controller = require('../controller/client/venueReviewController');
+
 const {
     createTermsAndServices,
     getTermsAndServices,
@@ -264,6 +266,13 @@ router.get('/getFeedbacks', feedbackController.getFeedbacks);
 router.get('/getFeedbackById/:id', feedbackController.getFeedbackById);
 router.put('/updateFeedback/:id', feedbackController.updateFeedback);
 router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
+
+
+//vemue review Route
+router.post('/createReview', venuereview_controller.createReview);
+router.get('/getReviews', venuereview_controller.getReviews);
+router.put('/updateReview/:id', venuereview_controller.updateReview);
+router.delete('/deleteReview/:id', venuereview_controller.deleteReview);
 
 //Template Routes 
 router.post('/createTemplate', templateController.createTemplate);
