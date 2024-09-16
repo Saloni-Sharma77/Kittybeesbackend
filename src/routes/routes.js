@@ -35,6 +35,8 @@ const postShareController = require('../controller/client/postshareControllers')
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
 const kittyDetailControllers = require('../controller/client/kittydetailController');
 const pastFunController = require('../controller/client/pastfunControllers');
+const venuereview_controller = require('../controller/client/venueReviewController');
+
 const {
     createTermsAndServices,
     getTermsAndServices,
@@ -43,7 +45,12 @@ const {
     deleteTermsAndServices
   } = require('../controller/client/termsandserviceControllers');
 
-  const walletTransactionController = require('../controller/client/wallettransectionhistoryControllers');
+  const walletTransactionControllers = require('../controller/client/wallettransectionhistoryControllers');
+  const draftController = require('../controller/client/draftControllers');
+
+
+
+
 
 
 
@@ -160,6 +167,8 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+//spin route
+router.get('/spin/:groupId', group_controller.performSpin);
 
 
 
@@ -208,8 +217,22 @@ router.get("/getVenueById/:id", venue_controller.getVenueById);
 router.put("/updateVenue/:id", venue_controller.updateVenue);
 router.delete("/deleteVenue/:id", venue_controller.deleteVenue);
 router.patch("/updateVenueStatus/:id", venue_controller.updateStatus);
-// router.post('/filter', venue_controller.filterVenues);
+
+
+//filter api 
 router.post('/filterVenues', venue_controller.filterVenues);
+//
+// {
+//   "cityName": "New York",
+//   "pricing": {
+//     "minPrice": 500.0,
+//     "maxPrice": 50000.0
+//   },
+//   "userLat": 40.7128,
+//   "userLong": -74.0060,
+//   "maxDistance": 20
+// }
+
 
 
 
@@ -229,6 +252,7 @@ router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
 
 
 
+
 //PostTag Routes
 router.post('/createPostTag', postTagController.createPostTag); // Create post tag
 router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
@@ -242,6 +266,13 @@ router.get('/getFeedbacks', feedbackController.getFeedbacks);
 router.get('/getFeedbackById/:id', feedbackController.getFeedbackById);
 router.put('/updateFeedback/:id', feedbackController.updateFeedback);
 router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
+
+
+//vemue review Route
+router.post('/createReview', venuereview_controller.createReview);
+router.get('/getReviews', venuereview_controller.getReviews);
+router.put('/updateReview/:id', venuereview_controller.updateReview);
+router.delete('/deleteReview/:id', venuereview_controller.deleteReview);
 
 //Template Routes 
 router.post('/createTemplate', templateController.createTemplate);
@@ -312,40 +343,47 @@ router.put('/updatePastFunById/:id', pastFunController.updatePastFunById);
 router.delete('/deletePastFunById/:id', pastFunController.deletePastFunById);
 
 // Create a new Terms and Services document
-router.post('/', createTermsAndServices);
+router.post('/createTermsAndServices', createTermsAndServices);
 
 // Get all Terms and Services documents
 router.get('/', getTermsAndServices);
 
 // Get a single Terms and Services document by ID
-router.get('/:id', getTermsAndServicesById);
+router.get('/getTermsAndServices/:id', getTermsAndServicesById);
 
 // Update a Terms and Services document by ID
-router.put('/:id', updateTermsAndServices);
+router.put('/updateTermsAndServices/:id', updateTermsAndServices);
 
 // Delete a Terms and Services document by ID
-router.delete('/:id', deleteTermsAndServices);
+router.delete('/deleteTermsAndServices/:id', deleteTermsAndServices);
 
 
 
 
-// Create a new transaction
-router.post('/transactions', walletTransactionController.createTransaction);
+// Create a new wallet transaction
+router.post('/walletTransactions', walletTransactionControllers.createWalletTransaction);
 
-// Get all transactions
-router.get('/transactions', walletTransactionController.getAllTransactions);
+// Get all wallet transactions
+router.get('/walletTransactions', walletTransactionControllers.getAllWalletTransactions);
 
-// Get transactions by user ID
-router.get('/transactions/user/:userId', walletTransactionController.getTransactionsByUser);
+// Get wallet transactions by user ID
+router.get('/walletTransactions/user/:userId', walletTransactionControllers.getWalletTransactionsByUserId);
 
-// Get a specific transaction by ID
-router.get('/transactions/:id', walletTransactionController.getTransactionById);
+// Update a wallet transaction by ID
+router.put('/walletTransactions/:id', walletTransactionControllers.updateWalletTransaction);
 
-// Update a transaction by ID
-router.put('/transactions/:id', walletTransactionController.updateTransaction);
+// Delete a wallet transaction by ID
+router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWalletTransaction);
 
-// Delete a transaction by ID
-router.delete('/transactions/:id', walletTransactionController.deleteTransaction);
+
+
+
+
+// Route to add a draft
+router.post('/addtodraft', draftController.addToDraft);
+router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
+router.get('/getalldrafts', draftController.getAllDrafts);
+
 
 
 

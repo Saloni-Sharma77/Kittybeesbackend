@@ -425,6 +425,55 @@ exports.addUserRequest = async (req, res) => {
 
 
 
+// Function to perform spin
+exports.performSpin = async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+
+    // Fetch the group by ID
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    const userIds = group.userIds.map(user => user.userId).filter(Boolean); // Ensure valid userIds
+
+    // Get previous winners from group or initialize if not present
+    let winners = group.winners || []; // Winners should be stored in the group
+
+    // Exclude previous winners from eligible users
+    const eligibleUsers = userIds.filter(userId => !winners.some(winner => winner.userId.toString() === userId.toString()));
+
+    // Check if there are any eligible users left
+    if (eligibleUsers.length === 0) {
+      return res.status(200).json({ message: "No eligible users left to spin." });
+    }
+
+    // Select one random user for the spin
+    const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
+    const selectedUser = eligibleUsers[randomIndex];
+
+    // Assign winner number based on the number of users already in the winners list
+    const winnerNumber = winners.length + 1;
+
+    // Add the selected user to the winners list and assign them the winner number
+    winners.push({ userId: selectedUser, winnerNumber });
+
+    // Save the updated group with the new winner
+    group.winners = winners;
+    await group.save();
+
+    // Return the spin result
+    res.status(200).json({
+      message: "Spin completed successfully",
+      spinResult: { winnerUserId: selectedUser, winnerNumber },
+      allWinners: winners // Returning all winners so far for clarity
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 
 

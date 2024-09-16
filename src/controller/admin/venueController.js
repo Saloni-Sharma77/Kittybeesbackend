@@ -2,6 +2,7 @@ const mongoose = require('mongoose'); // Ensure mongoose is imported
 const City = require('../../schema/citySchema');
 const VenueType = require('../../schema/typeofvanueSchema');
 const Venue = require("../../schema/venueSchema");
+const VenueReview = require('../../schema/venueReviewSchema'); // Ensure this import matches your path
 
 exports.addVenue = async (req, res) => {
   try {
@@ -58,6 +59,44 @@ exports.addVenue = async (req, res) => {
 
 
 // Get all venues
+// exports.getAllVenues = async (req, res) => {
+//   try {
+//     // Extract query parameters
+//     const { page = 1, limit = 5, name = '' } = req.query;
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     // Build the search query
+//     const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
+
+//     // Fetch venues with pagination and search
+//     const venues = await Venue.find(searchQuery)
+//       .skip((pageNumber - 1) * pageSize)
+//       .limit(pageSize);
+
+//     // Count total number of documents matching the search query
+//     const totalCount = await Venue.countDocuments(searchQuery);
+
+//     // Calculate total pages
+//     const totalPages = Math.ceil(totalCount / pageSize);
+
+//     // Send response with pagination info
+//     res.status(200).json({
+//       data: venues,
+//       pagination: {
+//         page: pageNumber,
+//         limit: pageSize,
+//         totalPages,
+//         totalCount
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 exports.getAllVenues = async (req, res) => {
   try {
     // Extract query parameters
@@ -70,10 +109,37 @@ exports.getAllVenues = async (req, res) => {
     // Build the search query
     const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
 
-    // Fetch venues with pagination and search
-    const venues = await Venue.find(searchQuery)
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
+    // Perform aggregation to include average rating
+    const venuesWithRatings = await Venue.aggregate([
+      { $match: searchQuery }, // Match the search query
+      {
+        $lookup: {
+          from: 'venuereviews', // Ensure this matches your review collection name
+          localField: '_id',
+          foreignField: 'venueId',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: '$reviews' }, 0] },
+              then: {
+                $avg: '$reviews.rating'
+              },
+              else: 0
+            }
+          }
+        }
+      },
+      {
+        $skip: (pageNumber - 1) * pageSize
+      },
+      {
+        $limit: pageSize
+      }
+    ]);
 
     // Count total number of documents matching the search query
     const totalCount = await Venue.countDocuments(searchQuery);
@@ -81,9 +147,9 @@ exports.getAllVenues = async (req, res) => {
     // Calculate total pages
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // Send response with pagination info
+    // Send response with pagination info and average ratings
     res.status(200).json({
-      data: venues,
+      data: venuesWithRatings,
       pagination: {
         page: pageNumber,
         limit: pageSize,
@@ -303,41 +369,76 @@ exports.updateStatus = async (req, res)=>{
 
 
 
-//filter venues based on city name, venue type, and pricing
-exports.filterVenues = async (req, res) => {
-    try {
-        const { cityName, venueTypeName, pricing } = req.body;
 
-        // Step 1: Find City ID based on city name
-        const city = await City.findOne({ name: cityName });
-        if (!city) {
-            return res.status(404).json({ message: 'City not found' });
-        }
 
-        // Step 2: Find VenueType ID based on venue type name
-        const venueType = await VenueType.findOne({ type: venueTypeName });
-        if (!venueType) {
-            return res.status(404).json({ message: 'Venue type not found' });
-        }
-
-        // Step 3: Find venues based on cityId, venueTypeId, and pricing
-        const filters = {
-            cityId: city._id,
-            venueTypeId: venueType._id
-        };
-        if (pricing) filters.pricing = pricing;
-
-        const venues = await Venue.find(filters);
-        res.status(200).json(venues);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+//  Function to calculate distance using Haversine formula
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Radius of the Earth in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
 };
-// //{
+
+exports.filterVenues = async (req, res) => {
+  try {
+      const { cityName, venueTypeName, pricing, userLat, userLong, maxDistance } = req.body;
+
+      const filters = {};
+
+      // Step 1: Apply city filter if cityName is provided
+      if (cityName) {
+          const city = await City.findOne({ name: cityName });
+          if (!city) {
+              return res.status(404).json({ message: 'City not found' });
+          }
+          filters.cityId = city._id;
+      }
+
+      // Step 2: Apply venue type filter if venueTypeName is provided
+      if (venueTypeName) {
+          const venueType = await VenueType.findOne({ type: venueTypeName });
+          if (!venueType) {
+              return res.status(404).json({ message: 'Venue type not found' });
+          }
+          filters.venueTypeId = venueType._id;
+      }
+
+      // Step 3: Apply price range filter if pricing object is provided
+      if (pricing && (pricing.minPrice !== undefined || pricing.maxPrice !== undefined)) {
+          filters.pricing = {
+              $gte: pricing.minPrice || 0,
+              $lte: pricing.maxPrice || Infinity
+          };
+      }
+
+      // Step 4: Find venues based on the applied filters
+      let venues = await Venue.find(filters);
+
+      // Step 5: Apply distance filter if userLat, userLong, and maxDistance are provided
+      if (userLat && userLong && maxDistance) {
+          venues = venues.filter((venue) => {
+              const distance = calculateDistance(userLat, userLong, venue.lat, venue.long);
+              return distance <= maxDistance;
+          });
+      }
+
+      res.status(200).json(venues);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+// {
 //   "cityName": "Udaipur",
 //   "venueTypeName": "Conference",
 //   "pricing": "5000"
 // }
+
+
 
 
 
