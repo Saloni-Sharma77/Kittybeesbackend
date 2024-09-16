@@ -44,7 +44,9 @@ const {
   } = require('../controller/client/termsandserviceControllers');
 
   const walletTransactionControllers = require('../controller/client/wallettransectionhistoryControllers');
-  const { spinKitty, getGroupById } = require('../controller/client/spinController');
+  const draftController = require('../controller/client/draftControllers');
+
+
 
 
 
@@ -163,6 +165,8 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+//spin route
+router.get('/spin/:groupId', group_controller.performSpin);
 
 
 
@@ -243,6 +247,7 @@ router.post("/addKitty", kitty_controller.addKitty);
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
+
 
 
 
@@ -364,9 +369,11 @@ router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWall
 
 
 
-//spin route
-router.get('/group/:groupId', getGroupById);
-router.post('/spin/:groupId', spinKitty);
+
+// Route to add a draft
+router.post('/addtodraft', draftController.addToDraft);
+router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
+router.get('/getalldrafts', draftController.getAllDrafts);
 
 
 

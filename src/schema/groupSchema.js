@@ -26,6 +26,10 @@ const GroupSchema = new mongoose.Schema(
     isActive:{type:Boolean,default : true},
     interests: {type:String,},
     // GroupStatus: {type: String,enum: ['JoiniSatus', 'Requested'],required: true },
+    winners: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      winnerNumber: { type: Number }
+    }],
 
   },
   { timestamps: true }
