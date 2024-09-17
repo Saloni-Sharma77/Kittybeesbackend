@@ -59,3 +59,46 @@ exports.deleteKittyDetail = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+//
+
+
+
+
+// Function to rate a kitty
+exports.rateKitty = async (req, res) => {
+  try {
+    const { kittyId, userId, rating } = req.body;
+
+    if (!kittyId || !userId || !rating) {
+      return res.status(400).json({ message: 'Kitty ID, User ID, and Rating are required' });
+    }
+
+    // Check if the kitty exists
+    const kitty = await KittyDetail.findById(kittyId);
+    if (!kitty) {
+      return res.status(404).json({ message: 'Kitty not found' });
+    }
+
+    // Check if the date and time have passed
+    const now = new Date();
+    const kittyDateTime = new Date(`${kitty.date} ${kitty.time}`);
+    if (now < kittyDateTime) {
+      return res.status(400).json({ message: 'You can only rate the kitty after the event has passed' });
+    }
+
+    // Check if the user has already rated this kitty
+    const existingRating = kitty.ratings.find(r => r.userId.toString() === userId);
+    if (existingRating) {
+      return res.status(400).json({ message: 'You have already rated this kitty' });
+    }
+
+    // Add the rating
+    kitty.ratings.push({ userId, rating });
+    await kitty.save();
+
+    res.status(200).json({ message: 'Kitty rated successfully', kitty });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

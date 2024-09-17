@@ -19,6 +19,7 @@ const venueCategory_controller = require("../controller/admin/venueCategoryContr
 // Client controllers
 const user_controller = require("../controller/client/usercontroller");
 const otp_controller = require("../controller/client/otpcontroller");
+const test_controller = require("../controller/client/testController");
 const group_controller = require("../controller/client/groupController");
 const post_controller = require("../controller/client/postController");
 const wishlist_controller = require("../controller/client/wishlistController");
@@ -68,6 +69,7 @@ router.post("/sendotp", otp_controller.sendotp);
 // router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
 // router.post("/verifyotp", otp_controller.verifyotp);
 // router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
+router.post("/sendotppp", test_controller.sendotp);
 
 router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);
@@ -168,6 +170,8 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 // router.post('/joinByReferral', group_controller.joinGroupByReferral);
+router.post('/join-by-referral', group_controller.joinGroupByReferralCode);
+
 
 //spin route
 router.get('/spin/:groupId', group_controller.performSpin);
@@ -335,6 +339,8 @@ router.get('/getAllKittyDetails', kittyDetailControllers.getAllKittyDetails);
 router.get('/getKittyDetailById/:id', kittyDetailControllers.getKittyDetailById);
 router.put('/updateKittyDetail/:id', kittyDetailControllers.updateKittyDetail);
 router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail);
+router.post('/rateKitty',kittyDetailControllers.rateKitty);
+
 
 
 //past fun routes

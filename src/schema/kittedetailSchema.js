@@ -33,7 +33,24 @@ const kittyDetailSchema = new mongoose.Schema({
   plannedActivities: {
     type: [String], // Array of planned activities
     default: [] // Default to an empty array
-  }
+  },
+  ratings: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1, // Assuming a rating scale of 1 to 5
+      max: 5
+    },
+    dateRated: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 });
 
 module.exports = mongoose.model('KittyDetail', kittyDetailSchema);

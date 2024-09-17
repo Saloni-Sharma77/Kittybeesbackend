@@ -30,6 +30,7 @@ const GroupSchema = new mongoose.Schema(
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
       winnerNumber: { type: Number }
     }],
+    referralCode: { type: String, unique: true },
 
   },
   { timestamps: true }
