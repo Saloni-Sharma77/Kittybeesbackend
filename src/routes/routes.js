@@ -65,9 +65,9 @@ const {
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
-router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
-router.post("/verifyotp", otp_controller.verifyotp);
-router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
+// router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
+// router.post("/verifyotp", otp_controller.verifyotp);
+// router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
 
 router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);
@@ -167,6 +167,8 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+// router.post('/joinByReferral', group_controller.joinGroupByReferral);
+
 //spin route
 router.get('/spin/:groupId', group_controller.performSpin);
 

@@ -79,7 +79,8 @@ exports.getKittyById = async (req, res) => {
           model: 'Users'
         }
       })
-      .populate('userId');
+      .populate('userId')
+      .populate('themeId');
 
     if (!getKitty) {
       return res.status(404).json({ error: "Kitty not found" });
