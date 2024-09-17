@@ -102,3 +102,28 @@ exports.rateKitty = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+/////
+
+// Get all past kitties
+exports.getPastKitties = async (req, res) => {
+  try {
+    const now = new Date();
+    const pastKitties = await KittyDetail.find({ date: { $lt: now } });
+    res.status(200).json(pastKitties);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving past kitties', error });
+  }
+};
+
+// Get all future kitties
+exports.getFutureKitties = async (req, res) => {
+  try {
+    const now = new Date();
+    const futureKitties = await KittyDetail.find({ date: { $gte: now } });
+    res.status(200).json(futureKitties);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving future kitties', error });
+  }
+};
