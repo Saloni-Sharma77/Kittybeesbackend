@@ -69,9 +69,9 @@ router.post("/postImage",uploadImage.uploadImage);
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
-// router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
-// router.post("/verifyotp", otp_controller.verifyotp);
-// router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
+router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
+router.post("/verifyotp", otp_controller.verifyotp);
+router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
 router.post("/sendotppp", test_controller.sendotp);
 
 router.post("/adduserInfo", user_controller.adduserInfo);
