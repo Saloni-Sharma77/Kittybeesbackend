@@ -4,6 +4,7 @@ const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
 
 
+
 exports.addGroup = async (req, res) => {
   try {
     const {
@@ -150,6 +151,7 @@ exports.updateGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to update group" });
   }
 };
+
 
 exports.deleteGroup = async (req, res) => {
   try {

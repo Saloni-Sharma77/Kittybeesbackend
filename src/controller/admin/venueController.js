@@ -183,9 +183,8 @@ exports.getAllCities = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-//
 
-// Helper function to calculate distance between two coordinates
+
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371; // Radius of Earth in km

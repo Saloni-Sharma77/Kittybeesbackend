@@ -39,6 +39,7 @@ const venueTypeController = require('../controller/client/typeofvanueControllers
 const kittyDetailControllers = require('../controller/client/kittydetailController');
 const pastFunController = require('../controller/client/pastfunControllers');
 const venuereview_controller = require('../controller/client/venueReviewController');
+const uploadImageController =require('../controller/client/KittyCreationImages/PlanKittyImageUpload');
 
 const {
     createTermsAndServices,
@@ -267,8 +268,8 @@ router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
 router.post('/createPostTag', postTagController.createPostTag); // Create post tag
 router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
 router.get('/getPostTagById/:id', postTagController.getPostTagById); // Get post tag by ID
-router.put('/updatePostTag/:id', postTagController.updatePostTag); // Update post tag by ID
-router.delete('/deletePostTag/:id', postTagController.deletePostTag); // Delete post tag by ID
+router.put('/updatePostTag/:id', postTagController.updatePostTag); 
+router.delete('/deletePostTag/:id', postTagController.deletePostTag);
 
 //FeedBack Route
 router.post('/createFeedback', feedbackController.createFeedback);
@@ -393,7 +394,8 @@ router.put('/walletTransactions/:id', walletTransactionControllers.updateWalletT
 router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWalletTransaction);
 
 
-
+//Routes to Upload Images On S3Bucket
+router.post('/uploadKittyBanner', uploadImageController.uploadKittyBanner);
 
 
 // Route to add a draft

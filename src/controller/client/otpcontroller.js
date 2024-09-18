@@ -24,7 +24,7 @@ const client = twilio(
   // Send TEXT OTP
   exports.sendotp = async (req, res) => {
     const { phoneNumber } = req.body;
-    
+    console.log(phoneNumber);
     if (!phoneNumber) {
       return res.status(400).send({ error: "Phone number is required" });
     }
@@ -85,8 +85,8 @@ const client = twilio(
   // };
   exports.verifyotp = async (req, res) => {
     const { phoneNumber, otp } = req.body;
-    if (!otp) {
-        return res.status(400).send({ error: "Phone number and OTP are required" });
+    if ( !otp) {
+      return res.status(400).send({ error: "Phone number and OTP are required" });
     }
     try {
         const user = await User.findOne({ phoneNumber });
