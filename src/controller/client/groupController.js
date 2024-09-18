@@ -19,7 +19,8 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       groupMembers,
-      image
+      image,
+      referralCode
      
     } = req.body;
 
