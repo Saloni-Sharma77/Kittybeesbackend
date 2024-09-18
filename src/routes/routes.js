@@ -36,6 +36,7 @@ const venueTypeController = require('../controller/client/typeofvanueControllers
 const kittyDetailControllers = require('../controller/client/kittydetailController');
 const pastFunController = require('../controller/client/pastfunControllers');
 const venuereview_controller = require('../controller/client/venueReviewController');
+const uploadImageController =require('../controller/client/KittyCreationImages/PlanKittyImageUpload');
 
 const {
     createTermsAndServices,
@@ -376,7 +377,8 @@ router.put('/walletTransactions/:id', walletTransactionControllers.updateWalletT
 router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWalletTransaction);
 
 
-
+//Routes to Upload Images On S3Bucket
+router.post('/uploadKittyBanner', uploadImageController.uploadKittyBanner);
 
 
 // Route to add a draft
