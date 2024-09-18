@@ -93,8 +93,7 @@ const client = twilio(
         if (!user) {
             return res.status(400).send({ error: "Phone number not found" });
         }
-        // if (user.otp !== otp || new Date() > user.otpExpiresAt) {
-          if (user.otp !== otp) {
+        if (user.otp !== otp || new Date() > user.otpExpiresAt) {          
             return res.status(400).send({ error: "Invalid or expired OTP" });
         }
        let fullnameExists = false;
