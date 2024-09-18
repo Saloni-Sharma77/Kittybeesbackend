@@ -499,10 +499,11 @@ exports.performSpin = async (req, res) => {
 
 exports.joinGroupByReferralCode = async (req, res) => {
   const { referralCode, userId } = req.body;
+  const { groupId } = req.params;  // Fetch group ID from URL parameters
 
   try {
-    // Check if referral code is valid (assuming it's stored in the group document)
-    const group = await Group.findOne({ referralCode: referralCode });
+    // Check if the referral code matches for the given group ID
+    const group = await Group.findOne({ _id: groupId, referralCode: referralCode });
     if (!group) {
       return res.status(404).json({ message: "Invalid referral code or group not found" });
     }
@@ -516,7 +517,7 @@ exports.joinGroupByReferralCode = async (req, res) => {
       return res.status(400).json({ message: 'User already has a pending request or is a member' });
     }
 
-    // Add the user to the group with a pending status
+    // Add the user to the group with an approved status
     group.userIds.push({
       userId,
       status: 'approved'
@@ -524,7 +525,7 @@ exports.joinGroupByReferralCode = async (req, res) => {
 
     await group.save();
 
-    res.status(200).json({ message: "User added to group request successfully" });
+    res.status(200).json({ message: "User successfully joined the group" });
   } catch (error) {
     console.error("Error joining group by referral code:", error);
     res.status(500).json({ message: error.message });

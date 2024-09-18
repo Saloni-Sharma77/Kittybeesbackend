@@ -127,3 +127,46 @@ exports.getFutureKitties = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving future kitties', error });
   }
 };
+
+
+///
+
+// Function to calculate the countdown for the upcoming kitty
+
+// Function to calculate the countdown for the upcoming kitty
+exports.getUpcomingKittyCountdown = async (req, res) => {
+  try {
+    // Get the current date and time
+    const currentDate = new Date();
+
+    // Find all kitty parties where the date is in the future, sorted by date (soonest first)
+    const upcomingKitties = await KittyDetail.find({ date: { $gte: currentDate } }).sort({ date: 1 });
+
+    // Check if any kitties are found
+    if (!upcomingKitties.length) {
+      return res.status(404).json({ message: "No upcoming kitty parties found" });
+    }
+
+    // Get the nearest upcoming kitty
+    const nextKitty = upcomingKitties[0];
+
+    // Calculate the difference between the current date and the upcoming kitty date
+    const timeDifference = new Date(nextKitty.date) - currentDate;
+
+    // Convert the time difference to days and hours
+    const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    // Send the response with the kitty name and the countdown
+    return res.status(200).json({
+      kittyName: nextKitty.partyName,
+      countdown: {
+        days,
+        hours
+      }
+    });
+  } catch (error) {
+    console.error("Error getting upcoming kitty countdown:", error);
+    return res.status(500).json({ error: "An error occurred while fetching the countdown." });
+  }
+};

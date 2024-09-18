@@ -32,7 +32,7 @@ const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
-const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
+const { addUserToGroup, getPendingRequestsByUserId, updateUserStatus } = require('../controller/client/requesttojoingroupController');
 const bookingRequestController = require('../controller/client/bookingrequestControllers');
 const postShareController = require('../controller/client/postshareControllers');
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
@@ -51,6 +51,9 @@ const {
 
   const walletTransactionControllers = require('../controller/client/wallettransectionhistoryControllers');
   const draftController = require('../controller/client/draftControllers');
+
+  const pollController = require('../controller/client/pollcontrollers');
+
 
 
 
@@ -174,7 +177,7 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 // router.post('/joinByReferral', group_controller.joinGroupByReferral);
-router.post('/join-by-referral', group_controller.joinGroupByReferralCode);
+router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCode);
 
 
 //spin route
@@ -304,7 +307,7 @@ router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
 // request to add user in group routes
 
 router.post('/addUserToGroup', addUserToGroup);
-router.get('/pendingUserIds/:groupId', getPendingUserIds);
+router.get('/pendingRequests/:userId', getPendingRequestsByUserId);
 
 router.put('/updateUserStatus', updateUserStatus);
 
@@ -347,6 +350,9 @@ router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail
 router.post('/rateKitty',kittyDetailControllers.rateKitty);
 // Route to get all past kitties
 router.get('/getPastKitties', kittyDetailControllers.getPastKitties);
+router.get('/upcoming-kitty', kittyDetailControllers.getUpcomingKittyCountdown);
+
+
 
 // Route to get all future kitties
 router.get('/getFutureKitties', kittyDetailControllers.getFutureKitties);
@@ -402,6 +408,26 @@ router.post('/uploadKittyBanner', uploadImageController.uploadKittyBanner);
 router.post('/addtodraft', draftController.addToDraft);
 router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
 router.get('/getalldrafts', draftController.getAllDrafts);
+
+
+
+
+// poll routes 
+
+// Create a new poll
+router.post('/polls', pollController.createPoll);
+
+// Get all polls
+router.get('/polls', pollController.getAllPolls);
+
+// Get a poll by ID
+router.get('/polls/:id', pollController.getPollById);
+
+// Update a poll by ID
+router.put('/polls/:id', pollController.updatePoll);
+
+// Delete a poll by ID
+router.delete('/polls/:id', pollController.deletePoll);
 
 
 
