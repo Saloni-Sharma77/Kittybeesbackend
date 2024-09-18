@@ -1,5 +1,7 @@
 // controllers/groupController.js
 const Group = require('../../schema/requesttojoingroupSchema');
+const mongoose = require('mongoose');
+
 
 
 // Add user to a group
@@ -72,17 +74,22 @@ const updateUserStatus = async (req, res) => {
 };
 
 
+
+
+// Get all pending requests from groups where the user is the admin
+
 // Get all pending requests from groups where the user is the admin
 const getPendingRequestsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;  // Get userId from URL params
 
-    if (!userId) {
-      return res.status(400).json({ message: 'userId is required' });
+    // Check if userId is provided and is a valid ObjectId
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid or missing userId' });
     }
 
-    // Find all groups where the user is the admin
-    const groups = await Group.find({ userId: userId });
+    // Find all groups where the user is the admin (userId is the admin's ID)
+    const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) });
 
     if (!groups || groups.length === 0) {
       return res.status(404).json({ message: 'No groups found for this user' });

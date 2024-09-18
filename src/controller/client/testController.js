@@ -16,6 +16,11 @@ function generateSixDigitRandomNumber() {
 }
 
 // Send OTP via SMS
+
+
+// Send OTP via Message Central
+
+// Send OTP via Message Central
 exports.sendotp = async (req, res) => {
   const { phoneNumber } = req.body;
 
@@ -24,25 +29,26 @@ exports.sendotp = async (req, res) => {
   }
 
   try {
-    const otp = generateSixDigitRandomNumber();  // Generate 6-digit OTP
-    const otpExpiresAt = new Date(Date.now() + 10 * 60000); // OTP valid for 10 minutes
-
-    // Send OTP via Message Central, passing the generated OTP in the message
-    await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`, {
-      message: `Your OTP is ${otp}`,  // Include the generated OTP in the message
-    }, {
+    // Send OTP request to Message Central
+    const response = await axios.post(`https://cpaas.messagecentral.com/verification/v3/send`, null, {
+      params: {
+        countryCode: '91',
+        customerId: process.env.MESSAGE_CENTRAL_USER_ID,
+        flowType: 'SMS',
+        mobileNumber: phoneNumber
+      },
       headers: {
-        'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
+        'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN
       }
     });
 
-    // Update or insert user OTP data
+    // Save the transaction ID to the user record for verification
     const filter = { phoneNumber };
-    const update = { otp, otpExpiresAt };
+    const update = { otpTransactionId: response.data.verificationId }; // Save the verificationId
     const options = { upsert: true, new: true };
-    const updatedUser = await User.findOneAndUpdate(filter, update, options);
+    await User.findOneAndUpdate(filter, update, options);
 
-    res.status(200).send({ success: true, message: 'OTP sent successfully', otp: otp });
+    res.status(200).send({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
     console.error('Error sending OTP:', error.response ? error.response.data : error.message);
     res.status(500).send({ error: 'Failed to send OTP' });
@@ -50,48 +56,59 @@ exports.sendotp = async (req, res) => {
 };
 
 // Verify OTP
+
+
+// Verify OTP via Message Central
 exports.verifyotp = async (req, res) => {
   const { phoneNumber, otp } = req.body;
+
   if (!phoneNumber || !otp) {
     return res.status(400).send({ error: 'Phone number and OTP are required' });
   }
 
   try {
     const user = await User.findOne({ phoneNumber });
-    if (!user) {
-      return res.status(400).send({ error: 'Phone number not found' });
+    if (!user || !user.otpTransactionId) {
+      return res.status(400).send({ error: 'Phone number not found or no OTP request made' });
     }
-    if (user.otp !== otp || new Date() > user.otpExpiresAt) {
+
+    // Validate OTP using Message Central
+    const response = await axios.get('https://cpaas.messagecentral.com/verification/v3/validateOtp', {
+      params: {
+        countryCode: '91',
+        mobileNumber: phoneNumber,
+        verificationId: user.otpTransactionId, // Use verificationId from user data
+        customerId: process.env.MESSAGE_CENTRAL_USER_ID,
+        code: otp
+      },
+      headers: {
+        'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN
+      }
+    });
+
+    if (response.data.status !== 'SUCCESS') {
       return res.status(400).send({ error: 'Invalid or expired OTP' });
     }
 
-    let fullnameExists = false;
-    if (user.fullname) {
-      fullnameExists = true;
-    }
-
-    // OTP is verified, now check if the user exists
+    // OTP is verified, now proceed with your login/registration logic
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
-    user.otp = undefined;
-    user.otpExpiresAt = undefined;
+    user.otpTransactionId = undefined; // Clear the OTP transaction ID after successful verification
     await user.save();
 
     res.status(200).send({
       success: true,
       message: 'OTP verified successfully',
       user: user,
-      fullname: user?.fullname,
-      username: user?.username,
-      token: token,
-      fullnameExists: fullnameExists, // true if user exists, false otherwise
+      token: token
     });
   } catch (error) {
     console.error('Error verifying OTP:', error.response ? error.response.data : error.message);
     res.status(500).send({ error: 'Failed to verify OTP' });
   }
 };
+
 
 // Send OTP via WhatsApp
 exports.sendotpwhatsapp = async (req, res) => {
