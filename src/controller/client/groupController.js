@@ -3,51 +3,57 @@ const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
 
+
 exports.addGroup = async (req, res) => {
   try {
     const {
-        name ,
-        userId,
-        userIds,
-        groupInterestId,
-        groupFrequencyId,
-        groupIcon ,
-        groupType,
-        description,
-      rulesAndRegulation,
-      kittyFrequency,
-      groupCityArea,
-      contributionAmount,
-      groupMembers,
-      image
-     
-    } = req.body;
-
-    const newGroup= new Group({
-        name ,
-        userIds,
-        userId,
-        groupInterestId,
-        groupFrequencyId,
-        groupIcon ,
-        groupType,
-        description,
+      name,
+      userId,
+      userIds,
+      groupInterestId,
+      groupFrequencyId,
+      groupIcon,
+      groupType,
+      description,
       rulesAndRegulation,
       kittyFrequency,
       groupCityArea,
       contributionAmount,
       groupMembers,
       image,
-      referralCode
-     
+      referralCode // Add referralCode to the destructuring
+    } = req.body;
+
+    // Create a new group instance
+    const newGroup = new Group({
+      name,
+      userId,
+      userIds,
+      groupInterestId,
+      groupFrequencyId,
+      groupIcon,
+      groupType,
+      description,
+      rulesAndRegulation,
+      kittyFrequency,
+      groupCityArea,
+      contributionAmount,
+      groupMembers,
+      image,
+      referralCode // Ensure referralCode is included
     });
 
+    // Save the new group to the database
     await newGroup.save();
 
-    res.status(201).json({ message: "Group added successfully", task: newGroup });
+    res.status(201).json({ message: "Group added successfully", group: newGroup });
   } catch (err) {
-    console.error("Error adding task:", err);
-    res.status(500).json({ error: "Failed to add Group" });
+    // Handle duplicate referralCode error
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Referral code already exists" });
+    }
+    console.error("Error adding group:", err);
+    res.status(500).json({ error: "Failed to add group" });
   }
 };
 exports.getAllGroups = async (req, res) => {
@@ -92,51 +98,59 @@ exports.getGroupById = async (req, res) => {
 exports.updateGroup = async (req, res) => {
   try {
     const {
-        name ,
-        groupIcon ,
-        groupType,
-        useId,
-        userIds,
-        description,
-        groupInterestId,
-        groupFrequencyId,
-      rulesAndRegulation,
-      kittyFrequency,
-      groupCityArea,
-      contributionAmount,
-      image,
-      referralCode,
-      groupMembers} = req.body;
-    const updatedGroup = await Group.findByIdAndUpdate(
-      req.params.id,
-    {
-        name ,
-        userIds,
-        groupIcon ,
-        useId,
-        groupInterestId,
-        groupFrequencyId,
-        groupType,
-        description,
+      name,
+      userId,  // Fix the typo (useId -> userId)
+      userIds,
+      groupIcon,
+      groupType,
+      description,
+      groupInterestId,
+      groupFrequencyId,
       rulesAndRegulation,
       kittyFrequency,
       groupCityArea,
       contributionAmount,
       image,
       groupMembers,
-      referralCode,
-    },
+      referralCode // Add referralCode here if needed
+    } = req.body;
+
+    // Find the group by ID and update its fields
+    const updatedGroup = await Group.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        userId, // Fixed typo here
+        userIds,
+        groupIcon,
+        groupType,
+        description,
+        groupInterestId,
+        groupFrequencyId,
+        rulesAndRegulation,
+        kittyFrequency,
+        groupCityArea,
+        contributionAmount,
+        image,
+        groupMembers,
+        referralCode
+      },
       { new: true }
     );
+
+    // Handle the case where the group is not found
     if (!updatedGroup) {
       return res.status(404).json({ error: "Group not found" });
     }
-    res.status(200).json(updatedGroup);
+
+    // Return the updated group
+    res.status(200).json({ message: "Group updated successfully", group: updatedGroup });
   } catch (err) {
-    console.error("Error updating Group:", err);
-    res.status(500).json({ error: "Failed to update Group" });
+    console.error("Error updating group:", err);
+    res.status(500).json({ error: "Failed to update group" });
   }
 };
+
 exports.deleteGroup = async (req, res) => {
   try {
     const deletedgroup = await Group.findByIdAndDelete(req.params.id);
