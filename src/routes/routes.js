@@ -354,7 +354,7 @@ router.delete('/deleteKittyDetail/:id', kittyDetailControllers.deleteKittyDetail
 router.post('/rateKitty',kittyDetailControllers.rateKitty);
 // Route to get all past kitties
 router.get('/getPastKitties', kittyDetailControllers.getPastKitties);
-router.get('/upcoming-kitty', kittyDetailControllers.getUpcomingKittyCountdown);
+router.get('/getUpcomingKittyCountdown', kittyDetailControllers.getUpcomingKittyCountdown);
 
 
 

@@ -5,6 +5,8 @@ const User = require('../../schema/userSchema');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const Otp = require('../../schema/otpSchema'); // Import the new OTP schema
+
 
 // Generate six-digit random number
 function generateSixDigitRandomNumber() {
@@ -18,7 +20,6 @@ function generateSixDigitRandomNumber() {
 // Send OTP via SMS
 
 
-// Send OTP via Message Central
 
 // Send OTP via Message Central
 exports.sendotp = async (req, res) => {
@@ -42,11 +43,15 @@ exports.sendotp = async (req, res) => {
       }
     });
 
-    // Save the transaction ID to the user record for verification
+    const otp = response.data.code; // Assuming the OTP code is included in the response
+    const otpTransactionId = response.data.verificationId;
+    const otpExpiresAt = new Date(Date.now() + 10 * 60000); // OTP valid for 10 minutes
+
+    // Save OTP details to the database
     const filter = { phoneNumber };
-    const update = { otpTransactionId: response.data.verificationId }; // Save the verificationId
+    const update = { otp, otpExpiresAt, otpTransactionId };
     const options = { upsert: true, new: true };
-    await User.findOneAndUpdate(filter, update, options);
+    await Otp.findOneAndUpdate(filter, update, options);
 
     res.status(200).send({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
@@ -58,6 +63,7 @@ exports.sendotp = async (req, res) => {
 // Verify OTP
 
 
+
 // Verify OTP via Message Central
 exports.verifyotp = async (req, res) => {
   const { phoneNumber, otp } = req.body;
@@ -67,9 +73,16 @@ exports.verifyotp = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ phoneNumber });
-    if (!user || !user.otpTransactionId) {
+    const otpRecord = await Otp.findOne({ phoneNumber });
+
+    // Check if OTP record exists
+    if (!otpRecord) {
       return res.status(400).send({ error: 'Phone number not found or no OTP request made' });
+    }
+
+    // Check if OTP has expired
+    if (new Date() > otpRecord.otpExpiresAt) {
+      return res.status(400).send({ error: 'OTP has expired' });
     }
 
     // Validate OTP using Message Central
@@ -77,7 +90,7 @@ exports.verifyotp = async (req, res) => {
       params: {
         countryCode: '91',
         mobileNumber: phoneNumber,
-        verificationId: user.otpTransactionId, // Use verificationId from user data
+        verificationId: otpRecord.otpTransactionId,
         customerId: process.env.MESSAGE_CENTRAL_USER_ID,
         code: otp
       },
@@ -90,17 +103,19 @@ exports.verifyotp = async (req, res) => {
       return res.status(400).send({ error: 'Invalid or expired OTP' });
     }
 
-    // OTP is verified, now proceed with your login/registration logic
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    // OTP is verified
+    const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
-    user.otpTransactionId = undefined; // Clear the OTP transaction ID after successful verification
-    await user.save();
+
+    // Clear OTP details after successful verification
+    otpRecord.otp = undefined;
+    otpRecord.otpTransactionId = undefined;
+    await otpRecord.save();
 
     res.status(200).send({
       success: true,
       message: 'OTP verified successfully',
-      user: user,
       token: token
     });
   } catch (error) {
@@ -108,7 +123,6 @@ exports.verifyotp = async (req, res) => {
     res.status(500).send({ error: 'Failed to verify OTP' });
   }
 };
-
 
 // Send OTP via WhatsApp
 exports.sendotpwhatsapp = async (req, res) => {
