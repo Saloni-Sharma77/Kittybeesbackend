@@ -18,6 +18,8 @@ exports.addVenue = async (req, res) => {
         image,
         pricing,
         contactNo,
+        kittiesHappened,  // Add these fields
+        kittiesBooked     // Add these fields
     } = req.body;
 
     // Validation check for cityId and venueTypeId
@@ -36,7 +38,9 @@ exports.addVenue = async (req, res) => {
         long,
         image,
         pricing,
-        contactNo
+        contactNo,
+        kittiesHappened,   // Initialize here
+        kittiesBooked      // Initialize here
     });
 
     await newVenue.save();
@@ -47,6 +51,7 @@ exports.addVenue = async (req, res) => {
     res.status(500).json({ error: "Failed to add venue", details: err.message });
   }
 };
+
 
 
 
@@ -276,12 +281,12 @@ exports.getVenueById = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user by ID" });
   }
 };
+
 exports.updateVenue = async (req, res) => {
   try {
     const {
-        name ,
+        name,
         venueCatId,
-
         userId,
         location,
         lat,
@@ -289,24 +294,28 @@ exports.updateVenue = async (req, res) => {
         image,
         pricing,
         contactNo,
-      VenueMembers} = req.body;
+        kittiesHappened,  // Add these fields
+        kittiesBooked     // Add these fields
+    } = req.body;
+
     const updatedVenue = await Venue.findByIdAndUpdate(
       req.params.id,
-    {
-        name ,
+      {
+        name,
         userId,
         venueCatId,
-
         location,
         lat,
         long,
         image,
         pricing,
         contactNo,
-
-    },
+        kittiesHappened,   // Update field
+        kittiesBooked      // Update field
+      },
       { new: true }
     );
+
     if (!updatedVenue) {
       return res.status(404).json({ error: "Venue not found" });
     }
@@ -316,6 +325,7 @@ exports.updateVenue = async (req, res) => {
     res.status(500).json({ error: "Failed to update Venue" });
   }
 };
+
 exports.deleteVenue = async (req, res) => {
   try {
     const deletedVenue = await Venue.findByIdAndDelete(req.params.id);
@@ -386,52 +396,50 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 exports.filterVenues = async (req, res) => {
   try {
-      const { cityName, venueTypeName, pricing, userLat, userLong, maxDistance } = req.body;
+    const { cityName, venueTypeName, pricing, userLat, userLong, maxDistance, minKittiesHappened, maxKittiesBooked } = req.body;
 
-      const filters = {};
+    const filters = {};
 
-      // Step 1: Apply city filter if cityName is provided
-      if (cityName) {
-          const city = await City.findOne({ name: cityName });
-          if (!city) {
-              return res.status(404).json({ message: 'City not found' });
-          }
-          filters.cityId = city._id;
-      }
+    // Filter by city
+    if (cityName) {
+      filters['location.city'] = cityName;
+    }
 
-      // Step 2: Apply venue type filter if venueTypeName is provided
-      if (venueTypeName) {
-          const venueType = await VenueType.findOne({ type: venueTypeName });
-          if (!venueType) {
-              return res.status(404).json({ message: 'Venue type not found' });
-          }
-          filters.venueTypeId = venueType._id;
-      }
+    // Filter by venue type
+    if (venueTypeName) {
+      filters['type'] = venueTypeName;
+    }
 
-      // Step 3: Apply price range filter if pricing object is provided
-      if (pricing && (pricing.minPrice !== undefined || pricing.maxPrice !== undefined)) {
-          filters.pricing = {
-              $gte: pricing.minPrice || 0,
-              $lte: pricing.maxPrice || Infinity
-          };
-      }
+    // Filter by price range
+    if (pricing) {
+      filters['pricing'] = { $gte: pricing.min, $lte: pricing.max };
+    }
 
-      // Step 4: Find venues based on the applied filters
-      let venues = await Venue.find(filters);
+    // Filter by kittiesHappened and kittiesBooked
+    if (minKittiesHappened) {
+      filters.kittiesHappened = { $gte: minKittiesHappened };
+    }
 
-      // Step 5: Apply distance filter if userLat, userLong, and maxDistance are provided
-      if (userLat && userLong && maxDistance) {
-          venues = venues.filter((venue) => {
-              const distance = calculateDistance(userLat, userLong, venue.lat, venue.long);
-              return distance <= maxDistance;
-          });
-      }
+    if (maxKittiesBooked) {
+      filters.kittiesBooked = { $lte: maxKittiesBooked };
+    }
 
-      res.status(200).json(venues);
+    let venues = await Venue.find(filters);
+
+    // Additional filtering by distance
+    if (userLat && userLong && maxDistance) {
+      venues = venues.filter(venue => {
+        const venueDistance = calculateDistance(userLat, userLong, venue.lat, venue.long);
+        return venueDistance <= maxDistance;
+      });
+    }
+
+    res.status(200).json({ venues });
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'Error fetching venues', error });
   }
 };
+
 // {
 //   "cityName": "Udaipur",
 //   "venueTypeName": "Conference",

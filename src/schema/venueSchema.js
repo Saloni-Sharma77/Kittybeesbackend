@@ -12,7 +12,9 @@ const GroupSchema = new mongoose.Schema({
   pricing: { type: String },
   contactNo: { type: String },
   isActive: { type: Boolean, default: true },
-  venueTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'VenueType' }
+  venueTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'VenueType' },
+  kittiesHappened: { type: Number, default: 0 },  // New field
+  kittiesBooked: { type: Number, default: 0 }     // New field
 }, { timestamps: true });
 
-module.exports = mongoose.model('Venue', GroupSchema); // Ensure 'Venue' is used here
+module.exports = mongoose.model('Venue', GroupSchema);

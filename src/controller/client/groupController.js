@@ -37,7 +37,8 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       groupMembers,
-      image
+      image,
+      referralCode
      
     });
 
@@ -104,6 +105,7 @@ exports.updateGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       image,
+      referralCode,
       groupMembers} = req.body;
     const updatedGroup = await Group.findByIdAndUpdate(
       req.params.id,
@@ -122,6 +124,7 @@ exports.updateGroup = async (req, res) => {
       contributionAmount,
       image,
       groupMembers,
+      referralCode,
     },
       { new: true }
     );
@@ -477,3 +480,37 @@ exports.performSpin = async (req, res) => {
 
 
 
+
+exports.joinGroupByReferralCode = async (req, res) => {
+  const { referralCode, userId } = req.body;
+
+  try {
+    // Check if referral code is valid (assuming it's stored in the group document)
+    const group = await Group.findOne({ referralCode: referralCode });
+    if (!group) {
+      return res.status(404).json({ message: "Invalid referral code or group not found" });
+    }
+
+    // Check if the user is already a member or has a pending request
+    const existingRequest = group.userIds.find(
+      (userRequest) => userRequest.userId.toString() === userId.toString()
+    );
+
+    if (existingRequest) {
+      return res.status(400).json({ message: 'User already has a pending request or is a member' });
+    }
+
+    // Add the user to the group with a pending status
+    group.userIds.push({
+      userId,
+      status: 'approved'
+    });
+
+    await group.save();
+
+    res.status(200).json({ message: "User added to group request successfully" });
+  } catch (error) {
+    console.error("Error joining group by referral code:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
