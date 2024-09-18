@@ -28,7 +28,7 @@ const addUserToGroup = async (req, res) => {
     group.userIds.push({ userId, status });
     await group.save();
 
-    res.status(200).json({ message: 'User added to group successfully', group });
+    res.status(200).json({ message: 'Join Request Sent successfully ', group });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -70,45 +70,51 @@ const updateUserStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// Get pending request user IDs for a group
-const getPendingUserIds = async (req, res) => {
+
+
+// Get all pending requests from groups where the user is the admin
+const getPendingRequestsByUserId = async (req, res) => {
   try {
-    const { groupId } = req.params;  // Get groupId from URL params
+    const { userId } = req.params;  // Get userId from URL params
 
-    if (!groupId) {
-      return res.status(400).json({ message: 'groupId is required' });
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required' });
     }
 
-    const group = await Group.findById(groupId);
+    // Find all groups where the user is the admin
+    const groups = await Group.find({ userId: userId });
 
-    if (!group) {
-      return res.status(404).json({ message: 'Group not found' });
+    if (!groups || groups.length === 0) {
+      return res.status(404).json({ message: 'No groups found for this user' });
     }
 
-    // Filter for pending requests and get the userIds
-    const pendingUserIds = group.userIds
-      .filter(user => user.status === 'pending')
-      .map(user => user.userId);  // Extract only userId from pending requests
+    // Collect all pending user IDs from these groups
+    const pendingRequests = groups.flatMap(group =>
+      group.userIds
+        .filter(user => user.status === 'pending')
+        .map(user => ({
+          groupId: group._id,
+          userId: user.userId
+        }))
+    );
 
-    if (pendingUserIds.length === 0) {
-      return res.status(200).json({ message: 'No pending requests found', pendingUserIds });
+    if (pendingRequests.length === 0) {
+      return res.status(200).json({ message: 'No pending requests found', pendingRequests });
     }
 
-    res.status(200).json({ message: 'Pending user IDs retrieved', pendingUserIds });
+    res.status(200).json({ message: 'Pending requests retrieved', pendingRequests });
   } catch (error) {
+    console.error("Error retrieving pending requests:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
 
 
   
 
 module.exports = {
   addUserToGroup,
-  getPendingUserIds,
+  getPendingRequestsByUserId,
   updateUserStatus,
   
 };

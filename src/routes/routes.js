@@ -4,6 +4,7 @@ const router = express.Router();
 
 // Upload images to S3 bucket
 const uploadImage = require("../controller/admin/s3UploadController")
+const detectGender = require("../controller/admin/detectGenderController")
 
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
@@ -32,7 +33,7 @@ const postTagController = require('../controller/client/postTagControllers');
 const feedbackController = require('../controller/client/feedbackController');
 const templateController = require('../controller/client/templateController');
 const faqController = require('../controller/client/faqControllers');
-const { addUserToGroup, getPendingUserIds, updateUserStatus } = require('../controller/client/requesttojoingroupController');
+const { addUserToGroup, getPendingRequestsByUserId, updateUserStatus } = require('../controller/client/requesttojoingroupController');
 const bookingRequestController = require('../controller/client/bookingrequestControllers');
 const postShareController = require('../controller/client/postshareControllers');
 const venueTypeController = require('../controller/client/typeofvanueControllers'); 
@@ -69,6 +70,8 @@ const {
 
 // S3bucket image upload route
 router.post("/postImage",uploadImage.uploadImage);
+router.get("/detectGender/:imageName",detectGender.detectGender);
+
 
 
 // Client routes
@@ -307,7 +310,7 @@ router.delete('/deleteFAQ/:id', faqController.deleteFAQ);
 // request to add user in group routes
 
 router.post('/addUserToGroup', addUserToGroup);
-router.get('/pendingUserIds/:groupId', getPendingUserIds);
+router.get('/pendingRequests/:userId', getPendingRequestsByUserId);
 
 router.put('/updateUserStatus', updateUserStatus);
 
