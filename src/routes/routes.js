@@ -4,6 +4,7 @@ const router = express.Router();
 
 // Upload images to S3 bucket
 const uploadImage = require("../controller/admin/s3UploadController")
+const detectGender = require("../controller/admin/detectGenderController")
 
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
@@ -57,19 +58,11 @@ const {
 
 
 
-
-
-
-
-
-
-
-
-
-
 // S3bucket image upload route
 router.post("/postImage",uploadImage.uploadImage);
+router.get("/detectGender/:imageName",detectGender.detectGender)
 
+router.get("/detectGender/:imageName",detectGender.detectGender)
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
