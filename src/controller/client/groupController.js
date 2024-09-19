@@ -62,7 +62,7 @@ exports.getAllGroups = async (req, res) => {
     const { name } = req.query; // Get the search term from the query parameters
 
     const query = name ? { name: { $regex: name, $options: "i" } } : {};
-    const getAllGroup = await Group.find(query).populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
+    const getAllGroup = await Group.find(query).populate('userIds.userId').populate('userId').populate('groupFrequencyId').populate('groupInterestId').sort({ createdAt: -1 }) ;
 
     const groupsWithUserCount = getAllGroup.map(group => ({
       ...group.toObject(),
@@ -333,13 +333,21 @@ exports.getGroupHostedByMe = async (req, res) => {
     const userId = req.params.id;
 
     // Find groups where userId matches as the host (hosted by me)
-    const hostedGroups = await Group.find({ userId: userId }).sort({ createdAt: -1 });
+    const hostedGroups = await Group.find({ userId: userId }).sort({ createdAt: -1 })
+    .populate('groupInterestId') 
+    .populate('groupFrequencyId')
+    .populate('userIds.userId');
+
 
     // Find groups where the userId is found in the userIds array with status 'approved' (joined by me)
     const joinedGroups = await Group.find({ 
       'userIds.userId': userId, 
       'userIds.status': 'approved' 
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 })
+    .populate('groupInterestId') 
+    .populate('groupFrequencyId')
+    .populate('userIds.userId');
+
 
     // Combine both results into a single array
     const allGroups = [...hostedGroups, ...joinedGroups];
