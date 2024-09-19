@@ -67,6 +67,73 @@ exports.getAllKittys = async (req, res) => {
 };
 
 
+exports.getAllPastAndFutureKitties = async (req, res) => {
+  try {
+    const { type } = req.query; // Fetch type parameter
+    const today = new Date(); // Current date in JavaScript
+
+    // Function to convert 'DD/MM/YYYY' or 'DD-MM-YYYY' to a Date object
+    const convertToDate = (str) => {
+      const [day, month, year] = str.split(/[\/-]/).map(Number); // Split by '/' or '-' and extract day, month, year
+      return new Date(year, month - 1, day); // Create a JavaScript Date object
+    };
+
+    // Function to get start and end of the day
+    const getStartOfDay = () => new Date(today.setHours(0, 0, 0, 0));
+    const getEndOfDay = () => new Date(today.setHours(23, 59, 59, 999));
+
+    // Define filter object
+    let filter = {};
+
+    // Check the type of kitties to filter
+    if (type === 'past') {
+      filter = {
+        $expr: {
+          $lt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
+        }
+      };
+    } else if (type === 'present') {
+      const startOfDay = getStartOfDay();
+      const endOfDay = getEndOfDay();
+
+      filter = {
+        $expr: {
+          $and: [
+            { $gte: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, startOfDay] },
+            { $lte: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, endOfDay] }
+          ]
+        }
+      };
+    } else if (type === 'future') {
+      filter = {
+        $expr: {
+          $gt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
+        }
+      };
+    }
+
+    // Fetch kitties based on the filter
+    const getAllKitty = await Kitty.find(filter)
+      .populate({
+        path: 'groupId',
+        populate: {
+          path: 'userId',
+          model: 'Users'
+        }
+      })
+      .populate('userId')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
 exports.getKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
   console.log(kittyId);

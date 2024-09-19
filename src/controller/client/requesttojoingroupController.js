@@ -99,7 +99,7 @@ const getPendingRequestsByUserId = async (req, res) => {
     }
 
     // Find all groups where the user is the admin (userId is the admin's ID)
-    const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) });
+    const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) }).populate('userIds.userId');
 
     if (!groups || groups.length === 0) {
       return res.status(404).json({ message: 'No groups found for this user' });
