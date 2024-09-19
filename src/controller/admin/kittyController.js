@@ -57,6 +57,9 @@ exports.getAllKittys = async (req, res) => {
         }
       })
       .populate('userId')
+      .populate('venueId')
+
+
       .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
@@ -122,6 +125,8 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
         }
       })
       .populate('userId')
+      .populate('venueId')
+
       .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
