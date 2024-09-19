@@ -14,7 +14,7 @@ exports.createWalletTransaction = async (req, res) => {
 // Get all wallet transactions
 exports.getAllWalletTransactions = async (req, res) => {
     try {
-        const walletTransactions = await WalletTransaction.find().populate('');
+        const walletTransactions = await WalletTransaction.find().populate('userId');
         res.status(200).json(walletTransactions);
     } catch (error) {
         res.status(400).json({ message: error.message });
