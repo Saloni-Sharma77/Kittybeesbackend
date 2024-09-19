@@ -79,8 +79,9 @@ router.post("/sendotp", otp_controller.sendotp);
 router.post("/sendotpwhatsapp", otp_controller.sendotpwhatsapp);
 router.post("/verifyotp", otp_controller.verifyotp);
 router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
-router.post("/sendotppp", test_controller.sendotp);
+// router.post("/sendotppp", test_controller.sendotp);
 router.post("/verifyotppp", test_controller.verifyotp);
+router.post("/sendotptest", test_controller.sendotptest);
 
 router.post("/adduserInfo", user_controller.adduserInfo);
 router.post("/checkGender", user_controller.checkGender);

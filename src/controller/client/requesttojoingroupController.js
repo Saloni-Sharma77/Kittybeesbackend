@@ -18,6 +18,9 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
+    console.log('ok')
+    console.log(userId)
+
 
     // Check if user is already in the group
     const existingUser = group.userIds.find(u => u.userId.toString() === userId.toString());
