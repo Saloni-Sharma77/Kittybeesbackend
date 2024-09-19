@@ -66,6 +66,7 @@ exports.getAllKittys = async (req, res) => {
   }
 };
 
+
 exports.getKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
   console.log(kittyId);

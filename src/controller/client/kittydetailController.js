@@ -121,7 +121,7 @@ exports.getPastKitties = async (req, res) => {
 exports.getFutureKitties = async (req, res) => {
   try {
     const now = new Date();
-    const futureKitties = await KittyDetail.find({ date: { $gte: now } });
+    const futureKitties = await KittyDetail.find({ date: { $gte: now } }).populate('userId');
     res.status(200).json(futureKitties);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving future kitties', error });

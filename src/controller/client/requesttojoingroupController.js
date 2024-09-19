@@ -20,15 +20,22 @@ const addUserToGroup = async (req, res) => {
     }
     console.log('ok')
     console.log(userId)
+    console.log(userIds)
+    const userIds = group.userIds || [];
 
-
-    // Check if user is already in the group
-    const existingUser = group.userIds.find(u => u.userId.toString() === userId.toString());
-
+    // Find a specific user by userId
+    const existingUser = userIds.find(u => u.userId && u.userId.toString() === userId.toString());
+    
     if (existingUser) {
-      return res.status(200).json({ message: 'User already exists in the group' });
+      console.log('User found:', existingUser);
+    } else {
+      console.log('User not found, you can add a new user');
+      // Add a new user if needed
+      userIds.push({
+        userId: userId,  // Assuming userId is available
+        status: 'pending'
+      });
     }
-
     // Add user to the group
     group.userIds.push({ userId, status });
     await group.save();
