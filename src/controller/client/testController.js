@@ -123,7 +123,7 @@ exports.verifyotp = async (req, res) => {
 };
 
 // Send OTP via WhatsApp
-exports.sendotpwhatsapp = async (req, res) => {
+exports.sendotptestwhatsapp = async (req, res) => {
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
@@ -137,7 +137,7 @@ exports.sendotpwhatsapp = async (req, res) => {
     const mediaUrl = 'https://dhorandjoy.s3-ap-southeast-1.amazonaws.com/your/subfolder/path/20246281352-239Prescription.pdf';
 
     // Send OTP via Message Central
-    await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`, {
+    await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=WHATSAPP&mobileNumber=${phoneNumber}`, {
       message: `Your OTP is ${otp}`,  // Include the generated OTP in the message
       media_url: mediaUrl,
     }, {
