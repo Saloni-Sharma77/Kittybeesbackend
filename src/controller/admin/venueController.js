@@ -53,16 +53,6 @@ exports.addVenue = async (req, res) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
 // Get all venues
 // exports.getAllVenues = async (req, res) => {
 //   try {
