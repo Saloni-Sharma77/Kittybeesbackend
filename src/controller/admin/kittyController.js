@@ -5,6 +5,7 @@ exports.addKitty = async (req, res) => {
     const {
       name,
       groupId,
+      userId,
       date,
       time,
       image,
@@ -15,36 +16,70 @@ exports.addKitty = async (req, res) => {
       activityId,
       templateId,
       addressId,
-      theamepoll,
-      locationpoll,
-      venuepoll
+      theamepoll,   // Updated to poll structure
+      locationpoll, // Updated to poll structure
+      venuepoll     // Updated to poll structure
     } = req.body;
 
+    // Validate and structure the poll data
+    const theamePollData = theamepoll ? {
+      question: theamepoll.question,
+      options: theamepoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0  // Default to 0 if not provided
+      })),
+      type: 'theampolls'
+    } : null;
+
+    const locationPollData = locationpoll ? {
+      question: locationpoll.question,
+      options: locationpoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0
+      })),
+      type: 'locationpolls'
+    } : null;
+
+    const venuePollData = venuepoll ? {
+      question: venuepoll.question,
+      options: venuepoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0
+      })),
+      type: 'venuepolls'
+    } : null;
+
+    // Create new Kitty with poll data
     const newKitty = new Kitty({
       name,
       groupId,
+      userId,
       date,
       time,
       image,
       themeId,
-      addressId,
       instructions,
       colorId,
       venueId,
       activityId,
       templateId,
-      theamepoll,
-      locationpoll,
-      venuepoll
+      addressId,
+      theamepoll: theamePollData,   // Add structured poll data
+      locationpoll: locationPollData, // Add structured poll data
+      venuepoll: venuePollData,     // Add structured poll data
     });
 
+    // Save the new Kitty to the database
     await newKitty.save();
-    res.status(201).json({ message: "Data added successfully", task: newKitty });
+    
+    // Send success response
+    res.status(201).json({ message: "Kitty added successfully", data: newKitty });
   } catch (err) {
-    console.error("Error adding data", err);
-    res.status(500).json({ error: "Failed to add data" });
+    console.error("Error adding kitty", err);
+    res.status(500).json({ error: "Failed to add kitty" });
   }
 };
+
 
 exports.getAllKittys = async (req, res) => {
   try {
