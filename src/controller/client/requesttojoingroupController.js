@@ -110,7 +110,7 @@ const getPendingRequestsByUserId = async (req, res) => {
       group.userIds
         .filter(user => user.status === 'pending')
         .map(user => ({
-          groupId: group._id,
+          groupId: group,
           userId: user.userId
         }))
     );

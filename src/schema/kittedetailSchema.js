@@ -27,7 +27,7 @@ const kittyDetailSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId, // Reference to the User model
-    ref: 'User', // Assuming you have a 'User' model
+    ref: 'Users', // Assuming you have a 'User' model
     required: true
   },
   plannedActivities: {
@@ -37,7 +37,7 @@ const kittyDetailSchema = new mongoose.Schema({
   ratings: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Users',
       required: true
     },
     rating: {
