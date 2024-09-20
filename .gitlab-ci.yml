@@ -16,5 +16,5 @@ build-job: # This job runs in the build stage, which runs first.
   only:
     - tags
   script: # scripts to run
-    - ssh ad@$SSH_IP_ADDRESS "cd /var/www/fullstack/docker-kittybee-backend/kitty_bee_backend && echo $SUDO_PASS | sudo -S git reset --hard && git pull && cd /var/www/fullstack/docker-kittybee-backend && docker-compose build && docker-compose down && docker-compose up -d"
+    - ssh ad@$SSH_IP_ADDRESS "cd /var/www/fullstack/docker-kittybee-backend/kitty_bee_backend && echo $SUDO_PASS | sudo -S git reset --hard HEAD&& git pull && cd /var/www/fullstack/docker-kittybee-backend && docker-compose build && docker-compose down && docker-compose up -d"
     - echo "completed"  
