@@ -239,9 +239,12 @@ router.put("/updateVenue/:id", venue_controller.updateVenue);
 router.delete("/deleteVenue/:id", venue_controller.deleteVenue);
 router.patch("/updateVenueStatus/:id", venue_controller.updateStatus);
 
+// router.post('/venues/filter', venue_controller.getFilteredVenues);
 
 //filter api 
-router.post('/filterVenues', venue_controller.filterVenues);
+// router.get('/filterVenues', venue_controller.filterVenues);
+router.get('/getFilteredVenues', venue_controller.getFilteredVenues);
+
 //
 // {
 //   "cityName": "New York",

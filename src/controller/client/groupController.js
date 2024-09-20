@@ -120,9 +120,9 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Find groups hosted by the user
     const hostedGroups = await Group.find({ userId })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId')
-      .populate('groupFrequencyId')
-      .populate('userIds.userId')
+      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+      .populate('groupFrequencyId')  // Populate groupFrequencyId
+      .populate('userIds.userId')    // Populate user IDs in the group
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
@@ -132,9 +132,9 @@ exports.getGroupHostedByMe = async (req, res) => {
       'userIds.status': 'approved',
     })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId')
-      .populate('groupFrequencyId')
-      .populate('userIds.userId')
+      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+      .populate('groupFrequencyId')  // Populate groupFrequencyId
+      .populate('userIds.userId')    // Populate user IDs in the group
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
