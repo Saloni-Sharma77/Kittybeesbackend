@@ -53,45 +53,6 @@ exports.addVenue = async (req, res) => {
 };
 
 
-// Get all venues
-// exports.getAllVenues = async (req, res) => {
-//   try {
-//     // Extract query parameters
-//     const { page = 1, limit = 5, name = '' } = req.query;
-
-//     // Convert page and limit to numbers
-//     const pageNumber = parseInt(page, 10);
-//     const pageSize = parseInt(limit, 10);
-
-//     // Build the search query
-//     const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
-
-//     // Fetch venues with pagination and search
-//     const venues = await Venue.find(searchQuery)
-//       .skip((pageNumber - 1) * pageSize)
-//       .limit(pageSize);
-
-//     // Count total number of documents matching the search query
-//     const totalCount = await Venue.countDocuments(searchQuery);
-
-//     // Calculate total pages
-//     const totalPages = Math.ceil(totalCount / pageSize);
-
-//     // Send response with pagination info
-//     res.status(200).json({
-//       data: venues,
-//       pagination: {
-//         page: pageNumber,
-//         limit: pageSize,
-//         totalPages,
-//         totalCount
-//       }
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 exports.getAllVenues = async (req, res) => {
   try {
     // Extract query parameters

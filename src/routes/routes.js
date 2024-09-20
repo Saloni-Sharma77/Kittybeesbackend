@@ -55,24 +55,9 @@ const {
 
   const pollController = require('../controller/client/pollcontrollers');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // S3bucket image upload route
 router.post("/postImage",uploadImage.uploadImage);
 router.get("/detectGender/:imageName",detectGender.detectGender);
-
-
 
 // Client routes
 router.post("/sendotp", otp_controller.sendotp);
@@ -190,9 +175,6 @@ router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCo
 //spin route
 router.get('/spin/:groupId', group_controller.performSpin);
 
-
-
-
 // gorup frequency routes
 router.post("/addGroupFrequency", group_controller.addGroupFrequency);
 router.get("/getAllGroupsFrequency", group_controller.getAllGroupsFrequency);
@@ -241,23 +223,6 @@ router.patch("/updateVenueStatus/:id", venue_controller.updateStatus);
 
 
 router.get('/getFilteredVenues', venue_controller.getFilteredVenues);
-
-//
-// {
-//   "cityName": "New York",
-//   "pricing": {
-//     "minPrice": 500.0,
-//     "maxPrice": 50000.0
-//   },
-//   "userLat": 40.7128,
-//   "userLong": -74.0060,
-//   "maxDistance": 20
-// }
-
-
-
-
-
 // VenueCategory routes
 router.post("/addVenueCategory", venueCategory_controller.createVenueCategory);
 router.get("/getAllVenueCategories", venueCategory_controller.getAllVenueCategories);
@@ -272,10 +237,6 @@ router.post("/addKitty", kitty_controller.addKitty);
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
-
-
-
-
 //PostTag Routes
 router.post('/createPostTag', postTagController.createPostTag); // Create post tag
 router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
@@ -390,9 +351,6 @@ router.put('/updateTermsAndServices/:id', updateTermsAndServices);
 // Delete a Terms and Services document by ID
 router.delete('/deleteTermsAndServices/:id', deleteTermsAndServices);
 
-
-
-
 // Create a new wallet transaction
 router.post('/walletTransactions', walletTransactionControllers.createWalletTransaction);
 
@@ -407,19 +365,12 @@ router.put('/walletTransactions/:id', walletTransactionControllers.updateWalletT
 
 // Delete a wallet transaction by ID
 router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWalletTransaction);
-
-
 //Routes to Upload Images On S3Bucket
 router.post('/uploadKittyBanner', uploadImageController.uploadKittyBanner);
-
-
 // Route to add a draft
 router.post('/addtodraft', draftController.addToDraft);
 router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
 router.get('/getalldrafts', draftController.getAllDrafts);
-
-
-
 
 // poll routes 
 
