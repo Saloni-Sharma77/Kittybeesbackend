@@ -165,9 +165,12 @@ router.post("/addGroup", group_controller.addGroup);
 router.get("/getAllGroups", group_controller.getAllGroups);
 router.get("/getGroupById/:id", group_controller.getGroupById);
 router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
+router.get("/getGroupDetails/:groupId", group_controller.getGroupDetails);
+
 router.put("/updateGroup/:id", group_controller.updateGroup);
 router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
+
 // router.post('/joinByReferral', group_controller.joinGroupByReferral);
 router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCode);
 
