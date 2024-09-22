@@ -586,3 +586,25 @@ exports.joinGroupByReferralCode = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.getGroupDetails = async (req, res) => {
+  const groupId = req.params.groupId;
+
+  try {
+    const group = await Group.findById(groupId)
+      .populate('userId')  // Populate userId field
+      .populate('groupInterestId')
+      .populate('groupFrequencyId'); 
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    res.status(200).json({
+      data: group,
+      members: group.userIds.length,
+    });
+  } catch (error) {
+    console.error("Error fetching group details:", error);
+    res.status(500).json({ error: "Failed to fetch group details" });
+  }
+};
