@@ -41,6 +41,8 @@ const kittyDetailControllers = require('../controller/client/kittydetailControll
 const pastFunController = require('../controller/client/pastfunControllers');
 const venuereview_controller = require('../controller/client/venueReviewController');
 const uploadImageController =require('../controller/client/KittyCreationImages/PlanKittyImageUpload');
+const memoriesControllers = require('../controller/client/memoriesControllers');
+
 
 const {
     createTermsAndServices,
@@ -376,21 +378,16 @@ router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
 router.get('/getalldrafts', draftController.getAllDrafts);
 
 // poll routes 
-
-// Create a new poll
 router.post('/polls', pollController.createPoll);
-
-// Get all polls
 router.get('/polls', pollController.getAllPolls);
-
-// Get a poll by ID
 router.get('/polls/:id', pollController.getPollById);
-
-// Update a poll by ID
 router.put('/polls/:id', pollController.updatePoll);
-
-// Delete a poll by ID
 router.delete('/polls/:id', pollController.deletePoll);
+//memories routes 
+router.post('/addMemory', memoriesControllers.addMemory);
+router.get('/:userId', memoriesControllers.getMemoriesByUserId);
+router.put('/update/:id', memoriesControllers.updateMemory);
+router.delete('/delete/:id', memoriesControllers.deleteMemory);
 
 
 
