@@ -385,9 +385,10 @@ router.put('/polls/:id', pollController.updatePoll);
 router.delete('/polls/:id', pollController.deletePoll);
 //memories routes 
 router.post('/addMemory', memoriesControllers.addMemory);
-router.get('/:userId', memoriesControllers.getMemoriesByUserId);
-router.put('/update/:id', memoriesControllers.updateMemory);
-router.delete('/delete/:id', memoriesControllers.deleteMemory);
+router.get('/getMemoriesByUserId/:userId', memoriesControllers.getMemoriesByUserId);
+router.put('/updateMemory/:id', memoriesControllers.updateMemory);
+router.delete('/deleteMemory/:id', memoriesControllers.deleteMemory);
+router.get('/getAllMemories', memoriesControllers.getAllMemories);
 
 
 

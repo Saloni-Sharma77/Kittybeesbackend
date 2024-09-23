@@ -56,3 +56,24 @@ exports.deleteMemory = async (req, res) => {
     res.status(500).json({ message: 'Failed to delete memory', error });
   }
 };
+
+
+
+
+// Get all memories with associated usernames
+exports.getAllMemories = async (req, res) => {
+    try {
+      const memories = await Memories.find().populate('userId', 'username'); // Populating username field from Users collection
+  
+      if (!memories || memories.length === 0) {
+        return res.status(404).json({ message: 'No memories found' });
+      }
+  
+      res.status(200).json({
+        message: 'Memories retrieved successfully',
+        data: memories
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to retrieve memories', error });
+    }
+  };
