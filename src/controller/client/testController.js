@@ -58,8 +58,8 @@ exports.sendotptest = async (req, res) => {
 exports.verifyotptest = async (req, res) => {
   const { phoneNumber, otp ,customerId,verificationId} = req.body;
 
-  if (!phoneNumber || !otp || !customerId || !verificationId) {
-    return res.status(400).send({ error: 'Phone number, customerId,verificationId and OTP are required' });
+  if (!phoneNumber || !otp  || !verificationId) {
+    return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
   }
 
   try {
@@ -72,9 +72,8 @@ exports.verifyotptest = async (req, res) => {
 
     // Validate OTP using Message Central
     const response = await axios.get(
-      `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phoneNumber}&customerId=${customerId}$
-      verificationId=
-      ${verificationId}&flowType=SMS`,
+      `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phoneNumber}&verificationId=${verificationId}&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&code=${otp}`,
+
       {
         headers: {
           'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN
@@ -82,9 +81,7 @@ exports.verifyotptest = async (req, res) => {
       }
     );
 
-    if (response.data.status !== 'SUCCESS') {
-      return res.status(400).send({ error: 'Invalid or expired OTP' });
-    }
+
 
     // OTP is verified
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
@@ -98,8 +95,8 @@ exports.verifyotptest = async (req, res) => {
       data :response.data
     });
   } catch (error) {
-    console.error('Error verifying OTP:', error.response ? error.response.data : error.message);
-    res.status(500).send({ error: error });
+    console.error(error.response.data);
+    res.status(500).send({ error: error?.response?.data });
   }
 };
 
