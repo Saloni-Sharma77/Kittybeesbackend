@@ -114,28 +114,37 @@ exports.sendotptestwhatsapp = async (req, res) => {
   }
 
   try {
-    const otp = generateSixDigitRandomNumber();  // Generate 6-digit OTP
-    const otpExpiresAt = new Date(Date.now() + 10 * 60000); // OTP valid for 10 minutes
+  
 
-    const mediaUrl = 'https://dhorandjoy.s3-ap-southeast-1.amazonaws.com/your/subfolder/path/20246281352-239Prescription.pdf';
 
     // Send OTP via Message Central
-    await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=WHATSAPP&mobileNumber=${phoneNumber}`, {
-      message: `Your OTP is ${otp}`,  // Include the generated OTP in the message
-      media_url: mediaUrl,
+    const axiosResponse =  await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=WHATSAPP&mobileNumber=${phoneNumber}`, {
     }, {
       headers: {
         'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN,
       }
     });
 
-    // Update or insert user OTP data
-    const filter = { phoneNumber };
-    const update = { otp, otpExpiresAt };
-    const options = { upsert: true, new: true };
-    const updatedUser = await User.findOneAndUpdate(filter, update, options);
+    console.log('Response from MessageCentral:', axiosResponse.data);
 
-    res.status(200).send({ success: true, message: 'OTP sent successfully via WhatsApp', otp: otp });
+    // Filter to update or create user with the phone number
+    const filter = { phoneNumber };
+
+    // Update the user document with the phone number or insert if not found
+    const update = { $set: { phoneNumber } };
+    const options = { upsert: true, new: true };
+   const userInfo = await User.findOneAndUpdate(filter, update, options);
+
+    // Return the actual response from the external API to the client
+    res.status(200).send({
+      success: true,
+      message: 'OTP sent successfully',
+      data: axiosResponse.data , // Send the response data from the API
+      uerData: userInfo,
+    });
+    // Update or insert user OTP data
+
+    res.status(200).send({ success: true, message: 'OTP sent successfully via WhatsApp'});
   } catch (error) {
     console.error('Error sending OTP via WhatsApp:', error.response ? error.response.data : error.message);
     res.status(500).send({ error: 'Failed to send OTP' });
