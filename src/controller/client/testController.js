@@ -5,51 +5,33 @@ const User = require('../../schema/userSchema');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const Otp = require('../../schema/otpSchema'); // Import the new OTP schema
-
-
-// Generate six-digit random number
-function generateSixDigitRandomNumber() {
-  let randomNumber = '';
-  for (let i = 0; i < 4; i++) {
-    randomNumber += Math.floor(Math.random() * 10);
-  }
-  return randomNumber;
-}
-
 // Send OTP via SMS
 exports.sendotptest = async (req, res) => {
   const { phoneNumber } = req.body;
-
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
   }
-
   try {
-    const otp = generateSixDigitRandomNumber();  // Generate 6-digit OTP
-    const otpExpiresAt = new Date(Date.now() + 10 * 60000); // OTP valid for 10 minutes
-
-    // Send OTP via Message Central, passing the generated OTP in the message
-    const message = `Your OTP is ${otp}. Please enter it within 10 minutes. Do not share it with anyone.`;
+    const message = `Your OTP is  Please enter it within 10 minutes. Do not share it with anyone.`;
 
     await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`, 
       {
-      message  // Include the generated OTP in the message
+      message
     }, {
       headers: {
         'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN
       }
     });
 
-    // const otp = response.data.code; // Assuming the OTP code is included in the response
-    // const otpTransactionId = response.data.verificationId;
-    // const otpExpiresAt = new Date(Date.now() + 10 * 60000); // OTP valid for 10 minutes
-
-    // Save OTP details to the database
     const filter = { phoneNumber };
-    const update = { otp, otpExpiresAt, otpTransactionId };
-    const options = { upsert: true, new: true };
-    await Otp.findOneAndUpdate(filter, update, options);
+
+    // Update the user document with the OTP and phone number (or insert if not found)
+    const update = { 
+      $set: { phoneNumber },  // Ensure the phone number is updated
+    };
+
+    const options = { upsert: true, new: true }; // Create the user if not found
+    const updatedUser = await User.findOneAndUpdate(filter, update, options);
 
     res.status(200).send({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
