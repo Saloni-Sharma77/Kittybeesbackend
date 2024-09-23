@@ -35,13 +35,14 @@ exports.sendotptest = async (req, res) => {
     // Update the user document with the phone number or insert if not found
     const update = { $set: { phoneNumber } };
     const options = { upsert: true, new: true };
-    await User.findOneAndUpdate(filter, update, options);
+   const userInfo = await User.findOneAndUpdate(filter, update, options);
 
     // Return the actual response from the external API to the client
     res.status(200).send({
       success: true,
       message: 'OTP sent successfully',
-      data: axiosResponse.data  // Send the response data from the API
+      data: axiosResponse.data , // Send the response data from the API
+      uerData: userInfo,
     });
   } catch (error) {
     console.error('Error sending OTP:', error.response ? error.response.data : error.message);
@@ -87,16 +88,20 @@ exports.verifyotptest = async (req, res) => {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
+    const userInfo = await User.find({phoneNumber});
+
 
     res.status(200).send({
       success: true,
       message: 'OTP verified successfully',
       token: token,
-      data :response.data
+      data :response.data,
+      uerData: userInfo,
+
     });
   } catch (error) {
-    console.error(error.response.data);
-    res.status(500).send({ error: error?.response?.data });
+    console.error('Error sending OTP:', error.response ? error.response.data : error.message);
+    res.status(500).send({ error: error.response ? error.response.data : 'Failed to verify OTP' });  
   }
 };
 
