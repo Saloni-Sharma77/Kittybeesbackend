@@ -56,7 +56,7 @@ exports.sendotptest = async (req, res) => {
 
 // Verify OTP via Message Central
 exports.verifyotptest = async (req, res) => {
-  const { phoneNumber, otp ,customerId,verificationId} = req.body;
+  const { phoneNumber, otp ,verificationId} = req.body;
 
   if (!phoneNumber || !otp  || !verificationId) {
     return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
