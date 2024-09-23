@@ -21,9 +21,9 @@ exports.addGroup = async (req, res) => {
       kittyFrequency,
       groupCityArea,
       contributionAmount,
-      groupMembers,
+      // groupMembers,
       image,
-      referralCode
+      // referralCode // Add referralCode to the destructuring
     } = req.body;
 
     // Validate required fields
@@ -61,9 +61,9 @@ exports.addGroup = async (req, res) => {
       kittyFrequency,
       groupCityArea,
       contributionAmount,
-      groupMembers,
+      // groupMembers,
       image,
-      referralCode
+      // referralCode // Ensure referralCode is included
     });
 
     // Save the new group to the database
@@ -72,9 +72,7 @@ exports.addGroup = async (req, res) => {
     res.status(201).json({ message: "Group added successfully", group: newGroup });
   } catch (err) {
     // Handle duplicate referralCode error
-    if (err.code === 11000) {
-      return res.status(400).json({ error: "Referral code already exists" });
-    }
+  
     console.error("Error adding group:", err);
     res.status(500).json({ error: "Failed to add group" });
   }
