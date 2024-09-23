@@ -4,7 +4,7 @@ const GroupSchema = new mongoose.Schema(
   {
     name: { type: String },
     groupIcon: { type: String },
-    userId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     groupInterestId: [{ type: mongoose.Schema.Types.ObjectId, ref: "groupinterest" }],
     groupFrequencyId: { type: mongoose.Schema.Types.ObjectId, ref: "groupfrequency" },
     userIds: [{

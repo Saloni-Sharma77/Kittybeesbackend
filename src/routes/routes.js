@@ -42,6 +42,8 @@ const pastFunController = require('../controller/client/pastfunControllers');
 const venuereview_controller = require('../controller/client/venueReviewController');
 const uploadImageController =require('../controller/client/KittyCreationImages/PlanKittyImageUpload');
 const memoriesControllers = require('../controller/client/memoriesControllers');
+const iconControllers = require('../controller/client/popupiconControllers');
+
 
 
 const {
@@ -242,6 +244,7 @@ router.post("/addKitty", kitty_controller.addKitty);
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
+
 //PostTag Routes
 router.post('/createPostTag', postTagController.createPostTag); // Create post tag
 router.get('/getAllPostTags', postTagController.getAllPostTags); // Get all post tags
@@ -390,6 +393,18 @@ router.put('/updateMemory/:id', memoriesControllers.updateMemory);
 router.delete('/deleteMemory/:id', memoriesControllers.deleteMemory);
 router.get('/getAllMemories', memoriesControllers.getAllMemories);
 
+
+// Route to add a new icon
+router.post('/addIcon', iconControllers.addIcon);
+
+// Route to get all icons
+router.get('/', iconControllers.getAllIcons);
+
+// Route to update an icon
+router.put('/update/:id', iconControllers.updateIcon);
+
+// Route to delete an icon
+router.delete('/delete/:id', iconControllers.deleteIcon);
 
 
 

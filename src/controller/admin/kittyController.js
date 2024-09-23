@@ -1,5 +1,85 @@
 const Kitty = require('../../schema/kittySchema');
 
+// exports.addKitty = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll,   // Updated to poll structure
+//       locationpoll, // Updated to poll structure
+//       venuepoll     // Updated to poll structure
+//     } = req.body;
+
+//     // Validate and structure the poll data
+//     const theamePollData = theamepoll ? {
+//       question: theamepoll.question,
+//       options: theamepoll.options.map(option => ({
+//         optionText: option.optionText,
+//         votes: option.votes || 0  // Default to 0 if not provided
+//       })),
+//       type: 'theampolls'
+//     } : null;
+
+//     const locationPollData = locationpoll ? {
+//       question: locationpoll.question,
+//       options: locationpoll.options.map(option => ({
+//         optionText: option.optionText,
+//         votes: option.votes || 0
+//       })),
+//       type: 'locationpolls'
+//     } : null;
+
+//     const venuePollData = venuepoll ? {
+//       question: venuepoll.question,
+//       options: venuepoll.options.map(option => ({
+//         optionText: option.optionText,
+//         votes: option.votes || 0
+//       })),
+//       type: 'venuepolls'
+//     } : null;
+
+//     // Create new Kitty with poll data
+//     const newKitty = new Kitty({
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll: theamePollData,   // Add structured poll data
+//       locationpoll: locationPollData, // Add structured poll data
+//       venuepoll: venuePollData,     // Add structured poll data
+//     });
+
+//     // Save the new Kitty to the database
+//     await newKitty.save();
+    
+//     // Send success response
+//     res.status(201).json({ message: "Kitty added successfully", data: newKitty });
+//   } catch (err) {
+//     console.error("Error adding kitty", err);
+//     res.status(500).json({ error: "Failed to add kitty" });
+//   }
+// };
+
 exports.addKitty = async (req, res) => {
   try {
     const {
@@ -16,10 +96,36 @@ exports.addKitty = async (req, res) => {
       activityId,
       templateId,
       addressId,
-      theamepoll,   // Updated to poll structure
-      locationpoll, // Updated to poll structure
-      venuepoll     // Updated to poll structure
+      theamepoll,
+      locationpoll,
+      venuepoll
     } = req.body;
+
+    // Validation checks
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: "Name is required and must be a string" });
+    }
+    if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({ error: "Invalid groupId" });
+    }
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+    if (!date || isNaN(new Date(date).getTime())) {
+      return res.status(400).json({ error: "Invalid date" });
+    }
+    if (!time || typeof time !== 'string') {
+      return res.status(400).json({ error: "Time is required and must be a string" });
+    }
+    if (theamepoll && (!theamepoll.question || !Array.isArray(theamepoll.options))) {
+      return res.status(400).json({ error: "Theame poll question is required and options must be an array" });
+    }
+    if (locationpoll && (!locationpoll.question || !Array.isArray(locationpoll.options))) {
+      return res.status(400).json({ error: "Location poll question is required and options must be an array" });
+    }
+    if (venuepoll && (!venuepoll.question || !Array.isArray(venuepoll.options))) {
+      return res.status(400).json({ error: "Venue poll question is required and options must be an array" });
+    }
 
     // Validate and structure the poll data
     const theamePollData = theamepoll ? {
@@ -64,14 +170,14 @@ exports.addKitty = async (req, res) => {
       activityId,
       templateId,
       addressId,
-      theamepoll: theamePollData,   // Add structured poll data
-      locationpoll: locationPollData, // Add structured poll data
-      venuepoll: venuePollData,     // Add structured poll data
+      theamepoll: theamePollData,
+      locationpoll: locationPollData,
+      venuepoll: venuePollData,
     });
 
     // Save the new Kitty to the database
     await newKitty.save();
-    
+
     // Send success response
     res.status(201).json({ message: "Kitty added successfully", data: newKitty });
   } catch (err) {
@@ -79,7 +185,6 @@ exports.addKitty = async (req, res) => {
     res.status(500).json({ error: "Failed to add kitty" });
   }
 };
-
 
 exports.getAllKittys = async (req, res) => {
   try {
@@ -161,7 +266,9 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       })
       .populate('userId')
       .populate('venueId')
-
+      .populate('themeId')
+      .populate('colorId')
+      
       .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });

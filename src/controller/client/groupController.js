@@ -4,6 +4,7 @@ const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
 
 
+// controllers/groupControllers.js
 
 exports.addGroup = async (req, res) => {
   try {
@@ -22,8 +23,29 @@ exports.addGroup = async (req, res) => {
       contributionAmount,
       groupMembers,
       image,
-      referralCode // Add referralCode to the destructuring
+      referralCode
     } = req.body;
+
+    // Validate required fields
+    const requiredFields = [
+      { name: 'name', value: name },
+      { name: 'userId', value: userId },
+      { name: 'groupIcon', value: groupIcon },
+      { name: 'groupType', value: groupType },
+      { name: 'description', value: description },
+      { name: 'rulesAndRegulation', value: rulesAndRegulation },
+      { name: 'kittyFrequency', value: kittyFrequency },
+      { name: 'groupCityArea', value: groupCityArea },
+      { name: 'contributionAmount', value: contributionAmount },
+      { name: 'groupMembers', value: groupMembers },
+      { name: 'image', value: image }
+    ];
+
+    for (const field of requiredFields) {
+      if (!field.value) {
+        return res.status(400).json({ error: `${field.name} is required` });
+      }
+    }
 
     // Create a new group instance
     const newGroup = new Group({
@@ -41,7 +63,7 @@ exports.addGroup = async (req, res) => {
       contributionAmount,
       groupMembers,
       image,
-      referralCode // Ensure referralCode is included
+      referralCode
     });
 
     // Save the new group to the database
@@ -57,6 +79,7 @@ exports.addGroup = async (req, res) => {
     res.status(500).json({ error: "Failed to add group" });
   }
 };
+
 exports.getAllGroups = async (req, res) => {
   try {
     const { page = 1, limit = 5, name = '' } = req.query; // Get pagination and search term from the query parameters
@@ -181,7 +204,7 @@ exports.updateGroup = async (req, res) => {
   try {
     const {
       name,
-      userId,  // Fix the typo (useId -> userId)
+      userId,
       userIds,
       groupIcon,
       groupType,
@@ -194,15 +217,36 @@ exports.updateGroup = async (req, res) => {
       contributionAmount,
       image,
       groupMembers,
-      referralCode // Add referralCode here if needed
+      referralCode
     } = req.body;
+
+    // Validate required fields
+    const requiredFields = [
+      { name: 'name', value: name },
+      { name: 'userId', value: userId },
+      { name: 'groupIcon', value: groupIcon },
+      { name: 'groupType', value: groupType },
+      { name: 'description', value: description },
+      { name: 'rulesAndRegulation', value: rulesAndRegulation },
+      { name: 'kittyFrequency', value: kittyFrequency },
+      { name: 'groupCityArea', value: groupCityArea },
+      { name: 'contributionAmount', value: contributionAmount },
+      { name: 'groupMembers', value: groupMembers },
+      { name: 'image', value: image }
+    ];
+
+    for (const field of requiredFields) {
+      if (!field.value) {
+        return res.status(400).json({ error: `${field.name} is required` });
+      }
+    }
 
     // Find the group by ID and update its fields
     const updatedGroup = await Group.findByIdAndUpdate(
       req.params.id,
       {
         name,
-        userId, // Fixed typo here
+        userId,
         userIds,
         groupIcon,
         groupType,

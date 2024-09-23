@@ -4,43 +4,103 @@ const VenueType = require('../../schema/typeofvanueSchema');
 const Venue = require("../../schema/venueSchema");
 const VenueReview = require('../../schema/venueReviewSchema'); // Ensure this import matches your path
 
+// exports.addVenue = async (req, res) => {
+//   try {
+//     const {
+//         name,
+//         userId,
+//         cityId,
+//         venueTypeId,
+//         venueCatId,
+//         location,
+//         lat,
+//         long,
+//         image,
+//         pricing,
+//         contactNo,
+//         kittiesHappened,  // Add these fields
+//         kittiesBooked     // Add these fields
+//     } = req.body;
+
+//     // Validation check for cityId and venueTypeId
+//     if (!mongoose.Types.ObjectId.isValid(cityId) || !mongoose.Types.ObjectId.isValid(venueTypeId)) {
+//         return res.status(400).json({ error: "Invalid cityId or venueTypeId" });
+//     }
+
+//     const newVenue = new Venue({
+//         name,
+//         userId,
+//         cityId,
+//         venueTypeId,
+//         venueCatId,
+//         location,
+//         lat,
+//         long,
+//         image,
+//         pricing,
+//         contactNo,
+//         kittiesHappened,   // Initialize here
+//         kittiesBooked      // Initialize here
+//     });
+
+//     await newVenue.save();
+
+//     res.status(201).json({ message: "Venue added successfully", venue: newVenue });
+//   } catch (err) {
+//     console.error("Error adding venue:", err);
+//     res.status(500).json({ error: "Failed to add venue", details: err.message });
+//   }
+// };
+
 exports.addVenue = async (req, res) => {
   try {
     const {
-        name,
-        userId,
-        cityId,
-        venueTypeId,
-        venueCatId,
-        location,
-        lat,
-        long,
-        image,
-        pricing,
-        contactNo,
-        kittiesHappened,  // Add these fields
-        kittiesBooked     // Add these fields
+      name,
+      userId,
+      cityId,
+      venueTypeId,
+      venueCatId,
+      location,
+      lat,
+      long,
+      image,
+      pricing,
+      contactNo,
+      kittiesHappened,
+      kittiesBooked
     } = req.body;
 
-    // Validation check for cityId and venueTypeId
+    // Validation checks
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: "Name is required and must be a string" });
+    }
     if (!mongoose.Types.ObjectId.isValid(cityId) || !mongoose.Types.ObjectId.isValid(venueTypeId)) {
-        return res.status(400).json({ error: "Invalid cityId or venueTypeId" });
+      return res.status(400).json({ error: "Invalid cityId or venueTypeId" });
+    }
+    if (typeof lat !== 'number' || typeof long !== 'number') {
+      return res.status(400).json({ error: "Latitude and Longitude must be numbers" });
+    }
+    if (typeof pricing !== 'number' || pricing < 0) {
+      return res.status(400).json({ error: "Pricing must be a non-negative number" });
+    }
+    if (!contactNo || typeof contactNo !== 'string') {
+      return res.status(400).json({ error: "Contact number is required and must be a string" });
     }
 
     const newVenue = new Venue({
-        name,
-        userId,
-        cityId,
-        venueTypeId,
-        venueCatId,
-        location,
-        lat,
-        long,
-        image,
-        pricing,
-        contactNo,
-        kittiesHappened,   // Initialize here
-        kittiesBooked      // Initialize here
+      name,
+      userId,
+      cityId,
+      venueTypeId,
+      venueCatId,
+      location,
+      lat,
+      long,
+      image,
+      pricing,
+      contactNo,
+      kittiesHappened,
+      kittiesBooked
     });
 
     await newVenue.save();
@@ -52,6 +112,63 @@ exports.addVenue = async (req, res) => {
   }
 };
 
+exports.updateVenue = async (req, res) => {
+  try {
+    const {
+      name,
+      venueCatId,
+      userId,
+      location,
+      lat,
+      long,
+      image,
+      pricing,
+      contactNo,
+      kittiesHappened,
+      kittiesBooked
+    } = req.body;
+
+    // Validation checks
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: "Name is required and must be a string" });
+    }
+    if (typeof lat !== 'number' || typeof long !== 'number') {
+      return res.status(400).json({ error: "Latitude and Longitude must be numbers" });
+    }
+    if (typeof pricing !== 'number' || pricing < 0) {
+      return res.status(400).json({ error: "Pricing must be a non-negative number" });
+    }
+    if (!contactNo || typeof contactNo !== 'string') {
+      return res.status(400).json({ error: "Contact number is required and must be a string" });
+    }
+
+    const updatedVenue = await Venue.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        userId,
+        venueCatId,
+        location,
+        lat,
+        long,
+        image,
+        pricing,
+        contactNo,
+        kittiesHappened,
+        kittiesBooked
+      },
+      { new: true }
+    );
+
+    if (!updatedVenue) {
+      return res.status(404).json({ error: "Venue not found" });
+    }
+    res.status(200).json(updatedVenue);
+  } catch (err) {
+    console.error("Error updating Venue:", err);
+    res.status(500).json({ error: "Failed to update Venue" });
+  }
+};
 
 exports.getAllVenues = async (req, res) => {
   try {
@@ -230,49 +347,49 @@ exports.getVenueById = async (req, res) => {
   }
 };
 
-exports.updateVenue = async (req, res) => {
-  try {
-    const {
-        name,
-        venueCatId,
-        userId,
-        location,
-        lat,
-        long,
-        image,
-        pricing,
-        contactNo,
-        kittiesHappened,  // Add these fields
-        kittiesBooked     // Add these fields
-    } = req.body;
+// exports.updateVenue = async (req, res) => {
+//   try {
+//     const {
+//         name,
+//         venueCatId,
+//         userId,
+//         location,
+//         lat,
+//         long,
+//         image,
+//         pricing,
+//         contactNo,
+//         kittiesHappened,  // Add these fields
+//         kittiesBooked     // Add these fields
+//     } = req.body;
 
-    const updatedVenue = await Venue.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        userId,
-        venueCatId,
-        location,
-        lat,
-        long,
-        image,
-        pricing,
-        contactNo,
-        kittiesHappened,   // Update field
-        kittiesBooked      // Update field
-      },
-      { new: true }
-    );
+//     const updatedVenue = await Venue.findByIdAndUpdate(
+//       req.params.id,
+//       {
+//         name,
+//         userId,
+//         venueCatId,
+//         location,
+//         lat,
+//         long,
+//         image,
+//         pricing,
+//         contactNo,
+//         kittiesHappened,   // Update field
+//         kittiesBooked      // Update field
+//       },
+//       { new: true }
+//     );
 
-    if (!updatedVenue) {
-      return res.status(404).json({ error: "Venue not found" });
-    }
-    res.status(200).json(updatedVenue);
-  } catch (err) {
-    console.error("Error updating Venue:", err);
-    res.status(500).json({ error: "Failed to update Venue" });
-  }
-};
+//     if (!updatedVenue) {
+//       return res.status(404).json({ error: "Venue not found" });
+//     }
+//     res.status(200).json(updatedVenue);
+//   } catch (err) {
+//     console.error("Error updating Venue:", err);
+//     res.status(500).json({ error: "Failed to update Venue" });
+//   }
+// };
 
 exports.deleteVenue = async (req, res) => {
   try {
