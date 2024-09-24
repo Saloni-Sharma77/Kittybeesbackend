@@ -31,7 +31,7 @@ const addUserToGroup = async (req, res) => {
       // Add a new user if needed
       userIds.push({
         userId: userId,  // Assuming userId is available
-        status: 'pending'
+        status: status || 'pending'
       });
     }
 
