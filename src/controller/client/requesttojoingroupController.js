@@ -34,8 +34,8 @@ const addUserToGroup = async (req, res) => {
         status: 'pending'
       });
     }
-    // Add user to the group
-    group.userIds.push({ userId, status });
+
+    // No need to push again here, as it's already done above
     await group.save();
 
     res.status(200).json({ message: 'Join Request Sent successfully ', group });
