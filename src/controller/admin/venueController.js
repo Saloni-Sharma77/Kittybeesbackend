@@ -202,6 +202,8 @@ exports.getAllVenues = async (req, res) => {
           }
         }
       },
+      
+      
       {
         $skip: (pageNumber - 1) * pageSize
       },
