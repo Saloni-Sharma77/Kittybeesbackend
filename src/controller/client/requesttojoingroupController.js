@@ -18,9 +18,7 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
-    console.log('ok')
-    console.log(userId)
-    console.log(userIds)
+ 
     const userIds = group.userIds || [];
 
     // Find a specific user by userId
