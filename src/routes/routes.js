@@ -262,7 +262,7 @@ router.delete('/deleteFeedback/:id', feedbackController.deleteFeedback);
 
 //vemue review Route
 router.post('/createReview', venuereview_controller.createReview);
-router.get('/getReviews', venuereview_controller.getReviews);
+router.get('/getReviews/:venueId', venuereview_controller.getReviews);
 router.put('/updateReview/:id', venuereview_controller.updateReview);
 router.delete('/deleteReview/:id', venuereview_controller.deleteReview);
 

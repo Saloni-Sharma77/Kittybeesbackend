@@ -12,9 +12,21 @@ exports.createReview = async (req, res) => {
 
 exports.getReviews = async (req, res) => {
     try {
+        // Log the venueId for debugging
+        console.log('Fetching reviews for venueId:', req.params.venueId);
+
+        // Find reviews for the venue and populate the user details
         const reviews = await VenueReview.find({ venueId: req.params.venueId }).populate('userId');
+
+        // Check if any reviews are found
+        if (!reviews.length) {
+            return res.status(404).json({ message: 'No reviews found for this venue.' });
+        }
+
+        // Return the reviews
         res.status(200).json(reviews);
     } catch (error) {
+        console.error('Error fetching reviews:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };

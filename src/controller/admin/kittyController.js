@@ -1,4 +1,6 @@
 const Kitty = require('../../schema/kittySchema');
+const VenueReviewSchema = require('../../schema/venueReviewSchema');
+
 
 // exports.addKitty = async (req, res) => {
 //   try {
@@ -283,7 +285,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
 exports.getKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
-  console.log(kittyId);
 
   try {
     const getKitty = await Kitty.findById(kittyId)
@@ -305,7 +306,8 @@ exports.getKittyById = async (req, res) => {
       return res.status(404).json({ error: "Kitty not found" });
     }
 
-    res.status(200).json({ message: "Kitty fetched successfully", data: getKitty });
+    let venueRev = await VenueReviewSchema.find({ venueId: getKitty?.venueId });
+    res.status(200).json({ message: "Kitty fetched successfully", data: getKitty,Venuereviews : venueRev?.length || 0 });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
