@@ -25,7 +25,7 @@ const addUserToGroup = async (req, res) => {
     const existingUser = userIds.find(u => u.userId && u.userId.toString() === userId.toString());
     
     if (existingUser) {
-      console.log('User found:', existingUser);
+      return res.status(400).json({error:'User Request Already sent!'})
     } else {
       console.log('User not found, you can add a new user');
       // Add a new user if needed
