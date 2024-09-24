@@ -14,30 +14,25 @@ exports.addGroup = async (req, res) => {
       userIds,
       groupInterestId,
       groupFrequencyId,
-      groupIcon,
       groupType,
       description,
       rulesAndRegulation,
-      kittyFrequency,
+      // kittyFrequency,
       groupCityArea,
       contributionAmount,
-      // groupMembers,
       image,
-      // referralCode // Add referralCode to the destructuring
     } = req.body;
 
     // Validate required fields
     const requiredFields = [
       { name: 'name', value: name },
       { name: 'userId', value: userId },
-      { name: 'groupIcon', value: groupIcon },
       { name: 'groupType', value: groupType },
       { name: 'description', value: description },
       { name: 'rulesAndRegulation', value: rulesAndRegulation },
-      { name: 'kittyFrequency', value: kittyFrequency },
+      { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'contributionAmount', value: contributionAmount },
-      { name: 'groupMembers', value: groupMembers },
       { name: 'image', value: image }
     ];
 
@@ -54,11 +49,10 @@ exports.addGroup = async (req, res) => {
       userIds,
       groupInterestId,
       groupFrequencyId,
-      groupIcon,
       groupType,
       description,
       rulesAndRegulation,
-      kittyFrequency,
+      groupFrequencyId,
       groupCityArea,
       contributionAmount,
       // groupMembers,
@@ -204,18 +198,14 @@ exports.updateGroup = async (req, res) => {
       name,
       userId,
       userIds,
-      groupIcon,
       groupType,
       description,
       groupInterestId,
       groupFrequencyId,
       rulesAndRegulation,
-      kittyFrequency,
       groupCityArea,
       contributionAmount,
       image,
-      groupMembers,
-      referralCode
     } = req.body;
 
     // Validate required fields
@@ -226,10 +216,9 @@ exports.updateGroup = async (req, res) => {
       { name: 'groupType', value: groupType },
       { name: 'description', value: description },
       { name: 'rulesAndRegulation', value: rulesAndRegulation },
-      { name: 'kittyFrequency', value: kittyFrequency },
+      { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'contributionAmount', value: contributionAmount },
-      { name: 'groupMembers', value: groupMembers },
       { name: 'image', value: image }
     ];
 
@@ -252,12 +241,9 @@ exports.updateGroup = async (req, res) => {
         groupInterestId,
         groupFrequencyId,
         rulesAndRegulation,
-        kittyFrequency,
         groupCityArea,
         contributionAmount,
         image,
-        groupMembers,
-        referralCode
       },
       { new: true }
     );
