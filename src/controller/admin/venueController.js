@@ -80,9 +80,7 @@ exports.addVenue = async (req, res) => {
     if (typeof lat !== 'number' || typeof long !== 'number') {
       return res.status(400).json({ error: "Latitude and Longitude must be numbers" });
     }
-    if (typeof pricing !== 'number' || pricing < 0) {
-      return res.status(400).json({ error: "Pricing must be a non-negative number" });
-    }
+
     if (!contactNo || typeof contactNo !== 'string') {
       return res.status(400).json({ error: "Contact number is required and must be a string" });
     }
@@ -135,9 +133,7 @@ exports.updateVenue = async (req, res) => {
     if (typeof lat !== 'number' || typeof long !== 'number') {
       return res.status(400).json({ error: "Latitude and Longitude must be numbers" });
     }
-    if (typeof pricing !== 'number' || pricing < 0) {
-      return res.status(400).json({ error: "Pricing must be a non-negative number" });
-    }
+  
     if (!contactNo || typeof contactNo !== 'string') {
       return res.status(400).json({ error: "Contact number is required and must be a string" });
     }
