@@ -144,7 +144,6 @@ exports.sendotptestwhatsapp = async (req, res) => {
     });
     // Update or insert user OTP data
 
-    res.status(200).send({ success: true, message: 'OTP sent successfully via WhatsApp'});
   } catch (error) {
     console.error('Error sending OTP via WhatsApp:', error.response ? error.response.data : error.message);
     res.status(500).send({ error: 'Failed to send OTP' });
