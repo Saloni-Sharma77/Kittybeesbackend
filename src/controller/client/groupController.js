@@ -180,7 +180,7 @@ exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
 
   try {
-    const user = await Group.findById(groupId).populate('userIds').populate('userId').populate('groupFrequencyId').populate('groupInterestId');
+    const user = await Group.findById(groupId).populate('userIds.userId').populate('userId').populate('groupFrequencyId').populate('groupInterestId');
     if (!user) {
       return res.status(404).json({ error: "Request not found" });
     }
