@@ -6,6 +6,7 @@ const GroupSchema = require('../../schema/groupSchema');
 
 
 
+
 // exports.addKitty = async (req, res) => {
 //   try {
 //     const {
@@ -286,36 +287,31 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
 
 
-exports.sendRequestTojoinKitty = async (req, res) => {
+exports.joinKitty = async (req, res) => {
   try {
-    const { kittyId, requestUserId, message } = req.body;
+    const { kittyId, requestUserId, status } = req.body;
 
     // Find the kitty by ID and populate the userId (the creator of the kitty)
-    const kitty = await Kitty.findById(kittyId).populate('userId');
 
+    const newMember = {
+      userId: requestUserId,
+      status: status // Set the status (it will automatically validate against the enum)
+    };
 
-    if (!kitty) {
-      return res.status(404).json({ error: 'Kitty not found' });
+    const updatedKitty = await Kitty.findByIdAndUpdate(
+      kittyId,
+      { $push: { members: newMember } }, // Using $push to insert the new member
+      { new: true, runValidators: true } // Returns the updated document and runs schema validation
+    );
+    
+    if (!updatedKitty) {
+      return res.status(404).json({ message: 'Kitty not found' });
     }
 
-    // Get the userId of the kitty creator
-    const userId = kitty?.userId;
-   let requestedUser = await UserSchema.findById(requestUserId)
+    return res.status(200).json({ message: 'Member added successfully', updatedKitty });
 
-
-    // Create a notification for the kitty creator
-    const notification = new NotificationSchema({
-      userId: userId, // Kitty creator
-      kittyId: kittyId,
-      requestUserId: requestUserId, // User who sent the request
-      message: message || `${requestedUser?.fullname} wants to join your kitty ${kitty?.name}.`,
-    });
-
-    // Save the notification
-    await notification.save();
-
-    res.status(200).json({ message: 'Request sent and notification created' });
   } catch (error) {
+    console.log('the error is',error);
     res.status(500).json({ error: 'Something went wrong' });
   }
 };

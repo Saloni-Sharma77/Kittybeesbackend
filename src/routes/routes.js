@@ -241,7 +241,7 @@ router.delete("/deleteVenueCategory/:id", venueCategory_controller.deleteVenueCa
 router.get("/getAllKittys", kitty_controller.getAllKittys);
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
 router.post("/addKitty", kitty_controller.addKitty);
-router.post("/sendRequestTojoinKitty", kitty_controller.sendRequestTojoinKitty);
+router.post("/joinKitty", kitty_controller.joinKitty);
 router.post("/acceptOrRejectRequestOfKitty", kitty_controller.acceptOrRejectRequestOfKitty);
 
 
