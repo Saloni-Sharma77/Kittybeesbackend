@@ -130,9 +130,7 @@ exports.updateVenue = async (req, res) => {
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: "Name is required and must be a string" });
     }
-    if (typeof lat !== 'number' || typeof long !== 'number') {
-      return res.status(400).json({ error: "Latitude and Longitude must be numbers" });
-    }
+
   
     if (!contactNo || typeof contactNo !== 'string') {
       return res.status(400).json({ error: "Contact number is required and must be a string" });
