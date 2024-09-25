@@ -30,7 +30,7 @@ const KittySchema = new mongoose.Schema({
   venuepoll: { type: pollSchema, default: null }, // Embed the poll schema
   date: { type: String },
   time: { type: String },
-  instructions: [{ type: String }],
+  instructions: { type: String },
   themeId: { type: mongoose.Schema.Types.ObjectId, ref: 'theme' },
   colorId: { type: mongoose.Schema.Types.ObjectId, ref: 'color' },
   venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },

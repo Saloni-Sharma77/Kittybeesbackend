@@ -8,6 +8,12 @@ const NotificationSchema = new mongoose.Schema(
     kittyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Kitty' },
     requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     message: { type: String},
+    status: { 
+      type: String, 
+      enum: ['pending', 'accepted', 'rejected'], 
+      default: 'pending' 
+    },
+  
   },
   { timestamps: true }
 );

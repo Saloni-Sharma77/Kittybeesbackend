@@ -1,5 +1,7 @@
 const Kitty = require('../../schema/kittySchema');
 const VenueReviewSchema = require('../../schema/venueReviewSchema');
+const NotificationSchema = require('../../schema/notificationSchema');
+const UserSchema = require('../../schema/userSchema');
 
 
 // exports.addKitty = async (req, res) => {
@@ -289,22 +291,23 @@ exports.sendRequestTojoinKitty = async (req, res) => {
     // Find the kitty by ID and populate the userId (the creator of the kitty)
     const kitty = await Kitty.findById(kittyId).populate('userId');
 
-    console.log(kitty,'kiererer')
 
     if (!kitty) {
       return res.status(404).json({ error: 'Kitty not found' });
     }
 
     // Get the userId of the kitty creator
-    const userId = kitty.userId;
+    const userId = kitty?.userId;
+   let requestedUser = await UserSchema.findById(requestUserId)
+
 
     // Create a notification for the kitty creator
-    const notification = new Notification({
+    const notification = new NotificationSchema({
       userId: userId, // Kitty creator
-      groupId: kitty.groupId, // Assuming groupId is part of the kitty
+      // groupId: kitty.groupId, // Assuming groupId is part of the kitty
       kittyId: kittyId,
       requestUserId: requestUserId, // User who sent the request
-      message: message || `User with ID ${requestUserId} wants to join your kitty.`,
+      message: message || `${requestedUser?.fullname} wants to join your kitty ${kitty?.name}.`,
     });
 
     // Save the notification
