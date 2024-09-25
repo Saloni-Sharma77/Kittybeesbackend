@@ -2,6 +2,8 @@ const Kitty = require('../../schema/kittySchema');
 const VenueReviewSchema = require('../../schema/venueReviewSchema');
 const NotificationSchema = require('../../schema/notificationSchema');
 const UserSchema = require('../../schema/userSchema');
+const GroupSchema = require('../../schema/groupSchema');
+
 
 
 // exports.addKitty = async (req, res) => {
@@ -304,7 +306,6 @@ exports.sendRequestTojoinKitty = async (req, res) => {
     // Create a notification for the kitty creator
     const notification = new NotificationSchema({
       userId: userId, // Kitty creator
-      // groupId: kitty.groupId, // Assuming groupId is part of the kitty
       kittyId: kittyId,
       requestUserId: requestUserId, // User who sent the request
       message: message || `${requestedUser?.fullname} wants to join your kitty ${kitty?.name}.`,
@@ -318,6 +319,38 @@ exports.sendRequestTojoinKitty = async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 };
+
+exports.acceptOrRejectRequestOfKitty = async (req, res)=>{
+  try {
+    const { notificationId, status } = req.body;
+
+    const kitty = await NotificationSchema.findById(notificationId).populate('userId').populate('kittyId');    
+    const kittyId = kitty?.kittyId?._id
+   let findWhichGroup = await Kitty.findById(kittyId);
+   console.log(findWhichGroup,'ddddddddddd')
+
+   return
+
+    // Create a notification for the kitty creator
+    const notification = new NotificationSchema({
+      userId: userId, // Kitty creator
+      // groupId: kitty.groupId, // Assuming groupId is part of the kitty
+      kittyId: kittyId,
+      requestUserId: requestUserId, // User who sent the request
+      message: message || `${requestedUser?.fullname} wants to join your kitty ${kitty?.name}.`,
+    });
+
+    // Save the notification
+    await notification.save();
+
+    res.status(200).json({ message: 'Request sent and notification created' });
+  } catch (error) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+
+
+}
+
 
 
 exports.getKittyById = async (req, res) => {
