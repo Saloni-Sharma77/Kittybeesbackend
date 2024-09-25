@@ -166,6 +166,7 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 
 // Group routes
 router.post("/addGroup", group_controller.addGroup);
+router.post("/addGroupMemories", group_controller.addGroupMemories);
 router.get("/getAllGroups", group_controller.getAllGroups);
 router.get("/getGroupById/:id", group_controller.getGroupById);
 router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);

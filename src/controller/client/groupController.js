@@ -173,6 +173,32 @@ exports.getGroupHostedByMe = async (req, res) => {
   }
 };
 
+exports.addGroupMemories = async (req,res)=>{
+  try {
+    const { groupId,image, userId } = req.body;
+
+    // Find the group by ID
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Add the new memory to the groupMemories array
+    group.groupMemories.push({
+      image:image,
+      userId: userId // userId from the request body
+    });
+
+    // Save the updated group document
+    await group.save();
+
+    res.status(200).json({ message: 'Memory added successfully', group });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding memory', error });
+  }
+
+}
 
 
 
@@ -180,7 +206,7 @@ exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
 
   try {
-    const user = await Group.findById(groupId).populate('userIds.userId').populate('userId').populate('groupFrequencyId').populate('groupInterestId');
+    const user = await Group.findById(groupId).populate('userIds.userId').populate('userId').populate('groupFrequencyId').populate('groupInterestId').populate('groupMemories.userId');
     if (!user) {
       return res.status(404).json({ error: "Request not found" });
     }

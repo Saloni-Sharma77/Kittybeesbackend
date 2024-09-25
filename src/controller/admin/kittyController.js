@@ -326,24 +326,37 @@ exports.acceptOrRejectRequestOfKitty = async (req, res)=>{
 
     const kitty = await NotificationSchema.findById(notificationId).populate('userId').populate('kittyId');    
     const kittyId = kitty?.kittyId?._id
-   let findWhichGroup = await Kitty.findById(kittyId);
-   console.log(findWhichGroup,'ddddddddddd')
+   let findWhichKitty = await Kitty.findById(kittyId);
+   const memberExists = findWhichKitty.members.some(member => member.userId.toString() === requestUserId.toString());
 
-   return
 
-    // Create a notification for the kitty creator
+  if(status === 'approved' && !memberExists){
+    findWhichKitty?.members.push({
+       userId: kittyId?.requestUserId, 
+       status:status || 'approved'
+    })
+  } 
+
+  await findWhichKitty.save();
+
+  console.log(findWhichKitty,'ddddddddddd')
+
+
+  //  return
+
+  //   // Create a notification for the kitty creator
     const notification = new NotificationSchema({
       userId: userId, // Kitty creator
       // groupId: kitty.groupId, // Assuming groupId is part of the kitty
       kittyId: kittyId,
       requestUserId: requestUserId, // User who sent the request
-      message: message || `${requestedUser?.fullname} wants to join your kitty ${kitty?.name}.`,
+      message: message || `${requestedUser?.fullname}  your request has been accepted for the kitty ${kitty?.name}.`,
     });
 
     // Save the notification
     await notification.save();
 
-    res.status(200).json({ message: 'Request sent and notification created' });
+    res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
     res.status(500).json({ error: 'Something went wrong' });
   }
