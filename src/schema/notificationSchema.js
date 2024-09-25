@@ -1,14 +1,15 @@
-// // models/notificationSchema.js
-// const mongoose = require('mongoose');
+// models/notificationSchema.js
+const mongoose = require('mongoose');
 
-// const NotificationSchema = new mongoose.Schema(
-//   {
-//     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-//     groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'groups', required: true },
-//     requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-//     message: { type: String, required: true },
-//   },
-//   { timestamps: true }
-// );
+const NotificationSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users'},
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'groups' },
+    kittyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Kitty' },
+    requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    message: { type: String},
+  },
+  { timestamps: true }
+);
 
-// module.exports = mongoose.model('Notification', NotificationSchema);
+module.exports = mongoose.model('Notification', NotificationSchema);

@@ -30,14 +30,18 @@ const KittySchema = new mongoose.Schema({
   venuepoll: { type: pollSchema, default: null }, // Embed the poll schema
   date: { type: String },
   time: { type: String },
-  instructions: { type: String },
+  instructions: [{ type: String }],
   themeId: { type: mongoose.Schema.Types.ObjectId, ref: 'theme' },
   colorId: { type: mongoose.Schema.Types.ObjectId, ref: 'color' },
   venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
   addressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
-  activityId: { type: mongoose.Schema.Types.ObjectId, ref: 'activity' },
+  activityId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activity' }],
   templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Template' },
   image: { type: String },
+  members: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    status: { type: String, enum: ['pending', 'approved','rejected'], default: 'pending' }
+}],
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

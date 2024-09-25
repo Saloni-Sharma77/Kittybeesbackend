@@ -282,6 +282,40 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
 
 
+exports.sendRequestTojoinKitty = async (req, res) => {
+  try {
+    const { kittyId, requestUserId, message } = req.body;
+
+    // Find the kitty by ID and populate the userId (the creator of the kitty)
+    const kitty = await Kitty.findById(kittyId).populate('userId');
+
+    console.log(kitty,'kiererer')
+
+    if (!kitty) {
+      return res.status(404).json({ error: 'Kitty not found' });
+    }
+
+    // Get the userId of the kitty creator
+    const userId = kitty.userId;
+
+    // Create a notification for the kitty creator
+    const notification = new Notification({
+      userId: userId, // Kitty creator
+      groupId: kitty.groupId, // Assuming groupId is part of the kitty
+      kittyId: kittyId,
+      requestUserId: requestUserId, // User who sent the request
+      message: message || `User with ID ${requestUserId} wants to join your kitty.`,
+    });
+
+    // Save the notification
+    await notification.save();
+
+    res.status(200).json({ message: 'Request sent and notification created' });
+  } catch (error) {
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+};
+
 
 exports.getKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters

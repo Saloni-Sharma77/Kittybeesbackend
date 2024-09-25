@@ -241,6 +241,8 @@ router.get("/getAllKittys", kitty_controller.getAllKittys);
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
 
 router.post("/addKitty", kitty_controller.addKitty);
+router.post("/sendRequestTojoinKitty", kitty_controller.sendRequestTojoinKitty);
+
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
 router.delete("/deleteKitty/:id", kitty_controller.deleteKittyById);
 router.patch("/updateKittyStatus/:id", kitty_controller.updateKittyStatus);
