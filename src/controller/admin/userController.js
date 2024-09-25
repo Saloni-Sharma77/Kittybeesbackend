@@ -38,9 +38,7 @@ exports.signup = async (req, res) => {
       if (!user) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
-      if(user.role == 'admin'){
-        return res.status(401).json({ error: "Only Admin is able to login" });
-      }
+   
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return res.status(401).json({ error: "Invalid email or password" });
