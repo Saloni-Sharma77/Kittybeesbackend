@@ -1,4 +1,8 @@
 const Group = require("../../schema/groupSchema");
+const KittySchema = require("../../schema/kittySchema");
+
+
+
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
@@ -173,32 +177,71 @@ exports.getGroupHostedByMe = async (req, res) => {
   }
 };
 
-exports.addGroupMemories = async (req,res)=>{
+// exports.addGroupMemories = async (req,res)=>{
+//   try {
+//     const { groupId,image, userId } = req.body;
+
+//     // Find the group by ID
+//     const group = await Group.findById(groupId);
+
+//     if (!group) {
+//       return res.status(404).json({ message: 'Group not found' });
+//     }
+
+//     // Add the new memory to the groupMemories array
+//     group.groupMemories.push({
+//       image:image,
+//       userId: userId // userId from the request body
+//     });
+
+//     // Save the updated group document
+//     await group.save();
+
+//     res.status(200).json({ message: 'Memory added successfully', group });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error adding memory', error });
+//   }
+
+// }
+
+exports.addGroupMemories = async (req, res) => {
   try {
-    const { groupId,image, userId } = req.body;
+    const { kittyId, image, userId } = req.body;
 
-    // Find the group by ID
-    const group = await Group.findById(groupId);
+    // Find the kitty by ID
+    const kitty = await KittySchema.findById(kittyId);
 
-    if (!group) {
+    if (!kitty) {
+      return res.status(404).json({ message: 'Kitty not found' });
+    }
+
+    // Extract the groupId from the kitty object
+    const getGroupId = kitty?.groupId[0]?._id;
+    
+    console.log(getGroupId); // Logging the groupId to verify if it's correct
+
+    // Fetch the group by its ID
+    const groupdata = await Group.findById(getGroupId);
+
+    if (!groupdata) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
     // Add the new memory to the groupMemories array
-    group.groupMemories.push({
-      image:image,
-      userId: userId // userId from the request body
+    groupdata.groupMemories.push({
+      memoryimage: image, // Assuming 'image' is the correct field name
+      userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
     });
 
     // Save the updated group document
-    await group.save();
+    await groupdata.save();
 
-    res.status(200).json({ message: 'Memory added successfully', group });
+    res.status(200).json({ message: 'Memory added successfully', group: groupdata });
   } catch (error) {
     res.status(500).json({ message: 'Error adding memory', error });
   }
+};
 
-}
 
 
 

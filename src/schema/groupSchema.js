@@ -29,7 +29,7 @@ const GroupSchema = new mongoose.Schema(
     }],
     groupMemories:[{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      image: { type: String }, 
+      memoryimage: { type: String }, 
       }]
 
   },

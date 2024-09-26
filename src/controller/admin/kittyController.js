@@ -316,6 +316,8 @@ exports.joinKitty = async (req, res) => {
   }
 };
 
+
+
 exports.acceptOrRejectRequestOfKitty = async (req, res)=>{
   try {
     const { notificationId, status } = req.body;
@@ -357,6 +359,39 @@ exports.acceptOrRejectRequestOfKitty = async (req, res)=>{
     res.status(500).json({ error: 'Something went wrong' });
   }
 
+
+}
+
+
+exports.addKittyMemories = async (req,res)=>{
+  try {
+    const { kittyId,image, userId } = req.body;
+
+    // Find the kitty by ID
+    const kitty = await Kitty.findById(kittyId);
+
+    if (!kitty) {
+      return res.status(404).json({ message: 'Kitty not found' });
+    }
+   const  getGroupId =  kitty?.groupId[0]?._id
+
+     let groupdata = await GroupSchema.find(getGroupId)
+
+
+
+    // Add the new memory to the groupMemories array
+    groupdata.groupMemories.push({
+      image:image,
+      userId: userId // userId from the request body
+    });
+
+    // Save the updated group document
+    await group.save();
+
+    res.status(200).json({ message: 'Memory added successfully', group });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding memory', error });
+  }
 
 }
 
