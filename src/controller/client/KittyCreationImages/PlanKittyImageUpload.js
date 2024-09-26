@@ -37,7 +37,14 @@ exports.uploadKittyBanner = [upload.single('file'), async (req, res) => {
 
     const result = await s3.send(command);
     console.log('Upload Success:', result);
-    res.status(201).json({ message: 'Upload Success', result });
+    const imageUrl = `https://${params.Bucket}.s3.amazonaws.com/${params.Key}`;
+
+    res.status(201).json({
+      message: 'Upload Success',
+      imageUrl, // Returning the URL of the uploaded file
+      result
+    });
+        
   } catch (err) {
     console.error('Upload Error:', err);
     res.status(500).json({ message: err.message });
