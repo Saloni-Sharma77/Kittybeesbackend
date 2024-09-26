@@ -291,29 +291,40 @@ exports.joinKitty = async (req, res) => {
   try {
     const { kittyId, requestUserId, status } = req.body;
 
-    // Find the kitty by ID and populate the userId (the creator of the kitty)
+    // Find the kitty by ID
+    const kitty = await Kitty.findById(kittyId);
 
-    const newMember = {
-      userId: requestUserId,
-      status: status // Set the status (it will automatically validate against the enum)
-    };
-
-    const updatedKitty = await Kitty.findByIdAndUpdate(
-      kittyId,
-      { $push: { members: newMember } }, // Using $push to insert the new member
-      { new: true, runValidators: true } // Returns the updated document and runs schema validation
-    );
-    
-    if (!updatedKitty) {
+    if (!kitty) {
       return res.status(404).json({ message: 'Kitty not found' });
     }
 
-    return res.status(200).json({ message: 'Member added successfully', updatedKitty });
+    // Check if the user is already in the members array
+    const existingMemberIndex = kitty.members.findIndex(member => 
+      member.userId && member.userId.toString() === requestUserId
+    );
+
+    if (existingMemberIndex !== -1) {
+      // User is already a member, update their status
+      kitty.members[existingMemberIndex].status = status;
+    } else {
+      // User is not a member, add them to the members array
+      const newMember = {
+        userId: requestUserId,
+        status: status // Set the status
+      };
+      kitty.members.push(newMember); // Push the new member to the array
+    }
+
+    // Save the updated kitty document
+    const updatedKitty = await kitty.save();
+
+    return res.status(200).json({ message: 'Member status updated successfully', updatedKitty });
 
   } catch (error) {
-    console.log('the error is',error);
-    res.status(500).json({ error: 'Something went wrong' });
+    console.log('the error is', error);
+    return res.status(500).json({ error: 'Something went wrong' });
   }
+
 };
 
 
