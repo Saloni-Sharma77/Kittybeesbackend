@@ -141,7 +141,7 @@ const getPendingRequestsByUserId = async (req, res) => {
 
     // Find all groups where the user is the admin (userId is the admin's ID)
     const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) })
-      .populate('userIds.userId', 'name email'); // Select only required fields to populate (e.g., name, email)
+      .populate('userIds.userId', 'fullname email profileImage'); // Select only required fields to populate (e.g., name, email)
 
     if (!groups || groups.length === 0) {
       return res.status(404).json({ message: 'No groups found for this user' });
@@ -153,10 +153,11 @@ const getPendingRequestsByUserId = async (req, res) => {
         .filter(user => user.status === 'pending')
         .map(user => ({
           groupId: group,  // Return only group ID
-          groupName: group.name,  // Optionally add group name
-          userId: user.userId._id,  // Return only user ID
-          userName: user.userId.name,  // Optionally add user name
-          userEmail: user.userId.email  // Optionally add user email
+          // groupName: group.name,  // Optionally add group name
+          userId: user.userId,  // Return only user ID
+          // userName: user.userId.name,  // Optionally add user name
+          // userEmail: user.userId.email  // Optionally add user email
+
         }))
     );
 
