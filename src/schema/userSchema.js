@@ -31,7 +31,7 @@ sociallinks: [
   role:{ type: String,enum:['user','admin'],default:'user'},
   partyArr:{type:Array},
   activityArr:{type:Array},
-  profileImage:{type:String},
+  profileImage:{type:String,default : 'https://kittybee.s3.ap-south-1.amazonaws.com/profile_images/defaultProfile.png'},
 
 
 

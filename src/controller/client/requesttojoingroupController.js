@@ -1,5 +1,7 @@
 // controllers/groupController.js
 const Group = require('../../schema/requesttojoingroupSchema');
+const NotificationSchema = require('../../schema/notificationSchema');
+
 const mongoose = require('mongoose');
 
 
@@ -38,8 +40,10 @@ const addUserToGroup = async (req, res) => {
       });
     }
 
+
     // No need to push again here, as it's already done above
     await group.save();
+    // const notificationData = new 
 
     res.status(200).json({ message: 'Join Request Sent successfully ', group });
   } catch (error) {
@@ -90,6 +94,42 @@ const updateUserStatus = async (req, res) => {
 // Get all pending requests from groups where the user is the admin
 
 // Get all pending requests from groups where the user is the admin
+// const getPendingRequestsByUserId = async (req, res) => {
+//   try {
+//     const { userId } = req.params;  // Get userId from URL params
+
+//     // Check if userId is provided and is a valid ObjectId
+//     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+//       return res.status(400).json({ message: 'Invalid or missing userId' });
+//     }
+
+//     // Find all groups where the user is the admin (userId is the admin's ID)
+//     const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) }).populate('userIds.userId');
+
+//     if (!groups || groups.length === 0) {
+//       return res.status(404).json({ message: 'No groups found for this user' });
+//     }
+
+//     // Collect all pending user IDs from these groups
+//     const pendingRequests = groups.flatMap(group =>
+//       group.userIds
+//         .filter(user => user.status === 'pending')
+//         .map(user => ({
+//           groupId: group,
+//           userId: user.userId
+//         }))
+//     );
+
+//     if (pendingRequests.length === 0) {
+//       return res.status(200).json({ message: 'No pending requests found', pendingRequests });
+//     }
+
+//     res.status(200).json({ message: 'Pending requests retrieved', pendingRequests });
+//   } catch (error) {
+//     console.error("Error retrieving pending requests:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 const getPendingRequestsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;  // Get userId from URL params
@@ -100,7 +140,8 @@ const getPendingRequestsByUserId = async (req, res) => {
     }
 
     // Find all groups where the user is the admin (userId is the admin's ID)
-    const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) }).populate('userIds.userId');
+    const groups = await Group.find({ userId: new mongoose.Types.ObjectId(userId) })
+      .populate('userIds.userId', 'name email'); // Select only required fields to populate (e.g., name, email)
 
     if (!groups || groups.length === 0) {
       return res.status(404).json({ message: 'No groups found for this user' });
@@ -111,8 +152,11 @@ const getPendingRequestsByUserId = async (req, res) => {
       group.userIds
         .filter(user => user.status === 'pending')
         .map(user => ({
-          groupId: group,
-          userId: user.userId
+          groupId: group,  // Return only group ID
+          groupName: group.name,  // Optionally add group name
+          userId: user.userId._id,  // Return only user ID
+          userName: user.userId.name,  // Optionally add user name
+          userEmail: user.userId.email  // Optionally add user email
         }))
     );
 
@@ -126,6 +170,7 @@ const getPendingRequestsByUserId = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
   
