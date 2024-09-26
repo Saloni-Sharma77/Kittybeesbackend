@@ -244,7 +244,7 @@ exports.addGroupMemories = async (req, res) => {
       // Add the memory to the kitty's kittyMemories array
       kitty.kittyMemories.push({
         memoryimage: image, // Assuming 'image' is the correct field name
-        userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
+        userId: userId, // Storing userId 
       });
       groupdata.winners =[];
       groupdata.groupMemories =[];
