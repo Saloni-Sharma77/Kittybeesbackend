@@ -421,11 +421,13 @@ exports.getKittyById = async (req, res) => {
         }
       })
       .populate('userId')
+      .populate('members.userId')
       .populate('themeId')
       .populate('venueId')
       .populate('colorId')
       .populate('activityId')
-      .populate('templateId');
+      .populate('templateId')
+
 
     if (!getKitty) {
       return res.status(404).json({ error: "Kitty not found" });

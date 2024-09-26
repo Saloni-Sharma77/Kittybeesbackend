@@ -22,9 +22,12 @@ const addUserToGroup = async (req, res) => {
     const userIds = group.userIds || [];
 
     // Find a specific user by userId
-    const existingUser = userIds.find(u => u.userId && u.userId.toString() === userId.toString());
-    
-    if (existingUser) {
+    const existingUser = userIds.find(u => u?.userId && u?.userId?.toString() === userId?.toString());
+
+    console.log(group?.userId?.toString() ,userId?.toString())
+    if (group?.userId?.toString() == userId?.toString()){
+      return res.status(400).json({error:'You are Group Admin!'})
+     }else if (existingUser) {
       return res.status(400).json({error:'User Request Already sent!'})
     } else {
       console.log('User not found, you can add a new user');
