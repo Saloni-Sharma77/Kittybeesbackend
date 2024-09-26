@@ -246,6 +246,9 @@ exports.addGroupMemories = async (req, res) => {
         memoryimage: image, // Assuming 'image' is the correct field name
         userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
       });
+      groupdata.winners =[];
+      groupdata.groupMemories =[];
+
 
       // Save the updated documents
       await groupdata.save();
