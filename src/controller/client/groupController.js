@@ -218,29 +218,46 @@ exports.addGroupMemories = async (req, res) => {
     // Extract the groupId from the kitty object
     const getGroupId = kitty?.groupId[0]?._id;
     
-    console.log(getGroupId); // Logging the groupId to verify if it's correct
-
+    
     // Fetch the group by its ID
     const groupdata = await Group.findById(getGroupId);
-
+    
     if (!groupdata) {
       return res.status(404).json({ message: 'Group not found' });
     }
+    
+    // Check if the user is a member of the kitty or the creator
+    const isMember = kitty?.members.find(member => member?.userId?.toString() === userId?.toString());
+    const isCreator = kitty?.userId?.toString() === userId?.toString();
+    console.log(isMember); // Logging the groupId to verify if it's correct
 
-    // Add the new memory to the groupMemories array
-    groupdata.groupMemories.push({
-      memoryimage: image, // Assuming 'image' is the correct field name
-      userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
-    });
+    if (isMember || isCreator) {
+      // Add the new memory to the groupMemories array
+      groupdata.groupMemories.push({
+        memoryimage: image, // Assuming 'image' is the correct field name
+        userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
+      });
+      
+      // Add the memory to the kitty's kittyMemories array
+      kitty.kittyMemories.push({
+        memoryimage: image, // Assuming 'image' is the correct field name
+        userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
+      });
 
-    // Save the updated group document
-    await groupdata.save();
-
-    res.status(200).json({ message: 'Memory added successfully', group: groupdata });
+      // Save the updated documents
+      await groupdata.save();
+      await kitty.save();
+      
+      res.status(200).json({ message: 'Memory added successfully', group: groupdata });
+    } else {
+      return res.status(400).json({ error: 'You are not a member, please join this kitty first' });
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Error adding memory', error });
+    console.error('Error adding memory:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Error adding memory', error: error.message || error });
   }
 };
+
 
 
 

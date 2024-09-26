@@ -42,6 +42,10 @@ const KittySchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     status: { type: String, enum: ['pending', 'approved','rejected'], default: 'pending' }
 }],
+kittyMemories:[{
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  memoryimage: { type: String }, 
+  }],
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
