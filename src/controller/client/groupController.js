@@ -65,6 +65,9 @@ exports.addGroup = async (req, res) => {
     });
 
     // Save the new group to the database
+    newGroup?.userIds.forEach(item => {
+      item.status = 'approved';
+    });
     await newGroup.save();
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });
