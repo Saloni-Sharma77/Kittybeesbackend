@@ -1826,7 +1826,7 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 
 /**
  * @swagger
- * /group/addGroup:
+ * /addGroup:
  *   post:
  *     summary: Add a new group
  *     tags: [Groups]
@@ -1853,7 +1853,7 @@ router.post("/addGroup", group_controller.addGroup);
 
 /**
  * @swagger
- * /group/addGroupMemories:
+ * /addGroupMemories:
  *   post:
  *     summary: Add memories to a group
  *     tags: [Groups]
@@ -1880,7 +1880,7 @@ router.post("/addGroupMemories", group_controller.addGroupMemories);
 
 /**
  * @swagger
- * /group/getAllGroups:
+ * /getAllGroups:
  *   get:
  *     summary: Retrieve all groups
  *     tags: [Groups]
@@ -1907,7 +1907,7 @@ router.get("/getAllGroups", group_controller.getAllGroups);
 
 /**
  * @swagger
- * /group/getGroupById/{id}:
+ * /getGroupById/{id}:
  *   get:
  *     summary: Retrieve a group by ID
  *     tags: [Groups]
@@ -1941,7 +1941,7 @@ router.get("/getGroupById/:id", group_controller.getGroupById);
 
 /**
  * @swagger
- * /group/getGroupHostedByMe/{id}:
+ * /getGroupHostedByMe/{id}:
  *   get:
  *     summary: Retrieve groups hosted by a specific user
  *     tags: [Groups]
@@ -1973,7 +1973,7 @@ router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 
 /**
  * @swagger
- * /group/getGroupDetails/{groupId}:
+ * /getGroupDetails/{groupId}:
  *   get:
  *     summary: Retrieve detailed information about a group
  *     tags: [Groups]
@@ -2007,7 +2007,7 @@ router.get("/getGroupDetails/:groupId", group_controller.getGroupDetails);
 
 /**
  * @swagger
- * /group/updateGroup/{id}:
+ * /updateGroup/{id}:
  *   put:
  *     summary: Update a group by ID
  *     tags: [Groups]
@@ -2041,7 +2041,7 @@ router.put("/updateGroup/:id", group_controller.updateGroup);
 
 /**
  * @swagger
- * /group/deleteGroup/{id}:
+ * /deleteGroup/{id}:
  *   delete:
  *     summary: Delete a group by ID
  *     tags: [Groups]
@@ -2062,7 +2062,7 @@ router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 
 /**
  * @swagger
- * /group/updateGroupStatus/{id}:
+ * /updateGroupStatus/{id}:
  *   patch:
  *     summary: Update the status of a group by ID
  *     tags: [Groups]
@@ -2094,7 +2094,7 @@ router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
 /**
  * @swagger
- * /group/join-by-referral/{groupId}:
+ * /join-by-referral/{groupId}:
  *   post:
  *     summary: Join a group by referral code
  *     tags: [Groups]
