@@ -6,7 +6,7 @@ exports.addWishlist = async (req, res) => {
   try {
     const { name, userId, venueId, description, image, isActive } = req.body;
 
-    // Create a new wishlist
+
     const newWishlist = new WishListModel({
       name,
       userId,
