@@ -15,9 +15,13 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: `http://localhost:${process.env.PORT || 4000}`, // Update based on your setup
+      url: `http://localhost:${process.env.PORT || 4000}`, // Local server URL
+    },
+    {
+      url: 'https://kittybee.api.ithemes.xyz', // New server URL
     },
   ],
+
 };
 
 const options = {

@@ -1819,10 +1819,17 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
 // Group routes
 /**
  * @swagger
- * /addGroup:
+ * tags:
+ *   name: Groups
+ *   description: Group management API
+ */
+
+/**
+ * @swagger
+ * /group/addGroup:
  *   post:
- *     summary: Create a new group
- *     tags: [Group]
+ *     summary: Add a new group
+ *     tags: [Groups]
  *     requestBody:
  *       required: true
  *       content:
@@ -1832,23 +1839,24 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *             properties:
  *               name:
  *                 type: string
- *                 description: The name of the group
  *               description:
  *                 type: string
- *                 description: A brief description of the group
+ *               hostId:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Group created successfully
  *       400:
- *         description: Invalid input data
+ *         description: Invalid input
  */
+router.post("/addGroup", group_controller.addGroup);
 
 /**
  * @swagger
- * /addGroupMemories:
+ * /group/addGroupMemories:
  *   post:
  *     summary: Add memories to a group
- *     tags: [Group]
+ *     tags: [Groups]
  *     requestBody:
  *       required: true
  *       content:
@@ -1858,25 +1866,24 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *             properties:
  *               groupId:
  *                 type: string
- *                 description: ID of the group to add memories to
  *               memories:
  *                 type: array
  *                 items:
  *                   type: string
- *                 description: List of memories to add
  *     responses:
- *       200:
+ *       201:
  *         description: Memories added successfully
- *       404:
- *         description: Group not found
+ *       400:
+ *         description: Invalid input
  */
+router.post("/addGroupMemories", group_controller.addGroupMemories);
 
 /**
  * @swagger
- * /getAllGroups:
+ * /group/getAllGroups:
  *   get:
  *     summary: Retrieve all groups
- *     tags: [Group]
+ *     tags: [Groups]
  *     responses:
  *       200:
  *         description: A list of groups
@@ -1893,79 +1900,122 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *                     type: string
  *                   description:
  *                     type: string
+ *                   hostId:
+ *                     type: string
  */
+router.get("/getAllGroups", group_controller.getAllGroups);
 
 /**
  * @swagger
- * /getGroupById/{id}:
+ * /group/getGroupById/{id}:
  *   get:
- *     summary: Retrieve a group by its ID
- *     tags: [Group]
+ *     summary: Retrieve a group by ID
+ *     tags: [Groups]
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: ID of the group to retrieve
+ *         description: The ID of the group to retrieve
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Group details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 hostId:
+ *                   type: string
  *       404:
  *         description: Group not found
  */
+router.get("/getGroupById/:id", group_controller.getGroupById);
 
 /**
  * @swagger
- * /getGroupHostedByMe/{id}:
+ * /group/getGroupHostedByMe/{id}:
  *   get:
- *     summary: Get groups hosted by a specific user
- *     tags: [Group]
+ *     summary: Retrieve groups hosted by a specific user
+ *     tags: [Groups]
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: User ID
+ *         description: The ID of the user
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: List of groups hosted by the user
- *       404:
- *         description: User not found
+ *         description: Groups hosted by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   description:
+ *                     type: string
  */
+router.get("/getGroupHostedByMe/:id", group_controller.getGroupHostedByMe);
 
 /**
  * @swagger
- * /getGroupDetails/{groupId}:
+ * /group/getGroupDetails/{groupId}:
  *   get:
  *     summary: Retrieve detailed information about a group
- *     tags: [Group]
+ *     tags: [Groups]
  *     parameters:
- *       - name: groupId
- *         in: path
+ *       - in: path
+ *         name: groupId
  *         required: true
- *         description: ID of the group
+ *         description: The ID of the group to retrieve details for
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Detailed group information
+ *         description: Group details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 hostId:
+ *                   type: string
  *       404:
  *         description: Group not found
  */
+router.get("/getGroupDetails/:groupId", group_controller.getGroupDetails);
 
 /**
  * @swagger
- * /updateGroup/{id}:
+ * /group/updateGroup/{id}:
  *   put:
- *     summary: Update group details
- *     tags: [Group]
+ *     summary: Update a group by ID
+ *     tags: [Groups]
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: ID of the group to update
+ *         description: The ID of the group to update
  *         schema:
  *           type: string
  *     requestBody:
@@ -1982,21 +2032,24 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *     responses:
  *       200:
  *         description: Group updated successfully
+ *       400:
+ *         description: Invalid input
  *       404:
  *         description: Group not found
  */
+router.put("/updateGroup/:id", group_controller.updateGroup);
 
 /**
  * @swagger
- * /deleteGroup/{id}:
+ * /group/deleteGroup/{id}:
  *   delete:
- *     summary: Delete a group by its ID
- *     tags: [Group]
+ *     summary: Delete a group by ID
+ *     tags: [Groups]
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: ID of the group to delete
+ *         description: The ID of the group to delete
  *         schema:
  *           type: string
  *     responses:
@@ -2005,18 +2058,19 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *       404:
  *         description: Group not found
  */
+router.delete("/deleteGroup/:id", group_controller.deleteGroup);
 
 /**
  * @swagger
- * /updateGroupStatus/{id}:
+ * /group/updateGroupStatus/{id}:
  *   patch:
- *     summary: Update the status of a group
- *     tags: [Group]
+ *     summary: Update the status of a group by ID
+ *     tags: [Groups]
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: ID of the group to update the status
+ *         description: The ID of the group to update status
  *         schema:
  *           type: string
  *     requestBody:
@@ -2031,21 +2085,24 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *     responses:
  *       200:
  *         description: Group status updated successfully
+ *       400:
+ *         description: Invalid input
  *       404:
  *         description: Group not found
  */
+router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
 
 /**
  * @swagger
- * /join-by-referral/{groupId}:
+ * /group/join-by-referral/{groupId}:
  *   post:
  *     summary: Join a group by referral code
- *     tags: [Group]
+ *     tags: [Groups]
  *     parameters:
- *       - name: groupId
- *         in: path
+ *       - in: path
+ *         name: groupId
  *         required: true
- *         description: ID of the group to join
+ *         description: The ID of the group to join
  *         schema:
  *           type: string
  *     requestBody:
@@ -2057,16 +2114,15 @@ router.patch("/updateThemesStatus/:id", themes_controller.updateThemesStatus);
  *             properties:
  *               referralCode:
  *                 type: string
- *                 description: Referral code to join the group
  *     responses:
- *       200:
+ *       201:
  *         description: Successfully joined the group
+ *       400:
+ *         description: Invalid input
  *       404:
  *         description: Group not found
- *       400:
- *         description: Invalid referral code
  */
-
+router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCode);
 
 
 //spin route
