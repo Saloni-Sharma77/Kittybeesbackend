@@ -216,6 +216,36 @@ exports.getAllKittys = async (req, res) => {
   }
 };
 
+exports.getKittyAttendance = async (req, res) => {
+  try {
+      const { userId } = req.params; // Assuming userId is passed as a route parameter
+
+      // Find the kitty where the userId is inside the members array
+      let kittyincludes = await Kitty.findOne({
+          members: { 
+              $elemMatch: { userId }  // Find kitty with this userId in the members array
+          }
+      });
+
+      if (!kittyincludes) {
+          return res.status(404).json({ message: "Kitty not found for this user" });
+      }
+
+      // Filter members where status is 'approved'
+      const approvedMembers = kittyincludes.members.filter(member => member.status === 'approved');
+
+      // Get the count of approved members
+      const approvedCount = approvedMembers.length;
+
+      // Respond with the count and kitty details
+      res.status(200).json({count :approvedCount || 0});
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
 
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {

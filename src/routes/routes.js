@@ -3496,7 +3496,7 @@ router.delete("/deleteVenueCategory/:id", venueCategory_controller.deleteVenueCa
  *         description: Server error
  */
 router.get("/getAllKittys", kitty_controller.getAllKittys);
-
+router.get("/getKittyAttendance/:userId", kitty_controller.getKittyAttendance);
 /**
  * @swagger
  * /getAllPastAndFutureKitties:
