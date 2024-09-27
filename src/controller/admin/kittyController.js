@@ -216,32 +216,79 @@ exports.getAllKittys = async (req, res) => {
   }
 };
 
+// exports.getKittyAttendance = async (req, res) => {
+//   try {
+//       const { userId } = req.params; // Assuming userId is passed as a route parameter
+
+//       // Find the kitty where the userId is inside the members array
+//       let kittyincludes = await Kitty.find({
+//           members: { 
+//               $elemMatch: { userId }  // Find kitty with this userId in the members array
+//           }
+//       });
+
+//       if (!kittyincludes) {
+//           return res.status(404).json({ message: "Kitty not found for this user" });
+//       }
+
+//       // Filter members where status is 'approved'
+//       const approvedMembers = kittyincludes.members.filter(member => member.status === 'approved');
+
+//       // Get the count of approved members
+//       const approvedCount = approvedMembers.length;
+
+//       // Respond with the count and kitty details
+//       res.status(200).json({counts :approvedCount || 0});
+//   } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
+
 exports.getKittyAttendance = async (req, res) => {
   try {
-      const { userId } = req.params; // Assuming userId is passed as a route parameter
+    const { userId } = req.params; // Assuming userId is passed as a route parameter
 
-      // Find the kitty where the userId is inside the members array
-      let kittyincludes = await Kitty.findOne({
-          members: { 
-              $elemMatch: { userId }  // Find kitty with this userId in the members array
-          }
-      });
+    // Find kitties where userId is either inside members array or directly in the userId field
+    let kitties = await Kitty.find({
+      $or: [
+        { userId }, // Check if userId is the creator of the kitty (directly in the Kitty document)
+        { members: { $elemMatch: { userId } } } // Check if userId is in the members array
+      ]
+    });
 
-      if (!kittyincludes) {
-          return res.status(404).json({ message: "Kitty not found for this user" });
+    if (!kitties.length) {
+      return res.status(404).json({ message: "No kitties found for this user" });
+    }
+
+    let approvedCount = 0;
+    let isCreatorCount = 0;
+
+    // Loop through each kitty
+    kitties.forEach(kitty => {
+      // Check if the user is the creator (outside members array)
+      if (kitty.userId.toString() === userId) {
+        isCreatorCount++; // Increment for the creator's kitties
       }
 
       // Filter members where status is 'approved'
-      const approvedMembers = kittyincludes.members.filter(member => member.status === 'approved');
+      const approvedMembers = kitty.members.filter(member => 
+        member.userId.toString() === userId && member.status === 'approved'
+      );
 
-      // Get the count of approved members
-      const approvedCount = approvedMembers.length;
+      // Increment the count of approved members
+      approvedCount += approvedMembers.length;
+    });
 
-      // Respond with the count and kitty details
-      res.status(200).json({count :approvedCount || 0});
+    // Total count includes both creator's kitties and approved memberships
+    const totalCount = isCreatorCount + approvedCount;
+
+    // Respond with the total count
+    res.status(200).json({ counts: totalCount || 0 });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Server error", error });
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
   }
 };
 
