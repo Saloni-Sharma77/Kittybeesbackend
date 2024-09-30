@@ -44,13 +44,13 @@ exports.adduserInfo = async (req, res) => {
   const {
     fullname,
     dob,
-    phoneNumber,
-    profession,
-    email,
+    phoneNumber, 
+    profession, 
+    email, 
     emergencyNumber,  
-    specificintrests,
-    eventArr,
-    partyArr,
+    specificintrests, 
+    eventArr, 
+    partyArr, 
     activityArr,
     username,
     about,
@@ -61,7 +61,19 @@ exports.adduserInfo = async (req, res) => {
 
   console.log(req.body, "response");
 
+
   try {
+
+    const existingUser = await UsersModel.findOne({ phoneNumber });
+    if (existingUser) {
+      return res.status(400).json({ error: "Phone number already exists" });
+    }
+
+    // Check if phoneNumber and emergencyNumber are the same
+    if (phoneNumber == emergencyNumber) {
+      return res.status(400).json({ error: "Phone number and emergency contact number cannot be the same" });
+    }
+
     const newUser = new UsersModel({
       fullname,
       dob,
@@ -101,6 +113,11 @@ exports.updateUserInfo = async (req, res) => {
   if (!phoneNumber) {
     return res.status(400).json({ error: "Phone number is required" });
   }
+
+  if (req.body.emergencyNumber && phoneNumber == req.body.emergencyNumber) {
+    return res.status(400).json({ error: "Phone number and emergency contact number cannot be the same" });
+  }
+
 
   const updateData = {};
 
