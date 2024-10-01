@@ -222,10 +222,7 @@ exports.updateKitty = async (req, res) => {
     if (groupId) {
       if (mongoose.Types.ObjectId.isValid(groupId)) {
           groupId = [groupId]; // Ensure it's an array with a valid ObjectId
-      } else {
-          // Handle the case where groupId is not valid
-          return res.status(400).json({ error: "Invalid group ID (send in Array)" });
-      }
+      } 
   }
     if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: "Invalid userId" });
