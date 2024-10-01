@@ -185,6 +185,7 @@ exports.addKitty = async (req, res) => {
     res.status(500).json({ error: "Failed to add kitty" });
   }
 };
+
 exports.updateKitty = async (req, res) => {
   try {
     const {
@@ -234,8 +235,8 @@ exports.updateKitty = async (req, res) => {
     const theamePollData = theamepoll ? {
       question: theamepoll.question,
       options: theamepoll.options.map(option => ({
-        optionText: option.optionText,
-        votes: option.votes || 0  // Default to 0 if not provided
+        optionText: option.optionText.optionText, // Access optionText correctly
+        votes: option.votes || 0 // Default to 0 if not provided
       })),
       type: 'theampolls'
     } : undefined;
@@ -243,7 +244,7 @@ exports.updateKitty = async (req, res) => {
     const locationPollData = locationpoll ? {
       question: locationpoll.question,
       options: locationpoll.options.map(option => ({
-        optionText: option.optionText,
+        optionText: option.optionText.optionText, // Access optionText correctly
         votes: option.votes || 0
       })),
       type: 'locationpolls'
@@ -252,7 +253,7 @@ exports.updateKitty = async (req, res) => {
     const venuePollData = venuepoll ? {
       question: venuepoll.question,
       options: venuepoll.options.map(option => ({
-        optionText: option.optionText,
+        optionText: option.optionText.optionText, // Access optionText correctly
         votes: option.votes || 0
       })),
       type: 'venuepolls'
@@ -272,7 +273,6 @@ exports.updateKitty = async (req, res) => {
       ...(venueId && { venueId }),
       ...(activityId && { activityId }),
       ...(templateId && { templateId }),
-      ...(addressId && { addressId }),
       ...(theamepoll && { theamepoll: theamePollData }),
       ...(locationpoll && { locationpoll: locationPollData }),
       ...(venuepoll && { venuepoll: venuePollData })
@@ -289,9 +289,11 @@ exports.updateKitty = async (req, res) => {
     res.status(200).json({ message: "Kitty updated successfully", data: updatedKitty });
   } catch (err) {
     console.error("Error updating kitty", err);
-    res.status(500).json({ error: "Failed to update kitty" });
+    res.status(500).json({ error: "Failed to update kitty", msg: err });
   }
 };
+
+
 
 
 exports.getAllKittys = async (req, res) => {
