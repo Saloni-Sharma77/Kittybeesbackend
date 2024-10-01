@@ -164,6 +164,107 @@ exports.updateVenue = async (req, res) => {
   }
 };
 
+
+
+
+
+
+exports.getAllCities = async (req, res) => {
+  try {
+  
+    const getAllCity = await Venue.find();
+   
+    res
+      .status(200)
+      .json({ message: "Data fetched successfully", data: getAllCity });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Radius of Earth in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+exports.filterVenues = async (req, res) => {
+  try {
+    const {
+      cityName,
+      venueTypeName,
+      pricing,         // Pricing range filter (e.g., { min: 1000, max: 5000 })
+      userLat,         // Latitude of user location
+      userLong,        // Longitude of user location
+      maxDistance,     // Max distance to venue from user location in km
+      minKittiesHappened,
+      maxKittiesBooked
+    } = req.body;
+
+    const filters = {};
+
+    // Filter by city (use the field `cityId` in the schema)
+    if (cityName) {
+      const city = await mongoose.model('City').findOne({ name: cityName });  // Fetch city by name
+      if (city) {
+        filters['cityId'] = city._id;  // Use city ID to filter
+      }
+    }
+
+    // Filter by venue type (use the field `venueTypeId` in the schema)
+    if (venueTypeName) {
+      const venueType = await mongoose.model('VenueType').findOne({ name: venueTypeName });  // Fetch venue type by name
+      if (venueType) {
+        filters['venueTypeId'] = venueType._id;  // Use venueType ID to filter
+      }
+    }
+
+    // Filter by pricing (since pricing is a string, we assume it should be numerical, update schema if needed)
+    if (pricing) {
+      filters['pricing'] = {
+        $gte: Number(pricing.min),   // Convert string to number
+        $lte: Number(pricing.max)
+      };
+    }
+
+    // Filter by kittiesHappened and kittiesBooked
+    if (minKittiesHappened) {
+      filters.kittiesHappened = { $gte: minKittiesHappened };
+    }
+
+    if (maxKittiesBooked) {
+      filters.kittiesBooked = { $lte: maxKittiesBooked };
+    }
+
+    // Fetch venues with basic filters
+    let venues = await Venue.find(filters);
+
+    // Additional filtering by distance if userLat, userLong, and maxDistance are provided
+    if (userLat && userLong && maxDistance) {
+      venues = venues.filter(venue => {
+        if (venue.lat && venue.long) {
+          const venueDistance = calculateDistance(userLat, userLong, venue.lat, venue.long);
+          return venueDistance <= maxDistance;
+        }
+        return false;
+      });
+    }
+
+    // Return filtered venues
+    res.status(200).json({ venues });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching venues', error });
+  }
+};
+
 exports.getAllVenues = async (req, res) => {
   try {
     // Extract query parameters
@@ -231,38 +332,6 @@ exports.getAllVenues = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
-
-exports.getAllCities = async (req, res) => {
-  try {
-  
-    const getAllCity = await Venue.find();
-   
-    res
-      .status(200)
-      .json({ message: "Data fetched successfully", data: getAllCity });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-
-const haversineDistance = (lat1, lon1, lat2, lon2) => {
-  const toRad = (value) => (value * Math.PI) / 180;
-  const R = 6371; // Radius of Earth in km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
-};
-
-
 
 exports.getFilteredVenues = async (req, res) => {
   try {
@@ -457,75 +526,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 
-exports.filterVenues = async (req, res) => {
-  try {
-    const {
-      cityName,
-      venueTypeName,
-      pricing,         // Pricing range filter (e.g., { min: 1000, max: 5000 })
-      userLat,         // Latitude of user location
-      userLong,        // Longitude of user location
-      maxDistance,     // Max distance to venue from user location in km
-      minKittiesHappened,
-      maxKittiesBooked
-    } = req.body;
 
-    const filters = {};
-
-    // Filter by city (use the field `cityId` in the schema)
-    if (cityName) {
-      const city = await mongoose.model('City').findOne({ name: cityName });  // Fetch city by name
-      if (city) {
-        filters['cityId'] = city._id;  // Use city ID to filter
-      }
-    }
-
-    // Filter by venue type (use the field `venueTypeId` in the schema)
-    if (venueTypeName) {
-      const venueType = await mongoose.model('VenueType').findOne({ name: venueTypeName });  // Fetch venue type by name
-      if (venueType) {
-        filters['venueTypeId'] = venueType._id;  // Use venueType ID to filter
-      }
-    }
-
-    // Filter by pricing (since pricing is a string, we assume it should be numerical, update schema if needed)
-    if (pricing) {
-      filters['pricing'] = {
-        $gte: Number(pricing.min),   // Convert string to number
-        $lte: Number(pricing.max)
-      };
-    }
-
-    // Filter by kittiesHappened and kittiesBooked
-    if (minKittiesHappened) {
-      filters.kittiesHappened = { $gte: minKittiesHappened };
-    }
-
-    if (maxKittiesBooked) {
-      filters.kittiesBooked = { $lte: maxKittiesBooked };
-    }
-
-    // Fetch venues with basic filters
-    let venues = await Venue.find(filters);
-
-    // Additional filtering by distance if userLat, userLong, and maxDistance are provided
-    if (userLat && userLong && maxDistance) {
-      venues = venues.filter(venue => {
-        if (venue.lat && venue.long) {
-          const venueDistance = calculateDistance(userLat, userLong, venue.lat, venue.long);
-          return venueDistance <= maxDistance;
-        }
-        return false;
-      });
-    }
-
-    // Return filtered venues
-    res.status(200).json({ venues });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error fetching venues', error });
-  }
-};
 
 
 // {
