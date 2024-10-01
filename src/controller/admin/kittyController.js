@@ -119,9 +119,7 @@ exports.addKitty = async (req, res) => {
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: "Invalid userId" });
     }
-    if (!date || isNaN(new Date(date).getTime())) {
-      return res.status(400).json({ error: "Invalid date" });
-    }
+ 
     if (!time || typeof time !== 'string') {
       return res.status(400).json({ error: "Time is required and must be a string" });
     }
