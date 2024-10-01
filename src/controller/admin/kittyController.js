@@ -125,15 +125,7 @@ exports.addKitty = async (req, res) => {
     if (!time || typeof time !== 'string') {
       return res.status(400).json({ error: "Time is required and must be a string" });
     }
-    if (theamepoll && (!theamepoll.question || !Array.isArray(theamepoll.options))) {
-      return res.status(400).json({ error: "Theame poll question is required and options must be an array" });
-    }
-    if (locationpoll && (!locationpoll.question || !Array.isArray(locationpoll.options))) {
-      return res.status(400).json({ error: "Location poll question is required and options must be an array" });
-    }
-    if (venuepoll && (!venuepoll.question || !Array.isArray(venuepoll.options))) {
-      return res.status(400).json({ error: "Venue poll question is required and options must be an array" });
-    }
+
 
     // Validate and structure the poll data
     const theamePollData = theamepoll ? {
@@ -193,6 +185,114 @@ exports.addKitty = async (req, res) => {
     res.status(500).json({ error: "Failed to add kitty" });
   }
 };
+exports.updateKitty = async (req, res) => {
+  try {
+    const {
+      name,
+      groupId,
+      userId,
+      date,
+      time,
+      image,
+      themeId,
+      instructions,
+      colorId,
+      venueId,
+      activityId,
+      templateId,
+      addressId,
+      theamepoll,
+      locationpoll,
+      venuepoll
+    } = req.body;
+
+    const { kittyId } = req.params;
+
+    // Validate kittyId
+    if (!mongoose.Types.ObjectId.isValid(kittyId)) {
+      return res.status(400).json({ error: "Invalid kittyId" });
+    }
+
+    // Validation checks for the fields
+    if (name && typeof name !== 'string') {
+      return res.status(400).json({ error: "Name must be a string" });
+    }
+    if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
+      return res.status(400).json({ error: "Invalid groupId" });
+    }
+    if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+    if (date && isNaN(new Date(date).getTime())) {
+      return res.status(400).json({ error: "Invalid date" });
+    }
+    if (time && typeof time !== 'string') {
+      return res.status(400).json({ error: "Time must be a string" });
+    }
+
+    // Validate and structure the poll data
+    const theamePollData = theamepoll ? {
+      question: theamepoll.question,
+      options: theamepoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0  // Default to 0 if not provided
+      })),
+      type: 'theampolls'
+    } : undefined;
+
+    const locationPollData = locationpoll ? {
+      question: locationpoll.question,
+      options: locationpoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0
+      })),
+      type: 'locationpolls'
+    } : undefined;
+
+    const venuePollData = venuepoll ? {
+      question: venuepoll.question,
+      options: venuepoll.options.map(option => ({
+        optionText: option.optionText,
+        votes: option.votes || 0
+      })),
+      type: 'venuepolls'
+    } : undefined;
+
+    // Prepare the update object
+    const updatedData = {
+      ...(name && { name }),
+      ...(groupId && { groupId }),
+      ...(userId && { userId }),
+      ...(date && { date }),
+      ...(time && { time }),
+      ...(image && { image }),
+      ...(themeId && { themeId }),
+      ...(instructions && { instructions }),
+      ...(colorId && { colorId }),
+      ...(venueId && { venueId }),
+      ...(activityId && { activityId }),
+      ...(templateId && { templateId }),
+      ...(addressId && { addressId }),
+      ...(theamepoll && { theamepoll: theamePollData }),
+      ...(locationpoll && { locationpoll: locationPollData }),
+      ...(venuepoll && { venuepoll: venuePollData })
+    };
+
+    // Find and update the kitty by ID
+    const updatedKitty = await Kitty.findByIdAndUpdate(kittyId, updatedData, { new: true });
+
+    if (!updatedKitty) {
+      return res.status(404).json({ error: "Kitty not found" });
+    }
+
+    // Send success response
+    res.status(200).json({ message: "Kitty updated successfully", data: updatedKitty });
+  } catch (err) {
+    console.error("Error updating kitty", err);
+    res.status(500).json({ error: "Failed to update kitty" });
+  }
+};
+
 
 exports.getAllKittys = async (req, res) => {
   try {

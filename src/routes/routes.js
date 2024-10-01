@@ -3552,6 +3552,8 @@ router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKi
  *         description: Server error
  */
 router.post("/addKitty", kitty_controller.addKitty);
+router.put("/updateKitty", kitty_controller.updateKitty);
+
 
 /**
  * @swagger
