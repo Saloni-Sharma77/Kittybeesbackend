@@ -94,7 +94,7 @@ exports.getAllGroups = async (req, res) => {
 
     // Fetch groups with pagination
     const getAllGroup = await Group.find(query)
-      .populate('userIds.userId')
+      .populate('userIds.userId','_id fullname')
       .populate('userId')
       .populate('groupFrequencyId')
       .populate('groupInterestId')
@@ -144,7 +144,9 @@ exports.getGroupHostedByMe = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
       .populate('groupFrequencyId')  // Populate groupFrequencyId
-      .populate('userIds.userId')    // Populate user IDs in the group
+      // .populate('userIds.userId')    // Populate user IDs in the group
+      .populate('userIds.userId','_id fullname')
+
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
@@ -156,7 +158,9 @@ exports.getGroupHostedByMe = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
       .populate('groupFrequencyId')  // Populate groupFrequencyId
-      .populate('userIds.userId')    // Populate user IDs in the group
+      // .populate('userIds.userId')    // Populate user IDs in the group
+      .populate('userIds.userId','_id fullname')
+
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
