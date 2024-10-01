@@ -216,9 +216,9 @@ exports.updateKitty = async (req, res) => {
     if (name && typeof name !== 'string') {
       return res.status(400).json({ error: "Name must be a string" });
     }
-    if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
-      return res.status(400).json({ error: "Invalid groupId" });
-    }
+    // if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
+    //   return res.status(400).json({ error: "Invalid groupId" });
+    // }
     if (groupId) {
       if (mongoose.Types.ObjectId.isValid(groupId)) {
           groupId = [groupId]; // Ensure it's an array with a valid ObjectId
