@@ -200,7 +200,8 @@ exports.getAllVenues = async (req, res) => {
           }
         }
       },
-      
+      { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
+
       
       {
         $skip: (pageNumber - 1) * pageSize
