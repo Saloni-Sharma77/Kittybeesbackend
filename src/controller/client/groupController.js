@@ -128,7 +128,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     const userId = req.params.id;
 
     // Convert page and limit to numbers
-    const pageNumber = parseInt(page, 10);
+    const pageNumber = parseInt(page, 10);  
     const pageSize = parseInt(limit, 10);
 
     // Count total groups hosted and joined for pagination
