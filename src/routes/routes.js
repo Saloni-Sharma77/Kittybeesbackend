@@ -726,6 +726,8 @@ router.patch("/updateStatus/:id", user_admin_controller.updateStatus);
  *         description: User not found
  */
 router.put("/users/:id", user_admin_controller.updateUserImage);
+router.get("/getCountOfKittyAndGroupByme/:userId", user_admin_controller.getCountOfKittyAndGroupByme);
+
 
 
 

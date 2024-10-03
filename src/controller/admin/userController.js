@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const UsersModel = require("../../schema/userSchema");
 const GroupModel = require("../../schema/groupSchema");
+const KittyModel = require("../../schema/kittySchema");
+
 const VenueModel = require("../../schema/venueSchema");
 const jwt = require("jsonwebtoken");
 const kittySchema = require("../../schema/kittySchema");
@@ -50,21 +52,6 @@ exports.signup = async (req, res) => {
         message: "Login successfull",
         token: token,
         loginid: user._id,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         user,
       });
     } catch (err) {
@@ -90,6 +77,26 @@ exports.signup = async (req, res) => {
       });
     }
   };
+
+  exports.getCountOfKittyAndGroupByme = async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const groupCount = await GroupModel.countDocuments({ userId });
+      const kittyCount = await KittyModel.countDocuments({ userId });
+      res.status(200).json({
+        success: true,
+        groupCount,
+        kittyCount,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
+        error: error.message,
+      });
+    }
+  };
+  
 
 
   exports.getuserById = async(req,res)=>{
