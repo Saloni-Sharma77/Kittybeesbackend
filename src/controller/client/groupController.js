@@ -210,6 +210,8 @@ exports.getGroupHostedByMe = async (req, res) => {
 
 // }
 
+
+
 exports.addGroupMemories = async (req, res) => {
   try {
     const { kittyId, image, userId } = req.body;

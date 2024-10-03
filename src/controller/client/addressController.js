@@ -9,6 +9,11 @@ exports.createAddress = async (req, res) => {
             userId:req.body.userId,
             location: req.body.location, // Location field
             isActive: req.body.isActive,
+            lat: req.body.lat,  
+            long: req.body.long  ,
+            image: req.body.image ,
+            pricing:req.body.pricing,
+
         });
 
         const savedAddress = await newAddress.save();
@@ -52,6 +57,10 @@ exports.updateAddressById = async (req, res) => {
                 location: req.body.location, // Location field
                 isActive: req.body.isActive,
                  userId:req.body.userId,
+                 lat: req.body.lat,  
+                 long: req.body.long  ,
+                 image: req.body.image ,
+                 pricing:req.body.pricing,
 
             },
             { new: true }
