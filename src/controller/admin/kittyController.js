@@ -625,6 +625,7 @@ exports.getKittyById = async (req, res) => {
       .populate('members.userId')
       .populate('themeId')
       .populate('venueId')
+      .populate('addressId')
       .populate('colorId')
       .populate('activityId')
       .populate('templateId')
