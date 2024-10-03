@@ -131,12 +131,13 @@ exports.updateUserInfo = async (req, res) => {
   if (req.body.eventArr) updateData.eventArr = req.body.eventArr;
   if (req.body.partyArr) updateData.partyArr = req.body.partyArr;
   if (req.body.activityArr) updateData.activityArr = req.body.activityArr;
-  if (req.body.location) updateData.location = req.body.location;
   if (req.body.username) updateData.username = req.body.username;
   if (req.body.about) updateData.about = req.body.about;
   if (req.body.sociallinks) updateData.sociallinks = req.body.sociallinks;
   if (req.body.profileImage) updateData.profileImage = req.body.profileImage;
   if (req.body.location) updateData.location = req.body.location;
+  if (req.body.verifiedBy) updateData.verifiedBy = req.body.verifiedBy;
+
 
   try {
     const updatedUser = await UsersModel.findOneAndUpdate(

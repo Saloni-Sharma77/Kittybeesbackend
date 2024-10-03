@@ -29,6 +29,7 @@ sociallinks: [
   isActive:{type:Boolean,default : true},
   eventArr:{type:Array},
   role:{ type: String,enum:['user','admin'],default:'user'},
+  verifiedBy:{ type: String,enum:['aadhar','video','notyet'],default:'notyet'},
   partyArr:{type:Array},
   activityArr:{type:Array},
   profileImage:{type:String,default : 'https://kittybee.s3.ap-south-1.amazonaws.com/profile_images/defaultProfile.png'},

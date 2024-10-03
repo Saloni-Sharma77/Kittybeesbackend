@@ -43,6 +43,8 @@ const venuereview_controller = require('../controller/client/venueReviewControll
 const uploadImageController =require('../controller/client/KittyCreationImages/PlanKittyImageUpload');
 const memoriesControllers = require('../controller/client/memoriesControllers');
 const iconControllers = require('../controller/client/popupiconControllers');
+const wallet_Controller = require('../controller/client/walletController');
+
 
 
 
@@ -6396,6 +6398,12 @@ router.put('/update/:id', iconControllers.updateIcon);
  *         description: Server error
  */
 router.delete('/delete/:id', iconControllers.deleteIcon);
+
+
+router.get('/getUserWalletForGroup/:userId/:groupId', wallet_Controller.getUserWalletForGroup);
+router.get('/getAllUsersWalletForGroup/:groupId', wallet_Controller.getAllUsersWalletForGroup);
+
+
 
 
 

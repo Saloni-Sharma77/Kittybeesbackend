@@ -1,8 +1,5 @@
 const Group = require("../../schema/groupSchema");
 const KittySchema = require("../../schema/kittySchema");
-
-
-
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
@@ -71,6 +68,8 @@ exports.addGroup = async (req, res) => {
     await newGroup.save();
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });
+ 
+
   } catch (err) {
     // Handle duplicate referralCode error
   
