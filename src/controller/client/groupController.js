@@ -674,9 +674,40 @@ exports.performSpin = async (req, res) => {
 };
 
 
+const generateReferralCode = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let referralCode = '';
+  for (let i = 0; i < 6; i++) {
+    referralCode += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return referralCode;
+};
 
+// Create or update group with a referral code
 
+exports.generateReferalCode = async (req, res) => {
+  const { groupId } = req.params;  // Fetch groupId from URL parameters
 
+  try {
+    // Find the group by its groupId
+    let group = await Group.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Generate a new referral code and update the group
+    const newReferralCode = generateReferralCode();
+    group.referralCode = newReferralCode;
+
+    await group.save();
+
+    res.status(200).json({ message: "Referral Code Generated", referralCode: newReferralCode });
+  } catch (error) {
+    console.error("Error generating referral code:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 exports.joinGroupByReferralCode = async (req, res) => {
   const { referralCode, userId } = req.body;
   const { groupId } = req.params;  // Fetch group ID from URL parameters
@@ -690,7 +721,7 @@ exports.joinGroupByReferralCode = async (req, res) => {
 
     // Check if the user is already a member or has a pending request
     const existingRequest = group.userIds.find(
-      (userRequest) => userRequest.userId.toString() === userId.toString()
+      (userRequest) => userRequest?.userId?.toString() === userId?.toString()
     );
 
     if (existingRequest) {

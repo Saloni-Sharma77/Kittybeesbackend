@@ -2127,6 +2127,8 @@ router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
  *         description: Group not found
  */
 router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCode);
+router.post('/generateReferalCode/:groupId', group_controller.generateReferalCode);
+
 
 
 //spin route
