@@ -83,10 +83,15 @@ exports.signup = async (req, res) => {
       const userId = req.params.userId;
       const groupCount = await GroupModel.countDocuments({ userId });
       const kittyCount = await KittyModel.countDocuments({ userId });
+      const joinedGroupsCount = await GroupModel.countDocuments({
+        'userIds.userId': userId,
+        'userIds.status': 'approved',
+      })
       res.status(200).json({
         success: true,
         groupCount,
         kittyCount,
+        joinedGroupsCount
       });
     } catch (error) {
       res.status(500).json({
