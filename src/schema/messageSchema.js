@@ -1,11 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const messageSchema = new Schema({
-  chatId: { type: Schema.Types.ObjectId, ref: 'Chats' },
-  sender: { type: Schema.Types.ObjectId, ref: 'Users' },
+const messageArray = new Schema({
+
+  senderId: { type: Schema.Types.ObjectId, ref: 'Users' },
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now }
+})
+
+const messageSchema = new Schema({
+  groupId: { type: Schema.Types.ObjectId, ref: 'groups' },
+  message : [messageArray]
+  
 });
 
 const Message = mongoose.model('Messages', messageSchema);
