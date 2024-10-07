@@ -17,6 +17,8 @@ const city_controller = require("../controller/admin/cityController");
 const roles_controller = require("../controller/admin/roleController");
 const activity_controller = require("../controller/admin/activityController");
 const themes_controller = require("../controller/admin/themesController");
+const pages_controller = require("../controller/admin/pageController");
+
 const venueCategory_controller = require("../controller/admin/venueCategoryController"); // Import the controller for venueCategory
 
 // Client controllers
@@ -1692,6 +1694,10 @@ router.delete("/deleteRoles/:id", roles_controller.deleteRoles);
  *         description: A list of themes
  */
 router.get("/getAllThemes", themes_controller.getAllThemes);
+
+router.get("/getAllPages", pages_controller.getAllPages);
+router.post("/addPage", pages_controller.addPage);
+
 
 /**
  * @swagger
