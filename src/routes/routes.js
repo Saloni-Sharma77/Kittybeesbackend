@@ -513,7 +513,7 @@ router.post("/createMessage", message_controller.createMessage);
  *       404:
  *         description: Chat not found
  */
-router.get("/getMessages/:chatId", message_controller.getMessages);
+router.get("/getMessages/:groupId", message_controller.getMessages);
 
 // Admin routes
 /**

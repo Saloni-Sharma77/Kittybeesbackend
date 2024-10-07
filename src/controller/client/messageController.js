@@ -31,7 +31,7 @@ exports.createMessage = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     // Find the document for the given groupId (chatId)
-    const messageDoc = await Message.findOne({ groupId: req.params.chatId }).populate('messages.senderId');
+    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate('messages.senderId');
 
     if (!messageDoc) {
       return res.status(404).json({ error: 'Messages not found' });
