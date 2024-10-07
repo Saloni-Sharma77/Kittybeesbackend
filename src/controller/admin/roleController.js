@@ -99,7 +99,6 @@ exports.updateRoles = async (req, res) => {
   }
 };
 
-// Delete a role by ID
 exports.deleteRoles = async (req, res) => {
   try {
     const deletedRole = await RoleModel.findByIdAndDelete(req.params.id);
