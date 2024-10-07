@@ -2,7 +2,7 @@ const Message = require('../../schema/messageSchema');
 
 exports.createMessage = async (req, res) => {
   try {
-    const { groupId, senderId, content } = req.body;
+    const { groupId, senderId, content ,image ,video} = req.body;
 
     // Find the message document by groupId
     let messageDoc = await Message.findOne({ groupId });
@@ -30,7 +30,9 @@ exports.createMessage = async (req, res) => {
     // Create a response object with required fields
     const response = {
       fullname: newMessage.senderId.fullname, 
-      content: newMessage.content,           
+      content: newMessage.content,   
+      image: newMessage.image,        
+      video: newMessage.video,           
       timestamp: newMessage.timestamp         
     };
 

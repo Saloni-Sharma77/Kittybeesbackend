@@ -5,6 +5,8 @@ const messageArray = new Schema({
 
   senderId: { type: Schema.Types.ObjectId, ref: 'Users' },
   content: { type: String, required: true },
+  image: { type: String, default: null },
+  video: { type: String, default: null },
   timestamp: { type: Date, default: Date.now }
 })
 
