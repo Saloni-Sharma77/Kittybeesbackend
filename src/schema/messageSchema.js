@@ -10,7 +10,7 @@ const messageArray = new Schema({
 
 const messageSchema = new Schema({
   groupId: { type: Schema.Types.ObjectId, ref: 'groups' },
-  message : [messageArray]
+  messages : [messageArray]
   
 });
 

@@ -21,17 +21,31 @@ exports.createMessage = async (req, res) => {
     // Save the document (either newly created or updated)
     await messageDoc.save();
 
-    res.status(201).json(messageDoc);
+    // Populate senderId details for the new message
+    await messageDoc.populate('messages.senderId', 'fullname');
+
+    // Get the last message added to the array
+    const newMessage = messageDoc.messages[messageDoc.messages.length - 1];
+
+    // Create a response object with required fields
+    const response = {
+      fullname: newMessage.senderId.fullname, 
+      content: newMessage.content,           
+      timestamp: newMessage.timestamp         
+    };
+
+    res.status(201).json(response); // Return only the new message details
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
+
 exports.getMessages = async (req, res) => {
   try {
     // Find the document for the given groupId (chatId)
-    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate('messages.senderId');
+    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate('messages.senderId','fullname profileImage');
 
     if (!messageDoc) {
       return res.status(404).json({ error: 'Messages not found' });
