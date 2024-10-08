@@ -11,11 +11,11 @@ exports.createMessage = async (req, res) => {
       // If no document exists for this groupId, create a new one
       messageDoc = new Message({
         groupId,
-        messages: [{ senderId, content }] // Add the message to the messages array
+        messages: [{ senderId, content,image,video }] // Add the message to the messages array
       });
     } else {
       // If the document exists, push the new message to the messages array
-      messageDoc.messages.push({ senderId, content });
+      messageDoc.messages.push({ senderId, content,image,video });
     }
 
     // Save the document (either newly created or updated)

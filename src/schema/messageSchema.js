@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const messageArray = new Schema({
 
   senderId: { type: Schema.Types.ObjectId, ref: 'Users' },
-  content: { type: String, required: true },
+  content: { type: String, default: null },
   image: { type: String, default: null },
   video: { type: String, default: null },
   timestamp: { type: Date, default: Date.now }
