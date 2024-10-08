@@ -27,8 +27,8 @@ exports.createMessage = async (req, res) => {
     }
 
     // Ensure at least one of content, image, or video is provided
-    if (!newMessageData.content && !newMessageData.image && !newMessageData.video) {
-      return res.status(400).json({ error: 'At least one of content, image, or video must be provided' });
+    if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document) {
+      return res.status(400).json({ error: 'At least one of content,document, image, or video must be provided' });
     }
 
     // Find the message document by groupId
