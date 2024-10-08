@@ -7,6 +7,7 @@ const messageArray = new Schema({
   content: { type: String, default: '' },
   image: { type: String, default: '' },
   video: { type: String, default: '' },
+  document: { type: String, default: '' },
   timestamp: { type: Date, default: Date.now }
 })
 

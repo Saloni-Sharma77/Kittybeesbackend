@@ -12,6 +12,9 @@ exports.createMessage = async (req, res) => {
     if (req.body.content) {
       newMessageData.content = req.body.content;
     }
+    if (req.body.document) {
+      newMessageData.document = req.body.document;
+    }
 
     // Check and add image if provided
     if (req.body.image) {
@@ -57,6 +60,7 @@ exports.createMessage = async (req, res) => {
       content: newMessage.content || '',
       image: newMessage.image || '',
       video: newMessage.video || '',
+      document:newMessage.document || '',
       timestamp: newMessage.timestamp,
       _id:newMessage._id
     };
