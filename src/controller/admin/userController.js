@@ -81,9 +81,9 @@ exports.signup = async (req, res) => {
   exports.getCountOfKittyAndGroupByme = async (req, res) => {
     try {
       const userId = req.params.userId;
-      const groupCount = await GroupModel.countDocuments({ userId });
-      const kittyCount = await KittyModel.countDocuments({ userId });
-      const joinedGroupsCount = await GroupModel.countDocuments({
+      const groupCount = await GroupModel.find({ userId });
+      const kittyCount = await KittyModel.find({ userId });
+      const joinedGroupsCount = await GroupModel.find({
         'userIds.userId': userId,
         'userIds.status': 'approved',
       })
