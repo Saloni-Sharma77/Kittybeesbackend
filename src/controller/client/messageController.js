@@ -2,7 +2,31 @@ const Message = require('../../schema/messageSchema');
 
 exports.createMessage = async (req, res) => {
   try {
-    const { groupId, senderId, content ,image ,video} = req.body;
+    // Destructure only groupId and senderId
+    const { groupId, senderId } = req.body;
+
+    // Initialize message data object
+    const newMessageData = { senderId };
+
+    // Check and add content if provided
+    if (req.body.content) {
+      newMessageData.content = req.body.content;
+    }
+
+    // Check and add image if provided
+    if (req.body.image) {
+      newMessageData.image = req.body.image;
+    }
+
+    // Check and add video if provided
+    if (req.body.video) {
+      newMessageData.video = req.body.video;
+    }
+
+    // Ensure at least one of content, image, or video is provided
+    if (!newMessageData.content && !newMessageData.image && !newMessageData.video) {
+      return res.status(400).json({ error: 'At least one of content, image, or video must be provided' });
+    }
 
     // Find the message document by groupId
     let messageDoc = await Message.findOne({ groupId });
@@ -11,11 +35,11 @@ exports.createMessage = async (req, res) => {
       // If no document exists for this groupId, create a new one
       messageDoc = new Message({
         groupId,
-        messages: [{ senderId, content,image,video }] // Add the message to the messages array
+        messages: [newMessageData] // Add the new message to the messages array
       });
     } else {
       // If the document exists, push the new message to the messages array
-      messageDoc.messages.push({ senderId, content,image,video });
+      messageDoc.messages.push(newMessageData);
     }
 
     // Save the document (either newly created or updated)
@@ -29,11 +53,11 @@ exports.createMessage = async (req, res) => {
 
     // Create a response object with required fields
     const response = {
-      fullname: newMessage.senderId.fullname, 
-      content: newMessage.content,   
-      image: newMessage.image,        
-      video: newMessage.video,           
-      timestamp: newMessage.timestamp         
+      fullname: newMessage.senderId.fullname,
+      content: newMessage.content || '',
+      image: newMessage.image || '',
+      video: newMessage.video || '',
+      timestamp: newMessage.timestamp
     };
 
     res.status(201).json(response); // Return only the new message details
@@ -42,6 +66,7 @@ exports.createMessage = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 
 exports.getMessages = async (req, res) => {
