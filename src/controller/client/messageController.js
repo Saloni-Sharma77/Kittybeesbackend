@@ -57,7 +57,8 @@ exports.createMessage = async (req, res) => {
       content: newMessage.content || '',
       image: newMessage.image || '',
       video: newMessage.video || '',
-      timestamp: newMessage.timestamp
+      timestamp: newMessage.timestamp,
+      _id:newMessage._id
     };
 
     res.status(201).json(response); // Return only the new message details
