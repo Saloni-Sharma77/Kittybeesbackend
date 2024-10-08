@@ -4305,6 +4305,10 @@ router.put('/updateTemplateById/:id', templateController.updateTemplateById);
  *         description: Server error
  */
 router.delete('/deleteTemplateById/:id', templateController.deleteTemplateById);
+router.put('/updateTemplateStatus/:id', templateController.updateTemplateStatus);
+
+
+
 
 
 

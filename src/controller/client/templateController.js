@@ -48,6 +48,39 @@ exports.updateTemplateById = async (req, res) => {
         res.status(500).json({ message: 'Error updating template', error });
     }
 };
+exports.updateTemplateStatus = async (req, res)=>{
+    const id = req.params.id; // Capture the ID from request parameters
+    const {
+      isActive
+    } = req.body;
+    try {
+      const updatedData = await Template.findByIdAndUpdate(
+        id,
+        {
+          isActive
+        },
+        { new: true, runValidators: true } 
+      );
+  
+      if (!updatedData) {
+        return res.status(404).json({
+          error: "Data not found",
+        });
+      }
+  
+      // Send the updated user data with a 200 status code
+      res.status(200).json({
+        message: "Data updated successfully",
+        data: updatedData,
+      });
+    } catch (error) {
+      console.error("Error updating data", error);
+      res.status(500).json({
+        error: "Failed to update user information",
+        details: error.message,
+      });
+    }
+  }
 
 // Delete template by ID
 exports.deleteTemplateById = async (req, res) => {
