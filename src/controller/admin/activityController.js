@@ -3,10 +3,12 @@ const ActivityModel = require("../../schema/activitySchema");
 
 exports.addActivity = async (req, res) => {
   try {
-      const { name ,description} = req.body;
+      const { name ,description,userId,createdBy} = req.body;
       const newActivity = new ActivityModel({
           name,
-          description
+          description,
+          userId,
+          createdBy
       });
 
       await newActivity.save();
@@ -22,11 +24,11 @@ exports.addActivity = async (req, res) => {
 exports.updateActivity = async (req, res) => {
   try {
       const { id } = req.params;
-      const { name,description } = req.body;
+      const { name,description ,userId,createdBy} = req.body;
 
       const updatedActivity = await ActivityModel.findByIdAndUpdate(
           id,
-          { name,description },
+          { name,description,userId,createdBy },
           { new: true, runValidators: true }
       );
 
@@ -58,10 +60,42 @@ exports.updateActivity = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch Activity' });
     }
   };
-   
+
+ exports.getAllActivityOfUser = async (req, res) => {
+  try {
+    const userId = req.params.id; // Extract userId from request parameters
+
+    // Query the ActivityModel to find activities that match userId and were created by admin
+    const getAllActivity = await ActivityModel.find({
+      userId: userId,    // Match userId
+      createdBy: 'admin', // Ensure the activity was created by admin
+    }).sort({ createdAt: -1 }); // Sort activities by creation date in descending order
+
+    // Check if any activities were found
+    if (getAllActivity.length === 0) {
+      return res.status(404).json({
+        message: "No activities found for this user created by admin.",
+      });
+    }
+
+    // Return success response with the retrieved activities
+    res.status(200).json({
+      message: "Activity retrieved successfully",
+      data: { events: getAllActivity }, // Wrap activities in an events object
+    });
+  } catch (err) {
+    // Handle errors and return a failure response
+    res.status(500).json({
+      error: "Failed to get information",
+      details: err.message, // Include error details for debugging
+    });
+  }
+};
+
   
   exports.getAllActivity = async (req, res) => {
     try {
+
       const getAllActivity = await ActivityModel.find().sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "Activity retrieved successfully", 

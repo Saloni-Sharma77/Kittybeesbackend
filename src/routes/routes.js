@@ -1438,6 +1438,8 @@ router.get('/getAddressByUserId/:userId', addressController.getAddressByUserId);
  *         description: A list of activities
  */
 router.get("/getAllActivity", activity_controller.getAllActivity);
+router.get("/getAllActivityOfUser/:id", activity_controller.getAllActivity);
+
 
 /**
  * @swagger
