@@ -5,6 +5,9 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
+
 const WebSocket = require('ws'); // Import WebSocket
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger'); // Swagger configuration
@@ -14,10 +17,20 @@ const port = process.env.PORT || 4000;
 const app = express();
 
 // Create HTTP server with Express
-const server = http.createServer(app);
+// const server = http.createServer(app);
+const serverOptions = {
+  key: fs.readFileSync('ssl/private.key'), // Path to your private key
+  cert: fs.readFileSync('ssl/certificate.crt') // Path to your certificate
+};
+
+// Create HTTPS server
+const server = https.createServer(serverOptions);
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
 
 // Create a WebSocket server
-const wss = new WebSocket.Server({port:8081});
+// const wss = new WebSocket.Server({port:8081});
 
 // Socket handler (passing the WebSocket server instance)
 const socketHandler = require('./src/socket/socket');
