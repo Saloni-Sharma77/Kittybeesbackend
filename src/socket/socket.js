@@ -1,4 +1,4 @@
-const Message = require('../schema/memoriesSchema'); // Import the Message schema
+const Message = require('../schema/messageSchema'); // Import the Message schema
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
