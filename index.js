@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Create a WebSocket server
-const wss = new WebSocket.Server({port:3000});
+const wss = new WebSocket.Server({port:443});
 
 // Socket handler (passing the WebSocket server instance)
 // const socketHandler = require('./src/socket/socket');
