@@ -10,7 +10,7 @@ const fs = require('fs');
 
 const WebSocket = require('ws'); // Import WebSocket
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./swagger'); // Swagger configuration
+const swaggerSpec = require('./swagger'); // Swagger configura
 const bodyParser = require('body-parser');
 
 const port = process.env.PORT || 4000;
