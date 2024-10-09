@@ -57,7 +57,7 @@ server.listen(port, () => {
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('A client connected.');
-
+  ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
   ws.on('message', (message) => {
     console.log('Received:', message);
     // Handle incoming messages and optionally respond
