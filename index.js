@@ -1,3 +1,4 @@
+// Load environment variables from .env file
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -9,14 +10,14 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger'); // Swagger configuration
 const bodyParser = require('body-parser');
 
-const port = process.env.PORT || 4049; // Use the desired port
+const port = process.env.PORT || 4000;
 const app = express();
 
 // Create HTTP server with Express
 const server = http.createServer(app);
 
-// Create a WebSocket server that uses the same server instance
-const wss = new WebSocket.Server({ server });
+// Create a WebSocket server
+const wss = new WebSocket.Server({port:8080});
 
 // Socket handler (passing the WebSocket server instance)
 const socketHandler = require('./src/socket/socket');
@@ -56,7 +57,7 @@ server.listen(port, () => {
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('A client connected.');
-  ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
+
   ws.on('message', (message) => {
     console.log('Received:', message);
     // Handle incoming messages and optionally respond
