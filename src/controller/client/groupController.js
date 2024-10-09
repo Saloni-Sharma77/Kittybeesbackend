@@ -7,6 +7,83 @@ const mongoose = require("mongoose");
 
 // controllers/groupControllers.js
 
+// exports.addGroup = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       userId,
+//       userIds,
+//       groupInterestId,
+//       groupFrequencyId,
+//       groupType,
+//       description,
+//       rulesAndRegulation,
+//       // kittyFrequency,
+//       groupCityArea,
+//       contributionAmount,
+//       image,
+//     } = req.body;
+
+//     // Validate required fields
+//     const requiredFields = [
+//       { name: 'name', value: name },
+//       { name: 'userId', value: userId },
+//       { name: 'groupType', value: groupType },
+//       { name: 'description', value: description },
+//       { name: 'rulesAndRegulation', value: rulesAndRegulation },
+//       { name: 'groupFrequencyId', value: groupFrequencyId },
+//       { name: 'groupCityArea', value: groupCityArea },
+//       { name: 'contributionAmount', value: contributionAmount },
+//       { name: 'image', value: image }
+//     ];
+
+//     for (const field of requiredFields) {
+//       if (!field.value) {
+//         return res.status(400).json({ error: `${field.name} is required` });
+//       }
+//     }
+
+//     // Create a new group instance
+//     const newGroup = new Group({
+//       name,
+//       userId,
+//       userIds,
+//       groupInterestId,
+//       groupFrequencyId,
+//       groupType,
+//       description,
+//       rulesAndRegulation,
+//       groupFrequencyId,
+//       groupCityArea,
+//       contributionAmount,
+//       // groupMembers,
+//       image,
+//       // referralCode // Ensure referralCode is included
+//     });
+
+//     // Save the new group to the database
+//     newGroup?.userIds.forEach(item => {
+//       item.status = 'approved';
+//     });
+//     await newGroup.save();
+
+//     res.status(201).json({ message: "Group added successfully", group: newGroup });
+ 
+
+//   } catch (err) {
+//     // Handle duplicate referralCode error
+  
+//     console.error("Error adding group:", err);
+//     res.status(500).json({ error: "Failed to add group" });
+//   }
+// };
+// const admin = require("firebase-admin");
+
+// // Initialize Firebase Admin SDK with your credentials
+// admin.initializeApp({
+//   credential: admin.credential.applicationDefault(),
+// });
+
 exports.addGroup = async (req, res) => {
   try {
     const {
@@ -18,7 +95,6 @@ exports.addGroup = async (req, res) => {
       groupType,
       description,
       rulesAndRegulation,
-      // kittyFrequency,
       groupCityArea,
       contributionAmount,
       image,
@@ -56,27 +132,51 @@ exports.addGroup = async (req, res) => {
       groupFrequencyId,
       groupCityArea,
       contributionAmount,
-      // groupMembers,
       image,
-      // referralCode // Ensure referralCode is included
     });
 
-    // Save the new group to the database
+    // Set status to 'approved' for each userId
     newGroup?.userIds.forEach(item => {
       item.status = 'approved';
     });
+
+    // Save the new group to the database
     await newGroup.save();
 
+    // Send push notification to all approved users
+    const approvedUsers = newGroup.userIds.filter(item => item.status === 'approved');
+
+    approvedUsers.forEach(async (user) => {
+      // Assuming you have a User model and each user has a deviceToken field
+      const userData = await User.findById(user.userId);
+      if (userData && userData.deviceToken) {
+        const message = {
+          notification: {
+            title: "New Group Created",
+            body: `You have been added to the group ${newGroup.name}`,
+          },
+          token: userData.deviceToken,
+        };
+
+        // Send notification
+        admin.messaging().send(message)
+          .then(response => {
+            console.log(`Notification sent to user: ${userData.email}`);
+          })
+          .catch(error => {
+            console.error(`Error sending notification to user: ${userData.email}`, error);
+          });
+      }
+    });
+
     res.status(201).json({ message: "Group added successfully", group: newGroup });
- 
 
   } catch (err) {
-    // Handle duplicate referralCode error
-  
     console.error("Error adding group:", err);
     res.status(500).json({ error: "Failed to add group" });
   }
 };
+
 
 exports.getAllGroups = async (req, res) => {
   try {
