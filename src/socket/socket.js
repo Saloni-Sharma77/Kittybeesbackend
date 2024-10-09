@@ -70,7 +70,6 @@
 //   });
 // };
 // src/socket/socket.js
-
 const WebSocket = require('ws');
 const Message = require('../schema/messageSchema'); // Import the Message schema
 
@@ -82,24 +81,29 @@ module.exports = (wss) => {
     console.log('New client connected');
 
     ws.on('message', async (message) => {
-      const data = JSON.parse(message); // Parse the incoming message
+      try {
+        const data = JSON.parse(message); // Parse the incoming message
 
-      switch (data.type) {
-        case 'joinGroup':
-          const { groupId, senderId, fullname } = data; // Extract data
-          console.log(`${fullname} joined group: ${groupId}`);
-          
-          if (!clients.has(groupId)) {
-            clients.set(groupId, new Set()); // Create a new Set for groupId if it doesn't exist
-          }
-          clients.get(groupId).add(ws); // Add the client to the group
-          break;
+        switch (data.type) {
+          case 'joinGroup':
+            const { groupId, senderId, fullname } = data; // Extract data
+            console.log(`${fullname} joined group: ${groupId}`);
 
-        case 'sendMessage':
-          // Extract data here to avoid scope issues
-          const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document } = data;
+            if (!clients.has(groupId)) {
+              clients.set(groupId, new Set()); // Create a new Set for groupId if it doesn't exist
+            }
+            clients.get(groupId).add(ws); // Add the client to the group
+            break;
 
-          try {
+          case 'sendMessage':
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document } = data;
+
+            // Ensure at least one of content, image, video, or document is provided
+            if (!content && !image && !video && !document) {
+              ws.send(JSON.stringify({ error: 'At least one of content, image, video, or document must be provided' }));
+              return;
+            }
+
             // Create a new message object
             const newMessageData = {
               senderId: senderIdSend,
@@ -109,12 +113,6 @@ module.exports = (wss) => {
               document,
               timestamp: new Date() // Add timestamp here
             };
-
-            // Ensure at least one of content, image, or video is provided
-            if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document) {
-              ws.send(JSON.stringify({ error: 'At least one of content, image, video, or document must be provided' }));
-              return;
-            }
 
             // Find or create the message document by groupId
             let messageDoc = await Message.findOne({ groupId: groupIdSend });
@@ -155,14 +153,14 @@ module.exports = (wss) => {
                 client.send(JSON.stringify(response));
               }
             });
-          } catch (error) {
-            console.error("Error sending message:", error);
-            ws.send(JSON.stringify({ error: 'Failed to send message' }));
-          }
-          break;
+            break;
 
-        default:
-          console.log('Unknown message type:', data.type);
+          default:
+            console.log('Unknown message type:', data.type);
+        }
+      } catch (error) {
+        console.error("Error processing message:", error);
+        ws.send(JSON.stringify({ error: 'Failed to process message' }));
       }
     });
 
@@ -179,5 +177,8 @@ module.exports = (wss) => {
         }
       });
     });
+
+    // Send a welcome message to the client
+    ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
   });
 };

@@ -20,8 +20,8 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({port:8080});
 
 // Socket handler (passing the WebSocket server instance)
-const socketHandler = require('./src/socket/socket');
-socketHandler(wss);
+// const socketHandler = require('./src/socket/socket');
+// socketHandler(wss);
 
 // Middleware configuration
 app.use(express.json());
