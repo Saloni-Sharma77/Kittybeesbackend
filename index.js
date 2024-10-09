@@ -17,14 +17,14 @@ const port = process.env.PORT || 4000;
 const app = express();
 
 // Create HTTP server with Express
-// const server = http.createServer(app);
-const serverOptions = {
-  key: fs.readFileSync('ssl/private.key'), // Path to your private key
-  cert: fs.readFileSync('ssl/certificate.crt') // Path to your certificate
-};
+const server = https.createServer(app);
+// const serverOptions = {
+//   key: fs.readFileSync('ssl/private.key'), // Path to your private key
+//   cert: fs.readFileSync('ssl/certificate.crt') // Path to your certificate
+// };
 
 // Create HTTPS server
-const server = https.createServer(serverOptions);
+// const server = https.createServer(serverOptions);
 
 // Create WebSocket server
 const wss = new WebSocket.Server({ server });
