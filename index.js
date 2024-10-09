@@ -20,8 +20,8 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({port:8080});
 
 // Socket handler (passing the WebSocket server instance)
-const socketHandler = require('./src/socket/socket');
-socketHandler(wss);
+// const socketHandler = require('./src/socket/socket');
+// socketHandler(wss);
 
 // Middleware configuration
 app.use(express.json());
@@ -47,13 +47,6 @@ app.get('/', (req, res) => {
 
 // Serve Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Start the server
-server.listen(port, () => {
-  console.log(`Your server is running on port ${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
-});
-
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
   console.log('A client connected.');
@@ -69,6 +62,14 @@ wss.on('connection', (ws) => {
 
   ws.send('Welcome to the WebSocket server!'); // Example message to the client
 });
+
+// Start the server
+server.listen(port, () => {
+  console.log(`Your server is running on port ${port}`);
+  console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+});
+
+
 
 
 // const dotenv = require('dotenv');
