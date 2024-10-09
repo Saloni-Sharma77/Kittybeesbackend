@@ -38,6 +38,7 @@ exports.addGroup = async (req, res) => {
     ];
 
     for (const field of requiredFields) {
+      
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
       }
