@@ -5,24 +5,23 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
-const socketIo = require('socket.io');
-const socketHandler = require('./src/socket/socket'); // Custom socket handler
+const WebSocket = require('ws'); // Import WebSocket
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger'); // Swagger configuration
 const bodyParser = require('body-parser');
 
 const port = process.env.PORT || 4000;
 const app = express();
+
+// Create HTTP server with Express
 const server = http.createServer(app);
 
-// Add CORS support to both Express and Socket.IO
-const io = socketIo(server, {
-  cors: {
-    origin: '*', // You can replace '*' with specific domains in production (e.g., "http://your-domain.com")
-    methods: ['GET', 'POST'], // Allowed HTTP methods
-    credentials: true, // If you're using cookies, set this to true
-  }
-});
+// Create a WebSocket server
+const wss = new WebSocket.Server({ server });
+
+// Socket handler (passing the WebSocket server instance)
+const socketHandler = require('./src/socket/socket');
+socketHandler(wss);
 
 // Middleware configuration
 app.use(express.json());
@@ -49,15 +48,27 @@ app.get('/', (req, res) => {
 // Serve Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Socket handler (passing the socket instance)
-socketHandler(io);
-
 // Start the server
 server.listen(port, () => {
   console.log(`Your server is running on port ${port}`);
   console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
 });
 
+// Handle WebSocket connections
+wss.on('connection', (ws) => {
+  console.log('A client connected.');
+
+  ws.on('message', (message) => {
+    console.log('Received:', message);
+    // Handle incoming messages and optionally respond
+  });
+
+  ws.on('close', () => {
+    console.log('A client disconnected.');
+  });
+
+  ws.send('Welcome to the WebSocket server!'); // Example message to the client
+});
 
 
 // const dotenv = require('dotenv');
