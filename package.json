@@ -20,6 +20,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "fast-two-sms": "^3.0.0",
+    "https": "^1.0.0",
     "joi": "^17.13.1",
     "jsonwebtoken": "^9.0.2",
     "kitty_bee_backend": "file:",

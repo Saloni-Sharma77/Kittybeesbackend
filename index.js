@@ -6,7 +6,6 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const https = require('https');
-const fs = require('fs');
 
 const WebSocket = require('ws'); // Import WebSocket
 const swaggerUi = require('swagger-ui-express');
@@ -18,10 +17,7 @@ const app = express();
 
 // Create HTTP server with Express
 const server = https.createServer(app);
-// const serverOptions = {
-//   key: fs.readFileSync('ssl/private.key'), // Path to your private key
-//   cert: fs.readFileSync('ssl/certificate.crt') // Path to your certificate
-// };
+
 
 // Create HTTPS server
 // const server = https.createServer(serverOptions);
