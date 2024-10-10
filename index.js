@@ -3,14 +3,14 @@ const dotenv = require('dotenv');
 dotenv.config();
 const express = require('express');
 const cors = require('cors');
-const https = require('https');
+const http = require('http');
 const WebSocket = require('ws'); // Import WebSocket
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger'); // Swagger configura
 const bodyParser = require('body-parser');
 const port = process.env.PORT || 4000;
 const app = express();
-const server = https.createServer(app);
+const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const socketHandler = require('./src/socket/socket');
 socketHandler(wss);
