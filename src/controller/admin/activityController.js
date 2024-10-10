@@ -119,7 +119,7 @@ exports.updateActivity = async (req, res) => {
             return res.status(404).json({ error: 'Activity not found' });
         }
 
-        res.json({ message: 'Activity deleted successfully' });
+        res.status(200).json({message: 'Activity deleted successfully' });
     } catch (error) {
         console.error('Error deleting Activity:', error);
         res.status(500).json({ error: 'Failed to delete Activity' });
