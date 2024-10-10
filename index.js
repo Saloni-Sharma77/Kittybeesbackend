@@ -18,7 +18,7 @@ socketHandler(wss);
 app.use(express.json());
 app.use(cors({
   origin: '*', // Adjust to match your production requirements
-  methods: ['GET', 'POST'], // Specify the allowed methods
+  // methods: ['GET', 'POST'], // Specify the allowed methods
   credentials: true, // Enable credentials sharing
 }));
 app.use(bodyParser.json({ limit: '500mb' }));
