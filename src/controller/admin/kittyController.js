@@ -456,9 +456,9 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const filteredKitties = allKitties.filter(kitty => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
-      if (type === 'past') {
+      if (type == 'past') {
         return kittyDateTime < now;
-      } else if (type === 'future') {
+      } else if (type == 'future') {
         return kittyDateTime > now;
       }
     });
