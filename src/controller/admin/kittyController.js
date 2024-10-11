@@ -423,16 +423,9 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const { type } = req.query; // Fetch type parameter
     const today = new Date(); // Current date in JavaScript
 
-    // Function to convert 'DD/MM/YYYY' or 'DD-MM-YYYY' to a Date object
-    const convertToDate = (str) => {
-      const [day, month, year] = str.split(/[\/-]/).map(Number); // Split by '/' or '-' and extract day, month, year
-      return new Date(year, month - 1, day); // Create a JavaScript Date object
-    };
-
     // Function to get start and end of the day
     const getStartOfDay = () => new Date(today.setHours(0, 0, 0, 0));
-    const getEndOfDay = () => new Date(today.setHours(23, 59, 59, 999));
-
+    
     // Define filter object
     let filter = {};
 
@@ -440,25 +433,19 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     if (type == 'past') {
       filter = {
         $expr: {
-          $lt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
-        }
-      };
-    } else if (type === 'present') {
-      const startOfDay = getStartOfDay();
-      const endOfDay = getEndOfDay();
-
-      filter = {
-        $expr: {
-          $and: [
-            { $gte: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, startOfDay] },
-            { $lte: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, endOfDay] }
+          $lt: [
+            { $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, 
+            getStartOfDay() // Only include dates strictly before today (start of today)
           ]
         }
       };
-    } else if (type == 'future') {
+    } else if (type == 'present' || type == 'future') {
       filter = {
         $expr: {
-          $gt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
+          $gte: [
+            { $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, 
+            getStartOfDay() // Include today and future dates
+          ]
         }
       };
     }
@@ -476,7 +463,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate('venueId')
       .populate('themeId')
       .populate('colorId')
-      
       .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
@@ -485,6 +471,8 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 
 
