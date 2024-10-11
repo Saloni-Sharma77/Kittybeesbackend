@@ -437,7 +437,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     let filter = {};
 
     // Check the type of kitties to filter
-    if (type === 'past') {
+    if (type == 'past') {
       filter = {
         $expr: {
           $lt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
@@ -455,7 +455,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
           ]
         }
       };
-    } else if (type === 'future') {
+    } else if (type == 'future') {
       filter = {
         $expr: {
           $gt: [{ $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, today]
@@ -485,6 +485,11 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+
 
 
 

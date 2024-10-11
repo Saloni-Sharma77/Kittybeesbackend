@@ -729,6 +729,7 @@ router.patch("/updateStatus/:id", user_admin_controller.updateStatus);
  */
 router.put("/users/:id", user_admin_controller.updateUserImage);
 router.get("/getCountOfKittyAndGroupByme/:userId", user_admin_controller.getCountOfKittyAndGroupByme);
+router.get("/getCountOfGroupAndInvolveByme/:userId", user_admin_controller.getCountOfGroupAndInvolveByme);
 
 
 

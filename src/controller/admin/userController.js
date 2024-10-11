@@ -101,6 +101,37 @@ exports.signup = async (req, res) => {
       });
     }
   };
+
+
+  exports.getCountOfGroupAndInvolveByme = async (req, res) => {
+    try {
+      const userId = req.params.userId;
+  
+      // Get the count of groups created by the user
+      const groupCount = await GroupModel.countDocuments({ userId });
+  
+      // Get the count of groups the user is involved in (with status 'approved')
+      const joinedGroupsCount = await GroupModel.countDocuments({
+        'userIds.userId': userId,
+        'userIds.status': 'approved',
+      });
+  
+      // Calculate total count
+      const totalCount = groupCount + joinedGroupsCount;
+  
+      // Respond with the total count
+      res.status(200).json({
+        success: true,
+        count: totalCount,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
+        error: error.message,
+      });
+    }
+  };
   
 
 
