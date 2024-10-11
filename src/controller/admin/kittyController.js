@@ -421,37 +421,24 @@ exports.getKittyAttendance = async (req, res) => {
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const { type } = req.query; // Fetch type parameter
-    const today = new Date(); // Current date in JavaScript
+    const now = new Date(); // Current date and time in JavaScript
 
-    // Function to get start and end of the day
-    const getStartOfDay = () => new Date(today.setHours(0, 0, 0, 0));
-    
-    // Define filter object
-    let filter = {};
+    // Function to combine date and time into a Date object
+    const combineDateAndTime = (dateStr, timeStr) => {
+      const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+      const [day, month, year] = dateParts.length === 3 ? dateParts : [null, null, null];
+      const [time, modifier] = timeStr.split(" "); // Split time by space to get time and AM/PM
 
-    // Check the type of kitties to filter
-    if (type == 'past') {
-      filter = {
-        $expr: {
-          $lt: [
-            { $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, 
-            getStartOfDay() // Only include dates strictly before today (start of today)
-          ]
-        }
-      };
-    } else if (type == 'present' || type == 'future') {
-      filter = {
-        $expr: {
-          $gte: [
-            { $dateFromString: { dateString: "$date", format: "%d/%m/%Y" } }, 
-            getStartOfDay() // Include today and future dates
-          ]
-        }
-      };
-    }
+      // Convert time to 24-hour format
+      const [hours, minutes] = time.split(":").map(Number);
+      const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
+      const completeDate = new Date(year, month - 1, day, hours24, minutes);
+      
+      return completeDate;
+    };
 
-    // Fetch kitties based on the filter
-    const getAllKitty = await Kitty.find(filter)
+    // Fetch all kitties to manually filter in the app
+    const allKitties = await Kitty.find({})
       .populate({
         path: 'groupId',
         populate: {
@@ -465,12 +452,26 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate('colorId')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ message: "Data fetched successfully", data: getAllKitty });
+    // Filter kitties based on combined date and time
+    const filteredKitties = allKitties.filter(kitty => {
+      const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+
+      if (type === 'past') {
+        return kittyDateTime < now;
+      } else if (type === 'future') {
+        return kittyDateTime > now;
+      }
+    });
+
+    res.status(200).json({ message: "Data fetched successfully", data: filteredKitties });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
 
 
 
