@@ -2,8 +2,6 @@
 const Group = require('../../schema/requesttojoingroupSchema');
 const NotificationSchema = require('../../schema/notificationSchema');
 const UserSchema = require('../../schema/userSchema');
-
-
 const mongoose = require('mongoose');
 
 const addUserToGroup = async (req, res) => {
@@ -51,7 +49,7 @@ const addUserToGroup = async (req, res) => {
     await group.save();
 
     // Fetch the user details (ensure userId is an ObjectId)
-    const user = await UserSchema.findById(mongoose.Types.ObjectId(userId)).select('fullname');
+    const user = await UserSchema.findById(userId).select('fullname');
     console.log(`User fetch result: ${user}`); // Log the user for debugging
 
     if (!user) {
@@ -60,7 +58,7 @@ const addUserToGroup = async (req, res) => {
 
     // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: group.userId, // Notification to the group admin
+      userId: userId, // Notification to the group admin
       groupId: groupId,
       message: `${user.fullname} has requested to join your group: ${group.name}`,
       type: 'group-join-request'
