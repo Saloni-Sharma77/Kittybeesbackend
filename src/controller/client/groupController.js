@@ -200,22 +200,73 @@ exports.addGroup = async (req, res) => {
 // };
 
 
+// exports.getAllGroups = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 5, name = '' } = req.query; // Get pagination and search term from the query parameters
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     const query = name ? { name: { $regex: name, $options: "i" } } : {};
+
+//     // Count total documents for pagination info
+//     const totalGroups = await Group.countDocuments(query);
+
+//     // Fetch groups with pagination
+//     const getAllGroup = await Group.find(query)
+//       .populate('userIds.userId','_id fullname')
+//       .populate('userId')
+//       .populate('groupFrequencyId')
+//       .populate('groupInterestId')
+//       .sort({ createdAt: -1 })
+//       .skip((pageNumber - 1) * pageSize)
+//       .limit(pageSize);
+
+//     // Map to include user count
+//     const groupsWithUserCount = getAllGroup.map(group => ({
+//       ...group.toObject(),
+//       userCount: group.userIds.length,
+//     }));
+
+//     res.status(200).json({
+//       message: "Group List fetched successfully",
+//       data: groupsWithUserCount,
+//       totalGroups,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalGroups / pageSize),
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 exports.getAllGroups = async (req, res) => {
   try {
-    const { page = 1, limit = 5, name = '' } = req.query; // Get pagination and search term from the query parameters
+    const { page = 1, limit = 5, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
 
     // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    const query = name ? { name: { $regex: name, $options: "i" } } : {};
+    // Build the query object
+    const query = {};
+
+    if (name) {
+      query.name = { $regex: name, $options: "i" }; // Search by name if provided
+    }
+
+    if (userId) {
+      query.userIds = { $elemMatch: { userId: new mongoose.Types.ObjectId(userId) } }; // Filter by userId if provided
+    }
 
     // Count total documents for pagination info
     const totalGroups = await Group.countDocuments(query);
 
     // Fetch groups with pagination
     const getAllGroup = await Group.find(query)
-      .populate('userIds.userId','_id fullname')
+      .populate('userIds.userId', '_id fullname')
       .populate('userId')
       .populate('groupFrequencyId')
       .populate('groupInterestId')
@@ -241,6 +292,7 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 exports.getGroupHostedByMe = async (req, res) => {

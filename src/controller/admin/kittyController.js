@@ -196,7 +196,7 @@ exports.addKitty = async (req, res) => {
     const userNotifications = group.userIds.map(user => ({
       userId: user.userId, // assuming userIds is an array of objects with userId field
       groupId: groupId,
-      kittyId: newKitty._id,
+      kittyId: newKitty._id,  
       message: `A new kitty has been created in your group: ${newKitty.name}`,
       type: 'kitty',
     }));
