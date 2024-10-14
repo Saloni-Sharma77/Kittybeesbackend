@@ -9,7 +9,7 @@ const NotificationSchema = new mongoose.Schema(
     requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     message: { type: String},
     type: {type:String,
-      enum: ['group', 'kitty', 'message'], 
+      enum: ['group', 'kitty', 'message','group-join-request'], 
     },
     status: { 
       type: String, 

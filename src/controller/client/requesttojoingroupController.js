@@ -1,6 +1,8 @@
 // controllers/groupController.js
 const Group = require('../../schema/requesttojoingroupSchema');
 const NotificationSchema = require('../../schema/notificationSchema');
+const UserSchema = require('../../schema/userSchema');
+
 
 const mongoose = require('mongoose');
 
@@ -44,6 +46,24 @@ const addUserToGroup = async (req, res) => {
     // No need to push again here, as it's already done above
     await group.save();
     // const notificationData = new 
+
+    // notification work ---------
+    // Fetch the user details for the requestor
+    const user = await UserSchema.findById(userId).select('fullname');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send a notification to the group admin (group.userId)
+    const adminNotification = new NotificationSchema({
+      userId: group.userId, // Send notification to the group admin
+      groupId: groupId,
+      message: `${user.fullname} has requested to join your group: ${group.name}`,
+      type: 'group-join-request'
+    });
+
+    // Save the admin notification
+    await adminNotification.save();
 
     res.status(200).json({ message: 'Join Request Sent successfully ', group });
   } catch (error) {
