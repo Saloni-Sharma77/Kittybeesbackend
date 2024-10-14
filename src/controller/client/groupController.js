@@ -263,7 +263,8 @@ exports.getAllGroups = async (req, res) => {
       
       query.$and = [
         { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
-        { userIds: { $not: { $elemMatch: { userId: objectId } } } } // Exclude groups where userIds contains the userId
+        
+        { userIds: { $not: { $elemMatch: { userId: objectId, status: 'approved'} } } }, // Exclude groups where userIds contains the userId,
       ];
     }
 
