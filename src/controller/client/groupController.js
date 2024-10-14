@@ -65,18 +65,32 @@ exports.addGroup = async (req, res) => {
       item.status = 'approved';
     });
     await newGroup.save();
+    //notification work------------------------->>>>
+    const creatorNotification = {
+      userId, // the creator's userId
+      groupId: newGroup._id,
+      message: `You have created the group: ${newGroup.name}`,
+      type: 'group',
+    };
+
+    // Save notifications for users with status 'approved'
     const approvedUserIds = newGroup.userIds
       .filter(item => item.status === 'approved')
       .map(item => item.userId);
 
-    const notifications = approvedUserIds.map(userId => ({
+    const userNotifications = approvedUserIds.map(userId => ({
       userId,
       groupId: newGroup._id,
       message: `You have been added to the group: ${newGroup.name}`,
       type: 'group',
     }));
 
-    await NotificationSchema.insertMany(notifications); // Insert notifications
+    // Combine notifications for the creator and the users
+    const allNotifications = [creatorNotification, ...userNotifications];
+
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(allNotifications);
+
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });
 
