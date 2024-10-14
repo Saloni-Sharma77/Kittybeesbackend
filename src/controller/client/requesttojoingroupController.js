@@ -6,67 +6,72 @@ const UserSchema = require('../../schema/userSchema');
 
 const mongoose = require('mongoose');
 
-
-
-// Add user to a group
 const addUserToGroup = async (req, res) => {
   try {
     const { groupId, userId, status } = req.body;
 
+    // Ensure all required fields are provided
     if (!groupId || !userId || !status) {
       return res.status(400).json({ message: 'groupId, userId, and status are required' });
     }
 
+    // Find the group by its ID
     const group = await Group.findById(groupId);
-
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
  
     const userIds = group.userIds || [];
 
-    // Find a specific user by userId
+    // Check if the user is already in the group
     const existingUser = userIds.find(u => u?.userId && u?.userId?.toString() === userId?.toString());
 
-    console.log(group?.userId?.toString() ,userId?.toString())
-    if (group?.userId?.toString() == userId?.toString()){
-      return res.status(400).json({error:'You are Group Admin!'})
-     }else if (existingUser) {
-      return res.status(400).json({error:'User Request Already sent!'})
-    } else {
-      console.log('User not found, you can add a new user');
-      // Add a new user if needed
+    console.log(`Group Admin ID: ${group?.userId?.toString()}, Current User ID: ${userId?.toString()}`);
+    
+    // Prevent the admin from sending a join request
+    if (group?.userId?.toString() == userId?.toString()) {
+      return res.status(400).json({ error: 'You are the Group Admin!' });
+    } 
+    
+    // Check if the user has already sent a request
+    else if (existingUser) {
+      return res.status(400).json({ error: 'User request already sent!' });
+    } 
+    
+    // Add the new user with pending status
+    else {
+      console.log('User not found in group, adding a new user');
       userIds.push({
-        userId: userId,  // Assuming userId is available
+        userId: userId,  
         status: status || 'pending'
       });
     }
 
-
-    // No need to push again here, as it's already done above
+    // Save the group after adding the user
     await group.save();
-    // const notificationData = new 
 
-    // notification work ---------
-    // Fetch the user details for the requestor
-    const user = await UserSchema.findById(userId).select('fullname');
+    // Fetch the user details (ensure userId is an ObjectId)
+    const user = await UserSchema.findById(mongoose.Types.ObjectId(userId)).select('fullname');
+    console.log(`User fetch result: ${user}`); // Log the user for debugging
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Send a notification to the group admin (group.userId)
+    // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: group.userId, // Send notification to the group admin
+      userId: group.userId, // Notification to the group admin
       groupId: groupId,
       message: `${user.fullname} has requested to join your group: ${group.name}`,
       type: 'group-join-request'
     });
 
-    // Save the admin notification
+    // Save the notification
     await adminNotification.save();
 
-    res.status(200).json({ message: 'Join Request Sent successfully ', group });
+    res.status(200).json({ message: 'Join request sent successfully', group });
   } catch (error) {
+    console.error('Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
