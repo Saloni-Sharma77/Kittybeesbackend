@@ -257,8 +257,9 @@ exports.getAllGroups = async (req, res) => {
       query.name = { $regex: name, $options: "i" }; // Search by name if provided
     }
 
+    // Exclude groups with the specified userId if provided
     if (userId) {
-      query.userIds = { $elemMatch: { userId: new mongoose.Types.ObjectId(userId) } }; // Filter by userId if provided
+      query.userIds = { $not: { $elemMatch: { userId: new mongoose.Types.ObjectId(userId) } } }; // Exclude groups containing userId
     }
 
     // Count total documents for pagination info
@@ -292,6 +293,7 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
