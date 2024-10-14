@@ -176,7 +176,40 @@ exports.addKitty = async (req, res) => {
     // Save the new Kitty to the database
     await newKitty.save();
 
-    // Send success response
+    //notification work------------>>>
+    // Fetch group details to get userIds
+    const group = await GroupSchema.findById(groupId).select('userIds');
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    // Create notifications for the userId (kitty creator)
+    const creatorNotification = {
+      userId, // The creator's userId
+      kittyId: newKitty._id,
+      message: `You have created a kitty: ${newKitty.name}`,
+      type: 'kitty',
+    };
+
+    // Create notifications for all users in the group
+    const userNotifications = group.userIds.map(user => ({
+      userId: user.userId, // assuming userIds is an array of objects with userId field
+      groupId: groupId,
+      kittyId: newKitty._id,
+      message: `A new kitty has been created in your group: ${newKitty.name}`,
+      type: 'kitty',
+    }));
+
+    // Combine notifications for the creator and the group users
+    const allNotifications = [creatorNotification, ...userNotifications];
+
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(allNotifications);
+
+
+
+
     res.status(201).json({ message: "Kitty added successfully", data: newKitty });
     // if (res.statusCode === 201) {
     //   // Loop through each userId and create a wallet object for them
