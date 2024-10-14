@@ -65,11 +65,6 @@ exports.addGroup = async (req, res) => {
       item.status = 'approved';
     });
     await newGroup.save();
-
-    res.status(201).json({ message: "Group added successfully", group: newGroup });
-
-    //notification work
-
     const approvedUserIds = newGroup.userIds
     .filter(item => item.status === 'approved')
     .map(item => item.userId);
