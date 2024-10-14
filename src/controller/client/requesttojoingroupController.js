@@ -66,6 +66,7 @@ const addUserToGroup = async (req, res) => {
     const adminNotification = new NotificationSchema({
       userId: groupC.userId, // Notification to the group admin
       groupId: groupId,
+      requestUserId:userId,
       message: `${user.fullname} has requested to join your group: ${groupC.name}`,
       type: 'group-join-request'
     });
