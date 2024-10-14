@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const GroupSchema = new mongoose.Schema(
   {
     name: { type: String },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     groupInterestId: [{ type: mongoose.Schema.Types.ObjectId, ref: "groupinterest" }],
     groupFrequencyId: { type: mongoose.Schema.Types.ObjectId, ref: "groupfrequency" },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     userIds: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
       status: { type: String, enum: ['pending', 'approved','rejected'], default: 'approved' }

@@ -2,7 +2,10 @@
 const Group = require('../../schema/requesttojoingroupSchema');
 const NotificationSchema = require('../../schema/notificationSchema');
 const UserSchema = require('../../schema/userSchema');
-const mongoose = require('mongoose');
+
+
+
+const mongoose = require('mongoose'); // Ensure mongoose is imported at the top
 
 const addUserToGroup = async (req, res) => {
   try {
@@ -18,7 +21,9 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
- 
+
+    console.log('Group object:', group); // Log the group object to debug
+
     const userIds = group.userIds || [];
 
     // Check if the user is already in the group
@@ -27,20 +32,20 @@ const addUserToGroup = async (req, res) => {
     console.log(`Group Admin ID: ${group?.userId?.toString()}, Current User ID: ${userId?.toString()}`);
     
     // Prevent the admin from sending a join request
-    if (group?.userId?.toString() == userId?.toString()) {
+    if (group?.userId?.toString() === userId?.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
     } 
-    
+
     // Check if the user has already sent a request
     else if (existingUser) {
       return res.status(400).json({ error: 'User request already sent!' });
     } 
-    
+
     // Add the new user with pending status
     else {
       console.log('User not found in group, adding a new user');
       userIds.push({
-        userId: userId,  
+        userId: userId,
         status: status || 'pending'
       });
     }
@@ -49,7 +54,7 @@ const addUserToGroup = async (req, res) => {
     await group.save();
 
     // Fetch the user details (ensure userId is an ObjectId)
-    const user = await UserSchema.findById(userId).select('fullname');
+    const user = await UserSchema.findById(mongoose.Types.ObjectId(userId)).select('fullname');
     console.log(`User fetch result: ${user}`); // Log the user for debugging
 
     if (!user) {
@@ -58,7 +63,7 @@ const addUserToGroup = async (req, res) => {
 
     // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: userId, // Notification to the group admin
+      userId: group.userId, // Notification to the group admin
       groupId: groupId,
       message: `${user.fullname} has requested to join your group: ${group.name}`,
       type: 'group-join-request'
@@ -73,6 +78,7 @@ const addUserToGroup = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Update the status of a user in a group
 const updateUserStatus = async (req, res) => {
