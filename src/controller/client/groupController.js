@@ -244,7 +244,7 @@ exports.addGroup = async (req, res) => {
 
 exports.getAllGroups = async (req, res) => {
   try {
-    const { page = 1, limit = 5, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
+    const { page = 1, limit = 20, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
 
     // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
