@@ -46,6 +46,7 @@ const uploadImageController =require('../controller/client/KittyCreationImages/P
 const memoriesControllers = require('../controller/client/memoriesControllers');
 const iconControllers = require('../controller/client/popupiconControllers');
 const wallet_Controller = require('../controller/client/walletController');
+const notification_Controller = require('../controller/client/notificationController');
 
 
 
@@ -6419,6 +6420,9 @@ router.delete('/delete/:id', iconControllers.deleteIcon);
 
 router.get('/getUserWalletForGroup/:userId/:groupId', wallet_Controller.getUserWalletForGroup);
 router.get('/getAllUsersWalletForGroup/:groupId', wallet_Controller.getAllUsersWalletForGroup);
+
+
+router.get('/getNotificationsOfUser/:userId', notification_Controller.getNotificationsOfUser);
 
 
 

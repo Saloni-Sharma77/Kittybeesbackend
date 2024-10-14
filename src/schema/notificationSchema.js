@@ -13,6 +13,10 @@ const NotificationSchema = new mongoose.Schema(
       enum: ['pending', 'accepted', 'rejected'], 
       default: 'pending' 
     },
+    isRead: {
+      type: Boolean,
+      default: false
+    },
   
   },
   { timestamps: true }

@@ -3,6 +3,7 @@ const KittySchema = require("../../schema/kittySchema");
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const mongoose = require("mongoose");
+const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 
 
 // controllers/groupControllers.js
@@ -57,23 +58,34 @@ exports.addGroup = async (req, res) => {
       groupFrequencyId,
       groupCityArea,
       contributionAmount,
-      // groupMembers,
       image,
-      // referralCode // Ensure referralCode is included
     });
 
-    // Save the new group to the database
     newGroup?.userIds.forEach(item => {
       item.status = 'approved';
     });
     await newGroup.save();
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });
- 
+
+    //notification work
+
+    const approvedUserIds = newGroup.userIds
+    .filter(item => item.status === 'approved')
+    .map(item => item.userId);
+
+  const notifications = approvedUserIds.map(userId => ({
+    userId,
+    groupId: newGroup._id,
+    message: `You have been added to the group: ${newGroup.name}`,
+    type: 'group',
+  }));
+
+  await NotificationSchema.insertMany(notifications);
+
+  res.status(201).json({ message: "Group added successfully", group: newGroup });
 
   } catch (err) {
-    // Handle duplicate referralCode error
-  
     console.error("Error adding group:", err);
     res.status(500).json({ error: "Failed to add group" });
   }

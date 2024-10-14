@@ -31,7 +31,7 @@ const KittySchema = new mongoose.Schema({
   date: { type: String },
   time: { type: String },
   instructions: { type: String },
-  themeId: { type: mongoose.Schema.Types.ObjectId, ref: 'theme' },
+  themeId: { type: mongoose.Schema.Types.ObjectId, ref: 'theme' },  
   colorId: { type: mongoose.Schema.Types.ObjectId, ref: 'color' },
   venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
   addressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
