@@ -259,8 +259,14 @@ exports.getAllGroups = async (req, res) => {
 
     // Exclude groups with the specified userId if provided
     if (userId) {
-      query.userIds = { $not: { $elemMatch: { userId: new mongoose.Types.ObjectId(userId) } } }; // Exclude groups containing userId
+      const objectId = new mongoose.Types.ObjectId(userId);
+      
+      query.$and = [
+        { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
+        { userIds: { $not: { $elemMatch: { userId: objectId } } } } // Exclude groups where userIds contains the userId
+      ];
     }
+
 
     // Count total documents for pagination info
     const totalGroups = await Group.countDocuments(query);
