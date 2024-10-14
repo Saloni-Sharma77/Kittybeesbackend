@@ -22,7 +22,6 @@ const addUserToGroup = async (req, res) => {
       return res.status(404).json({ message: 'Group not found' });
     }
     let groupC =  JSON.parse(JSON.stringify(group));
-    console.log(groupC.userId,'ccccccccccccccccccccccccccccc')
 
     console.log('Group object:', group); // Log the group object to debug
 
@@ -92,10 +91,7 @@ const updateUserStatus = async (req, res) => {
       return res.status(400).json({ message: 'groupId, userId, and status are required' });
     }
 
-    // Validate status
-    if (!['pending', 'approved'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
+  
 
     const group = await Group.findById(groupId);
 
