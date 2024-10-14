@@ -2,8 +2,8 @@ const Group = require("../../schema/groupSchema");
 const KittySchema = require("../../schema/kittySchema");
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
-const mongoose = require("mongoose");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
+const mongoose = require("mongoose");
 
 
 // controllers/groupControllers.js
@@ -66,19 +66,19 @@ exports.addGroup = async (req, res) => {
     });
     await newGroup.save();
     const approvedUserIds = newGroup.userIds
-    .filter(item => item.status === 'approved')
-    .map(item => item.userId);
+      .filter(item => item.status === 'approved')
+      .map(item => item.userId);
 
-  const notifications = approvedUserIds.map(userId => ({
-    userId,
-    groupId: newGroup._id,
-    message: `You have been added to the group: ${newGroup.name}`,
-    type: 'group',
-  }));
+    const notifications = approvedUserIds.map(userId => ({
+      userId,
+      groupId: newGroup._id,
+      message: `You have been added to the group: ${newGroup.name}`,
+      type: 'group',
+    }));
 
-  await NotificationSchema.insertMany(notifications);
+    await NotificationSchema.insertMany(notifications); // Insert notifications
 
-  res.status(201).json({ message: "Group added successfully", group: newGroup });
+    res.status(201).json({ message: "Group added successfully", group: newGroup });
 
   } catch (err) {
     console.error("Error adding group:", err);
