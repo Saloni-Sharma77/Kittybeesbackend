@@ -21,18 +21,19 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
+    let groupC =  JSON.parse(JSON.stringify(group));
+    console.log(groupC.userId,'ccccccccccccccccccccccccccccc')
 
     console.log('Group object:', group); // Log the group object to debug
 
-    const userIds = group.userIds || [];
+    const userIds = groupC.userIds || [];
 
     // Check if the user is already in the group
+    console.log('Group Admin ID:', groupC.userId, 'Current User ID:', userId?.toString());
     const existingUser = userIds.find(u => u?.userId && u?.userId?.toString() === userId?.toString());
 
-    console.log(`Group Admin ID: ${group?.userId?.toString()}, Current User ID: ${userId?.toString()}`);
-    
     // Prevent the admin from sending a join request
-    if (group?.userId?.toString() === userId?.toString()) {
+    if (groupC?.userId?.toString() === userId?.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
     } 
 
@@ -45,16 +46,17 @@ const addUserToGroup = async (req, res) => {
     else {
       console.log('User not found in group, adding a new user');
       userIds.push({
-        userId: userId,
+        userId: userId, // This should be an ObjectId
         status: status || 'pending'
       });
     }
 
     // Save the group after adding the user
+    groupC.userIds = userIds; // Ensure userIds is updated on the groupC
     await group.save();
 
     // Fetch the user details (ensure userId is an ObjectId)
-    const user = await UserSchema.findById(mongoose.Types.ObjectId(userId)).select('fullname');
+    const user = await UserSchema.findById(new mongoose.Types.ObjectId(userId)).select('fullname');
     console.log(`User fetch result: ${user}`); // Log the user for debugging
 
     if (!user) {
@@ -63,21 +65,22 @@ const addUserToGroup = async (req, res) => {
 
     // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: group.userId, // Notification to the group admin
+      userId: groupC.userId, // Notification to the group admin
       groupId: groupId,
-      message: `${user.fullname} has requested to join your group: ${group.name}`,
+      message: `${user.fullname} has requested to join your group: ${groupC.name}`,
       type: 'group-join-request'
     });
 
     // Save the notification
     await adminNotification.save();
 
-    res.status(200).json({ message: 'Join request sent successfully', group });
+    res.status(200).json({ message: 'Join request sent successfully', groupC });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 // Update the status of a user in a group
