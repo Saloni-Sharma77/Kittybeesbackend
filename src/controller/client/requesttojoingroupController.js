@@ -11,7 +11,6 @@ const addUserToGroup = async (req, res) => {
   try {
     const { groupId, userId, status } = req.body;
 
-    // Ensure all required fields are provided
     if (!groupId || !userId || !status) {
       return res.status(400).json({ message: 'groupId, userId, and status are required' });
     }
@@ -21,65 +20,54 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
-    let groupC =  JSON.parse(JSON.stringify(group));
 
-    console.log('Group object:', group); // Log the group object to debug
+    const userIds = group.userIds || [];
 
-    const userIds = groupC.userIds || [];
-
-    // Check if the user is already in the group
-    console.log('Group Admin ID:', groupC.userId, 'Current User ID:', userId?.toString());
-    const existingUser = userIds.find(u => u?.userId && u?.userId?.toString() === userId?.toString());
-
-    // Prevent the admin from sending a join request
-    if (groupC?.userId?.toString() === userId?.toString()) {
+    // Check if the user is the admin
+    if (group.userId.toString() === userId.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
-    } 
-
-    // Check if the user has already sent a request
-    else if (existingUser) {
-      return res.status(400).json({ error: 'User request already sent!' });
-    } 
-
-    // Add the new user with pending status
-    else {
-      console.log('User not found in group, adding a new user');
-      userIds.push({
-        userId: userId, // This should be an ObjectId
-        status: status || 'pending'
-      });
     }
 
-    // Save the group after adding the user
-    groupC.userIds = userIds; // Ensure userIds is updated on the groupC
+    // Check if the user is already in the group
+    const existingUser = userIds.find(u => u.userId.toString() === userId.toString());
+    if (existingUser) {
+      return res.status(400).json({ error: 'User request already sent!' });
+    }
+
+    // Add the new user with pending status
+    group.userIds.push({
+      userId: userId, // Ensure this is an ObjectId
+      status: status || 'pending'
+    });
+
+    // Save the group with the updated user list
     await group.save();
 
-    // Fetch the user details (ensure userId is an ObjectId)
-    const user = await UserSchema.findById(new mongoose.Types.ObjectId(userId)).select('fullname');
-    console.log(`User fetch result: ${user}`); // Log the user for debugging
-
+    // Fetch the user details
+    const user = await UserSchema.findById(userId).select('fullname');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: groupC.userId, // Notification to the group admin
+      userId: group.userId, // Notification to the group admin
       groupId: groupId,
-      requestUserId:userId,
-      message: `${user.fullname} has requested to join your group: ${groupC.name}`,
+      requestUserId: userId,
+      message: `${user.fullname} has requested to join your group: ${group.name}`,
       type: 'group-join-request'
     });
 
     // Save the notification
     await adminNotification.save();
 
-    res.status(200).json({ message: 'Join request sent successfully', groupC });
+    res.status(200).json({ message: 'Join request sent successfully', group });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
