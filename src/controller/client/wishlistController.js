@@ -48,7 +48,6 @@ exports.getAllWishlistByme = async (req, res) => {
       }
 
       const wishlists = await WishListModel.find({ userId })
-          .populate('userId')
           .populate('venueId');
 
       res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
