@@ -116,7 +116,7 @@ exports.deleteWishlistById = async (req, res) => {
     const venueId = req.params.venueId;
 
     // Find wishlist by ID and delete it
-    const deletedWishlist = await WishListModel.findByIdAndDelete(venueId);
+    const deletedWishlist = await WishListModel.findByIdAndDelete({venueId:venueId});
 
     if (!deletedWishlist) {
       return res.status(404).json({ message: 'Wishlist not found' });
