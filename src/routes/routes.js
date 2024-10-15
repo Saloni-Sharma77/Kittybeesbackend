@@ -6423,6 +6423,7 @@ router.get('/getAllUsersWalletForGroup/:groupId', wallet_Controller.getAllUsersW
 
 
 router.get('/getNotificationsOfUser/:userId', notification_Controller.getNotificationsOfUser);
+router.delete('/deleteNotificationById/:notificationId', notification_Controller.deleteNotificationById);
 
 
 
