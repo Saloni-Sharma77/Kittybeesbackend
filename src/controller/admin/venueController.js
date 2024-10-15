@@ -268,7 +268,7 @@ exports.filterVenues = async (req, res) => {
 exports.getAllVenues = async (req, res) => {
   try {
     // Extract query parameters
-    const { page = 1, limit = 5, name = '' } = req.query;
+    const { page = 1, limit = 20, name = '' } = req.query;
 
     // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);

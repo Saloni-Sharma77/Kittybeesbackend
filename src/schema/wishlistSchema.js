@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const wishlistSchema = new mongoose.Schema({
-    userId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Keep this as is
-    venueId: [{ type: mongoose.Schema.Types.ObjectId, ref: "Venue" }], // Use the correct model name here
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" }, // Keep this as is
+    venueId: { type: mongoose.Schema.Types.ObjectId, ref: "Venue" }, // Use the correct model name here
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
