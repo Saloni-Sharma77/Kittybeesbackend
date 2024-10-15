@@ -4,13 +4,20 @@ const WishListModel = require('../../schema/wishlistSchema');
 // Add a new wishlist
 exports.addWishlist = async (req, res) => {
   try {
-    const {  userId, venueId } = req.body;
+    const { userId, venueId } = req.body;
 
+    // Check if the wishlist item already exists
+    const existingWishlist = await WishListModel.findOne({ userId, venueId });
+    if (existingWishlist) {
+      return res.status(400).json({ message: 'Item already in wishlist' });
+    }
 
+    // Create new wishlist entry
     const newWishlist = new WishListModel({
       userId,
       venueId,
     });
+    
     // Save the wishlist to the database
     await newWishlist.save();
 
@@ -20,6 +27,7 @@ exports.addWishlist = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // Get all wishlists
 exports.getAllWishlist = async (req, res) => {
