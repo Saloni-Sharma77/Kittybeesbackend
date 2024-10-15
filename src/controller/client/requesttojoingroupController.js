@@ -87,6 +87,8 @@ const updateUserStatus = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
+    let groupcopy = JSON.parse(JSON.stringify(group))
+
 
     // Find the user in the group
     const user = group.userIds.find(u => u.userId.toString() === userId.toString());
@@ -101,12 +103,12 @@ const updateUserStatus = async (req, res) => {
 
     // Define the notification messages
     const notificationMessage = status === 'approved'
-      ? `Your request to join the group: ${group.name} has been approved.`
-      : `Your request to join the group: ${group.name} has been rejected.`;
+      ? `Your request to join the group: ${groupcopy.name} has been approved.`
+      : `Your request to join the group: ${groupcopy.name} has been rejected.`;
 
     const hostNotificationMessage = status === 'approved'
-      ? `You have accepted the invitation for group: ${group.name}.`
-      : `You have rejected the invitation for group: ${group.name}.`;
+      ? `You have accepted the invitation for group: ${groupcopy.name}.`
+      : `You have rejected the invitation for group: ${groupcopy.name}.`;
 
     // Log the messages for debugging
     console.log(notificationMessage, hostNotificationMessage);
