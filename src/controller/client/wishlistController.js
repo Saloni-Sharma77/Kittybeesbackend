@@ -27,7 +27,7 @@ exports.getAllWishlist = async (req, res) => {
     // Fetch all wishlists, populate userId and venueId with user and venue information
     const wishlists = await WishListModel.find()
       .populate('userId', 'fullname') // Populate only necessary fields
-      .populate('venueId', 'name');
+      .populate('venueId');
 
     res.status(200).json({ message: 'All wishlists fetched successfully', data: wishlists });
   } catch (err) {
@@ -48,7 +48,7 @@ exports.getAllWishlistByme = async (req, res) => {
       }
 
       const wishlists = await WishListModel.find({ userId })
-          .populate('userId', 'fullname','_id')
+          .populate('userId')
           .populate('venueId');
 
       res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
