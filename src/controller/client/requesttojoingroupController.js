@@ -132,7 +132,7 @@ const updateUserStatus = async (req, res) => {
     userId, // Notification for the user
     groupId: groupId,
     message: notificationMessage,
-    type: 'group-status-update'
+    type: 'group'
   });
   await userNotification.save();
 
