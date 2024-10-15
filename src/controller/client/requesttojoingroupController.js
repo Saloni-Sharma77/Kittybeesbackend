@@ -75,10 +75,10 @@ const addUserToGroup = async (req, res) => {
 // Update the status of a user in a group
 const updateUserStatus = async (req, res) => {
   try {
-    const { groupId, userId, status,notificationId } = req.body;
+    const { groupId, userId, status, notificationId } = req.body;
 
     if (!groupId || !userId || !status || !notificationId) {
-      return res.status(400).json({ message: 'groupId, userId, and status,notificationId are required' });
+      return res.status(400).json({ message: 'groupId, userId, status, and notificationId are required' });
     }
 
     const group = await Group.findById(groupId);
@@ -87,7 +87,7 @@ const updateUserStatus = async (req, res) => {
       return res.status(404).json({ message: 'Group not found' });
     }
 
-    // Find user in the group
+    // Find the user in the group
     const user = group.userIds.find(u => u.userId.toString() === userId.toString());
 
     if (!user) {
@@ -98,40 +98,43 @@ const updateUserStatus = async (req, res) => {
     user.status = status;
     await group.save();
 
+    // Define the notification messages
     const notificationMessage = status === 'approved'
-    ? `Your request to join the group: ${group.name} has been approved.`
-    : `Your request to join the group: ${group.name} has been rejected.`;
+      ? `Your request to join the group: ${group.name} has been approved.`
+      : `Your request to join the group: ${group.name} has been rejected.`;
 
-    const hostnotificationMessage = status === 'approved'
-    ? `You have accepted the invitation for group: ${group.name}.`
-    : `You have rejected the invitation for group: ${group.name}.`;
+    const hostNotificationMessage = status === 'approved'
+      ? `You have accepted the invitation for group: ${group.name}.`
+      : `You have rejected the invitation for group: ${group.name}.`;
 
-    console.log(notificationMessage,'asdasd')
+    // Log the messages for debugging
+    console.log(notificationMessage, hostNotificationMessage);
 
-  // Update or create the notification for the user
-  await NotificationSchema.findByIdAndUpdate(notificationId, {
-    message: hostnotificationMessage,
-    type: 'group'
-  });
+    // Update or create the notification for the host
+    await NotificationSchema.findByIdAndUpdate(
+      notificationId,
+      { message: hostNotificationMessage, type: 'group' },
+      { new: true, upsert: true }  // upsert ensures creation if the notification doesn't exist
+    );
 
-  console.log(group,'asdasd')
+    // Send a new notification to the user
+    const userNotification = new NotificationSchema({
+      userId, // Notification for the user
+      groupId: groupId,
+      message: notificationMessage,
+      type: 'group'
+    });
 
-  // Send new notification to the user
-  const userNotification = new NotificationSchema({
-    userId, // Notification for the user
-    groupId: groupId,
-    message: notificationMessage,
-    type: 'group'
-  });
-  await userNotification.save();
+    await userNotification.save();
 
-
-
+    // Return success response
     res.status(200).json({ message: 'User status updated successfully', group });
   } catch (error) {
+    console.error('Error updating user status:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
