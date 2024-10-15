@@ -20,6 +20,7 @@ const addUserToGroup = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
+    let groupcopy = JSON.parse(JSON.stringify(group))
 
     const userIds = group.userIds || [];
     console.log(userIds)
@@ -52,10 +53,10 @@ const addUserToGroup = async (req, res) => {
 
     // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: group.userId, // Notification to the group admin
+      userId: groupcopy.userId, // Notification to the group admin
       groupId: groupId,
       requestUserId: userId,
-      message: `${user.fullname} has requested to join your group: ${group.name}`,
+      message: `${user.fullname} has requested to join your group: ${groupcopy.name}`,
       type: 'group-join-request'
     });
 
