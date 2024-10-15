@@ -4,18 +4,13 @@ const WishListModel = require('../../schema/wishlistSchema');
 // Add a new wishlist
 exports.addWishlist = async (req, res) => {
   try {
-    const { name, userId, venueId, description, image, isActive } = req.body;
+    const {  userId, venueId } = req.body;
 
 
     const newWishlist = new WishListModel({
-      name,
       userId,
       venueId,
-      description,
-      image,
-      isActive,
     });
-
     // Save the wishlist to the database
     await newWishlist.save();
 
@@ -53,8 +48,8 @@ exports.getAllWishlistByme = async (req, res) => {
       }
 
       const wishlists = await WishListModel.find({ userId })
-          .populate('userId', 'fullname')
-          .populate('venueId', 'name');
+          .populate('userId', 'fullname','_id')
+          .populate('venueId');
 
       res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
   } catch (err) {
