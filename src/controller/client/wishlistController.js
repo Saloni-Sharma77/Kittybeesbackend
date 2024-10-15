@@ -1,5 +1,6 @@
 // Import WishListModel
 const WishListModel = require('../../schema/wishlistSchema');
+const mongoose = require('mongoose'); // Ensure mongoose is imported at the top
 
 // Add a new wishlist
 exports.addWishlist = async (req, res) => {
@@ -45,25 +46,81 @@ exports.getAllWishlist = async (req, res) => {
 };
 
 // Get all wishlists by user ID
+// exports.getAllWishlistByme = async (req, res) => {
+//   try {
+//       const userId = req.params.id;
+//       console.log('Fetching wishlists for user ID:', userId); // Debug log
+
+//       // Validate userId
+//       if (!userId) {
+//           return res.status(400).json({ message: 'User ID is required' });
+//       }
+
+//       const wishlists = await WishListModel.find({ userId })
+//           .populate('venueId');
+
+//       res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
+//   } catch (err) {
+//       console.error('Error details:', err); // Log the full error object
+//       res.status(500).json({ message: 'Internal server error', error: err.message });
+//   }
+// };
+
 exports.getAllWishlistByme = async (req, res) => {
   try {
-      const userId = req.params.id;
-      console.log('Fetching wishlists for user ID:', userId); // Debug log
+    const userId = req.params.id;
 
-      // Validate userId
-      if (!userId) {
-          return res.status(400).json({ message: 'User ID is required' });
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const wishlists = await WishListModel.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'venues', // Assuming 'venues' is the collection name for venues
+          localField: 'venueId',
+          foreignField: '_id',
+          as: 'venueId' // Populate venueId directly
+        }
+      },
+      {
+        $unwind: {
+          path: '$venueId',
+          preserveNullAndEmptyArrays: true // Optional, if no venue is found
+        }
+      },
+      {
+        $lookup: {
+          from: 'venuereviews', // Lookup for reviews
+          localField: 'venueId._id', // Reference the populated venueId
+          foreignField: 'venueId',
+          as: 'reviews'
+        }
+      },
+      {
+        $addFields: {
+          averageRating: {
+            $cond: {
+              if: { $gt: [{ $size: '$reviews' }, 0] },
+              then: { $avg: '$reviews.rating' },
+              else: 0
+            }
+          }
+        }
       }
+    ]);
 
-      const wishlists = await WishListModel.find({ userId })
-          .populate('venueId');
-
-      res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
+    res.status(200).json({ message: 'Wishlists by user fetched successfully', data: wishlists });
   } catch (err) {
-      console.error('Error details:', err); // Log the full error object
-      res.status(500).json({ message: 'Internal server error', error: err.message });
+    console.error('Error details:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 };
+
+
+
+
 
 
 // Get a single wishlist by wishlist ID
