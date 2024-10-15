@@ -22,14 +22,15 @@ const addUserToGroup = async (req, res) => {
     }
 
     const userIds = group.userIds || [];
+    console.log(userIds)
 
     // Check if the user is the admin
-    if (group.userId.toString() === userId.toString()) {
+    if (group.userId?.toString() === userId?.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
     }
 
     // Check if the user is already in the group
-    const existingUser = userIds.find(u => u.userId.toString() === userId.toString());
+    const existingUser = userIds.find(u => u.userId?.toString() === userId?.toString());
     if (existingUser) {
       return res.status(400).json({ error: 'User request already sent!' });
     }
