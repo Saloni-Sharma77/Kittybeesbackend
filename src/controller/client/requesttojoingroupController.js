@@ -117,12 +117,15 @@ const updateUserStatus = async (req, res) => {
     ? `You have accepted the invitation for group: ${group.name}.`
     : `You have rejected the invitation for group: ${group.name}.`;
 
+    console.log(notificationMessage,'asdasd')
 
   // Update or create the notification for the user
   await NotificationSchema.findByIdAndUpdate(notificationId, {
     message: hostnotificationMessage,
     type: 'group'
   });
+
+  console.log(group,'asdasd')
 
   // Send new notification to the user
   const userNotification = new NotificationSchema({
@@ -132,6 +135,7 @@ const updateUserStatus = async (req, res) => {
     type: 'group-status-update'
   });
   await userNotification.save();
+
 
 
     res.status(200).json({ message: 'User status updated successfully', group });
