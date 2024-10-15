@@ -267,22 +267,18 @@ exports.filterVenues = async (req, res) => {
 
 exports.getAllVenues = async (req, res) => {
   try {
-    // Extract query parameters
-    const { page = 1, limit = 20, name = '' } = req.query;
+    const { page = 1, limit = 20, name = '', userId } = req.query; // Include userId in query params
 
-    // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    // Build the search query
     const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
 
-    // Perform aggregation to include average rating
     const venuesWithRatings = await Venue.aggregate([
-      { $match: searchQuery }, // Match the search query
+      { $match: searchQuery },
       {
         $lookup: {
-          from: 'venuereviews', // Ensure this matches your review collection name
+          from: 'venuereviews',
           localField: '_id',
           foreignField: 'venueId',
           as: 'reviews'
@@ -293,32 +289,41 @@ exports.getAllVenues = async (req, res) => {
           averageRating: {
             $cond: {
               if: { $gt: [{ $size: '$reviews' }, 0] },
-              then: {
-                $avg: '$reviews.rating'
-              },
+              then: { $avg: '$reviews.rating' },
               else: 0
             }
           }
         }
       },
-      { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
-
-      
       {
-        $skip: (pageNumber - 1) * pageSize
+        $lookup: {
+          from: 'wishlists', // Assuming 'wishlists' is the wishlist collection name
+          let: { venueId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $and: [{ $eq: ['$venueId', '$$venueId'] }, { $eq: ['$userId', new mongoose.Types.ObjectId(userId)] }] } } },
+          ],
+          as: 'isWishListed'
+        }
       },
       {
-        $limit: pageSize
-      }
+        $addFields: {
+          isWishListed: {
+            $cond: {
+              if: { $gt: [{ $size: '$isWishListed' }, 0] },
+              then: true,
+              else: false
+            }
+          }
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: (pageNumber - 1) * pageSize },
+      { $limit: pageSize }
     ]);
 
-    // Count total number of documents matching the search query
     const totalCount = await Venue.countDocuments(searchQuery);
-
-    // Calculate total pages
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // Send response with pagination info and average ratings
     res.status(200).json({
       data: venuesWithRatings,
       pagination: {
@@ -332,6 +337,75 @@ exports.getAllVenues = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+// exports.getAllVenues = async (req, res) => {
+//   try {
+//     // Extract query parameters
+//     const { page = 1, limit = 20, name = '' } = req.query;
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     // Build the search query
+//     const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
+
+//     // Perform aggregation to include average rating
+//     const venuesWithRatings = await Venue.aggregate([
+//       { $match: searchQuery }, // Match the search query
+//       {
+//         $lookup: {
+//           from: 'venuereviews', // Ensure this matches your review collection name
+//           localField: '_id',
+//           foreignField: 'venueId',
+//           as: 'reviews'
+//         }
+//       },
+//       {
+//         $addFields: {
+//           averageRating: {
+//             $cond: {
+//               if: { $gt: [{ $size: '$reviews' }, 0] },
+//               then: {
+//                 $avg: '$reviews.rating'
+//               },
+//               else: 0
+//             }
+//           }
+//         }
+//       },
+//       { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
+
+      
+//       {
+//         $skip: (pageNumber - 1) * pageSize
+//       },
+//       {
+//         $limit: pageSize
+//       }
+//     ]);
+
+//     // Count total number of documents matching the search query
+//     const totalCount = await Venue.countDocuments(searchQuery);
+
+//     // Calculate total pages
+//     const totalPages = Math.ceil(totalCount / pageSize);
+
+//     // Send response with pagination info and average ratings
+//     res.status(200).json({
+//       data: venuesWithRatings,
+//       pagination: {
+//         page: pageNumber,
+//         limit: pageSize,
+//         totalPages,
+//         totalCount
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 exports.getFilteredVenues = async (req, res) => {
   try {
