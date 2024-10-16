@@ -10,7 +10,10 @@ const walletSchema = new Schema({
   groupId: {
     type: Schema.Types.ObjectId,
     ref: 'groups',
-    required: true
+  },
+  kittyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Kitty',
   },
   amount: {
     type: Number,
