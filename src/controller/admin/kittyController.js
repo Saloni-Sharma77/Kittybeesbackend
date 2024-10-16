@@ -500,6 +500,18 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
         return kittyDateTime > now;
       }
     });
+    const sortedKitties = filteredKitties.sort((a, b) => {
+      const dateTimeA = combineDateAndTime(a.date, a.time);
+      const dateTimeB = combineDateAndTime(b.date, b.time);
+
+      // For future kitties, sort ascending (nearest future date first)
+      // For past kitties, sort descending (most recent past date first)
+      if (type === "future") {
+        return dateTimeA - dateTimeB; // Ascending order
+      } else if (type === "past") {
+        return dateTimeB - dateTimeA; // Descending order
+      }
+    });
 
     res
       .status(200)
