@@ -211,27 +211,26 @@ exports.addKitty = async (req, res) => {
 
 
 
-    res.status(201).json({ message: "Kitty added successfully", data: newKitty });
-    // if (res.statusCode === 201) {
-    //   // Loop through each userId and create a wallet object for them
-    //   newGroup.userIds.forEach(async (item) => {
-    //     const wallet = new WalletModel({
-    //       userId: item.userId,
-    //       groupId: newGroup._id,
-    //       amount: contributionAmount, // The amount for this particular user
-    //       transactionType: 'Contribution', // Or dynamically set based on your needs
-    //       description: `Initial contribution for group ${newGroup._id}`
-    //     });
+      // Loop through each userId and create a wallet object for them
+      newGroup.userIds.forEach(async (item) => {
+        const wallet = new WalletModel({
+          userId: item.userId,
+          groupId: newGroup._id,
+          amount: contributionAmount, // The amount for this particular user
+          transactionType: 'Contribution', // Or dynamically set based on your needs
+          description: `Initial contribution for group ${newGroup._id}`
+        });
     
-    //     try {
-    //       // Save the wallet object for each user
-    //       await wallet.save();
-    //       console.log(`Wallet created for user ${item.userId} in group ${newGroup._id}`);
-    //     } catch (error) {
-    //       console.error(`Error creating wallet for user ${item.userId}:`, error.message);
-    //     }
-    //   });
-    // }
+        try {
+          // Save the wallet object for each user
+          await wallet.save();
+          console.log(`Wallet created for user ${item.userId} in group ${newGroup._id}`);
+        } catch (error) {
+          console.error(`Error creating wallet for user ${item.userId}:`, error.message);
+        }
+      });
+    res.status(201).json({ message: "Kitty added successfully", data: newKitty });
+
   } catch (err) {
     console.error("Error adding kitty", err);
     res.status(500).json({ error: "Failed to add kitty" });
@@ -511,7 +510,7 @@ exports.getAllKittyForMe = async (req, res) => {
     const currentTime = moment(); // Current date and time
 
     // Fetch all kitties
-    const KittyData = await Kitty.find().lean();
+    const KittyData = await Kitty.find().lean().populate('venueId','name').populate('groupId','name').populate('themeId','name');
 
     // Filter kitties by future date and time
     const filteredKitties = KittyData.filter(kitty => {
