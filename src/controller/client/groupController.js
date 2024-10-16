@@ -306,7 +306,7 @@ exports.getAllGroups = async (req, res) => {
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit = 5 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const userId = req.params.id;
 
     // Convert page and limit to numbers
@@ -316,26 +316,22 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Count total groups hosted and joined for pagination
     const hostedCount = await Group.countDocuments({ userId });
     const joinedCount = await Group.countDocuments({
-      'userIds.userId': userId,
-      'userIds.status': 'approved',
+      userIds: {
+        $elemMatch: { userId, status: 'approved' }
+      }
     });
     const totalGroups = hostedCount + joinedCount;
-
-    // Find groups hosted by the user
     const hostedGroups = await Group.find({ userId })
       .sort({ createdAt: -1 })
       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
       .populate('groupFrequencyId')  // Populate groupFrequencyId
-      // .populate('userIds.userId')    // Populate user IDs in the group
       .populate('userIds.userId','_id fullname')
-
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
-
-    // Find groups joined by the user
     const joinedGroups = await Group.find({
-      'userIds.userId': userId,
-      'userIds.status': 'approved',
+      userIds: {
+        $elemMatch: { userId, status: 'approved' }
+      }
     })
       .sort({ createdAt: -1 })
       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection

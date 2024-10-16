@@ -504,6 +504,25 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 };
 
 
+exports.getAllKittyForMe = async (req, res)=>{
+  try {
+    const userId  = req.params.userId
+
+    const KittyData =await Kitty.find()
+    return res.status(200).json({data:KittyData})
+
+
+
+    
+  } catch (error) {
+    return res.status(500).json({error:error,message:'Internal Server Error'})
+    
+  }
+}
+
+
+
+
 
 
 
