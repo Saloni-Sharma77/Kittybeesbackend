@@ -622,44 +622,49 @@ exports.joinKitty = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong" });
   }
 };
-
 exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
 
+    // Check for required fields
     if (!kittyId || !userId || !status || !notificationId) {
-      return res
-        .status(400)
-        .json({
-          message: "kittyId, userId, status, and notificationId are required",
-        });
+      return res.status(400).json({
+        message: "kittyId, userId, status, and notificationId are required",
+      });
     }
 
+    // Find the Kitty document by ID
     let findWhichKitty = await Kitty.findById(kittyId);
-    const memberExists = findWhichKitty.members.some(
+    if (!findWhichKitty) {
+      return res.status(404).json({ message: "Kitty not found" });
+    }
+
+    // Find the specific member in the Kitty's members array
+    const memberIndex = findWhichKitty.members.findIndex(
       (member) => member.userId.toString() === userId.toString()
     );
 
-    memberExists.status = status;
+    if (memberIndex === -1) {
+      return res.status(404).json({ message: "Member not found in the Kitty" });
+    }
 
-    // if(status === 'approved' && !memberExists){
-    //   findWhichKitty?.members.push({
-    //      userId: userId,
-    //      status:status || 'approved'
-    //   })
-    // }
+    // Update the member's status
+    findWhichKitty.members[memberIndex].status = status;
+    
 
-    await memberExists.save();
+    // Save the updated Kitty document
+    await findWhichKitty.save();
 
+    // Prepare notification messages based on the status
     const notificationMessage =
       status === "approved"
-        ? `Your request to join the Kitty: ${memberExists.name} has been approved.`
-        : `Your request to join the Kitty: ${memberExists.name} has been rejected.`;
+        ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
+        : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
 
     const hostNotificationMessage =
       status === "approved"
-        ? `You have accepted the invitation for Kitty: ${memberExists.name}.`
-        : `You have rejected the invitation for Kitty: ${memberExists.name}.`;
+        ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
+        : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
 
     // Log the messages for debugging
     console.log(notificationMessage, hostNotificationMessage);
@@ -681,11 +686,15 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
 
     await userNotification.save();
 
+    // Respond with success message
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
+    // Handle errors
+    console.error(error); // Log the error for debugging
     res.status(500).json({ error: "Something went wrong" });
   }
 };
+
 
 exports.addKittyMemories = async (req, res) => {
   try {
