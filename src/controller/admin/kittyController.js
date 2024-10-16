@@ -3,6 +3,7 @@ const VenueReviewSchema = require('../../schema/venueReviewSchema');
 const NotificationSchema = require('../../schema/notificationSchema');
 const UserSchema = require('../../schema/userSchema');
 const GroupSchema = require('../../schema/groupSchema');
+const moment = require('moment'); // For date and time parsing
 
 const mongoose = require("mongoose");
 
@@ -504,21 +505,50 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 };
 
 
-exports.getAllKittyForMe = async (req, res)=>{
+
+exports.getAllKittyForMe = async (req, res) => {
   try {
-    const userId  = req.params.userId
+    const userId = req.params.userId;
+    const currentTime = moment(); // Current date and time
 
-    const KittyData =await Kitty.find()
-    return res.status(200).json({data:KittyData})
+    const KittyData = await Kitty.find({
+      $or: [
+        { 
+          'members.userId': userId, 
+          'members.status': { $in: ['approved', 'pending'] } 
+        },
+        { 
+          userId: userId // if the user is the admin
+        }
+      ]
+    }).lean();
 
+    const filteredKitties = KittyData.filter(kitty => {
+      const kittyDateTime = moment(kitty.date + ' ' + kitty.time, 'DD/MM/YYYY hh:mm A');
+      return kittyDateTime.isAfter(currentTime);
+    });
 
+    const response = filteredKitties.map(kitty => {
+      const member = kitty.members.find(member => member.userId.toString() === userId);
+      let kittymemberstatus = 'guest';
 
-    
+      if (member) {
+        kittymemberstatus = member.status === 'approved' ? 'member' : 'requested';
+      } else if (kitty.userId.toString() === userId) {
+        kittymemberstatus = 'host';
+      }
+
+      return {
+        ...kitty,
+        kittymemberstatus,
+      };
+    });
+
+    return res.status(200).json({ data: response });
   } catch (error) {
-    return res.status(500).json({error:error,message:'Internal Server Error'})
-    
+    return res.status(500).json({ error: error.message, message: 'Internal Server Error' });
   }
-}
+};
 
 
 
