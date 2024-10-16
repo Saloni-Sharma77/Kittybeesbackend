@@ -200,6 +200,8 @@ exports.addKitty = async (req, res) => {
       message: `You have created a kitty: ${newKitty.name}`,
       type: "kitty",
     };
+    console.log(group);
+    console.log(group.contributionAmount)
 
     // Create notifications for all users in the group
     const userNotifications = group.userIds.map((user) => ({
