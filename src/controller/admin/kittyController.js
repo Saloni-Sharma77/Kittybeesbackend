@@ -505,37 +505,34 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 };
 
 
-
 exports.getAllKittyForMe = async (req, res) => {
   try {
     const userId = req.params.userId;
     const currentTime = moment(); // Current date and time
 
-    const KittyData = await Kitty.find({
-      $or: [
-        { 
-          'members.userId': userId, 
-          'members.status': { $in: ['approved', 'pending'] } 
-        },
-        { 
-          userId: userId // if the user is the admin
-        }
-      ]
-    }).lean();
+    // Fetch all kitties
+    const KittyData = await Kitty.find().lean();
 
+    // Filter kitties by future date and time
     const filteredKitties = KittyData.filter(kitty => {
       const kittyDateTime = moment(kitty.date + ' ' + kitty.time, 'DD/MM/YYYY hh:mm A');
       return kittyDateTime.isAfter(currentTime);
     });
 
+    // Modify response to add kittymemberstatus for each kitty
     const response = filteredKitties.map(kitty => {
       const member = kitty.members.find(member => member.userId.toString() === userId);
-      let kittymemberstatus = 'guest';
+      let kittymemberstatus = 'guest'; // Default if not in members array
 
+      // Set status based on membership or if the user is the host
       if (member) {
-        kittymemberstatus = member.status === 'approved' ? 'member' : 'requested';
+        kittymemberstatus = member.status === 'approved' ? 'member' 
+          : member.status === 'rejected' ? 'rejected' 
+          : 'requested';
       } else if (kitty.userId.toString() === userId) {
         kittymemberstatus = 'host';
+      } else {
+        kittymemberstatus = 'notmember';
       }
 
       return {
@@ -549,6 +546,7 @@ exports.getAllKittyForMe = async (req, res) => {
     return res.status(500).json({ error: error.message, message: 'Internal Server Error' });
   }
 };
+
 
 
 
