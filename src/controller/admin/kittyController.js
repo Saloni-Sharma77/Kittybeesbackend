@@ -212,11 +212,10 @@ exports.addKitty = async (req, res) => {
 
 
       // Loop through each userId and create a wallet object for them
-      newGroup.userIds.forEach(async (item) => {
         const wallet = new WalletModel({
-          userId: item.userId,
+          userId: userId,
           groupId: newGroup._id,
-          amount: contributionAmount, // The amount for this particular user
+          amount: group.contributionAmount, // The amount for this particular user
           transactionType: 'Contribution', // Or dynamically set based on your needs
           description: `Initial contribution for group ${newGroup._id}`
         });
@@ -228,7 +227,6 @@ exports.addKitty = async (req, res) => {
         } catch (error) {
           console.error(`Error creating wallet for user ${item.userId}:`, error.message);
         }
-      });
     res.status(201).json({ message: "Kitty added successfully", data: newKitty });
 
   } catch (err) {
@@ -510,7 +508,7 @@ exports.getAllKittyForMe = async (req, res) => {
     const currentTime = moment(); // Current date and time
 
     // Fetch all kitties
-    const KittyData = await Kitty.find().lean().populate('venueId','name').populate('groupId','name').populate('themeId','name');
+    const KittyData = await Kitty.find().lean().populate('venueId','name').populate('groupId','name contributionAmount').populate('themeId','name');
 
     // Filter kitties by future date and time
     const filteredKitties = KittyData.filter(kitty => {
