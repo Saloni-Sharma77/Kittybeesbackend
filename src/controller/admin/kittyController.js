@@ -187,7 +187,7 @@ exports.addKitty = async (req, res) => {
 
     //notification work------------>>>
     // Fetch group details to get userIds
-    const group = await GroupSchema.findById(groupId).select("userIds");
+    const group = await GroupSchema.findById(groupId).select("userIds name contributionAmount");
 
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
