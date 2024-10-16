@@ -580,39 +580,57 @@ exports.joinKitty = async (req, res) => {
 
 exports.acceptOrRejectRequestOfKitty = async (req, res)=>{
   try {
-    const { notificationId, status } = req.body;
+    const { notificationId, status, kittyId, userId,} = req.body;
 
-    const kitty = await NotificationSchema.findById(notificationId).populate('userId').populate('kittyId');    
-    const kittyId = kitty?.kittyId?._id
+
+    if (!kittyId || !userId || !status || !notificationId) {
+      return res.status(400).json({ message: 'kittyId, userId, status, and notificationId are required' });
+    }
+
+
    let findWhichKitty = await Kitty.findById(kittyId);
-   const memberExists = findWhichKitty.members.some(member => member.userId.toString() === requestUserId.toString());
+   const memberExists = findWhichKitty.members.some(member => member.userId.toString() === userId.toString());
+
+   memberExists.status = status;
 
 
-  if(status === 'approved' && !memberExists){
-    findWhichKitty?.members.push({
-       userId: kittyId?.requestUserId, 
-       status:status || 'approved'
-    })
-  } 
+  // if(status === 'approved' && !memberExists){
+  //   findWhichKitty?.members.push({
+  //      userId: userId, 
+  //      status:status || 'approved'
+  //   })
+  // } 
 
-  await findWhichKitty.save();
+  await memberExists.save();
 
-  console.log(findWhichKitty,'ddddddddddd')
+    const notificationMessage = status === 'approved'
+      ? `Your request to join the Kitty: ${memberExists.name} has been approved.`
+      : `Your request to join the Kitty: ${memberExists.name} has been rejected.`;
 
+    const hostNotificationMessage = status === 'approved'
+      ? `You have accepted the invitation for Kitty: ${memberExists.name}.`
+      : `You have rejected the invitation for Kitty: ${memberExists.name}.`;
 
-  //  return
+    // Log the messages for debugging
+    console.log(notificationMessage, hostNotificationMessage);
 
-  //   // Create a notification for the kitty creator
-    const notification = new NotificationSchema({
-      userId: userId, // Kitty creator
-      // groupId: kitty.groupId, // Assuming groupId is part of the kitty
+    // Update or create the notification for the host
+    await NotificationSchema.findByIdAndUpdate(
+      notificationId,
+      { message: hostNotificationMessage, type: 'kitty' },
+      { new: true, upsert: true }  // upsert ensures creation if the notification doesn't exist
+    );
+
+    // Send a new notification to the user
+    const userNotification = new NotificationSchema({
+      userId, // Notification for the user
       kittyId: kittyId,
-      requestUserId: requestUserId, // User who sent the request
-      message: message || `${requestedUser?.fullname}  your request has been accepted for the kitty ${kitty?.name}.`,
+      message: notificationMessage,
+      type: 'kitty'
     });
 
-    // Save the notification
-    await notification.save();
+    await userNotification.save();
+
 
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
