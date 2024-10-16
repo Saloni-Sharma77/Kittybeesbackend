@@ -648,9 +648,13 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       return res.status(404).json({ message: "Member not found in the Kitty" });
     }
 
+    // Check if the member's status is already approved
+    if (findWhichKitty.members[memberIndex].status === 'approved') {
+      return res.status(400).json({ message: "Request has already been approved" });
+    }
+
     // Update the member's status
     findWhichKitty.members[memberIndex].status = status;
-    
 
     // Save the updated Kitty document
     await findWhichKitty.save();
@@ -694,6 +698,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     res.status(500).json({ error: "Something went wrong" });
   }
 };
+
 
 
 exports.addKittyMemories = async (req, res) => {
