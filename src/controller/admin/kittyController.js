@@ -484,7 +484,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate('themeId')
       .populate('colorId')
       .populate('addressId')
-      .sort({ createdAt: -1 });
 
     // Filter kitties based on combined date and time
     const filteredKitties = allKitties.filter(kitty => {
