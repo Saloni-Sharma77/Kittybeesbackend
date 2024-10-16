@@ -547,6 +547,26 @@ exports.joinKitty = async (req, res) => {
     // Save the updated kitty document
     const updatedKitty = await kitty.save();
 
+    const user = await UserSchema.findById(requestUserId).select('fullname');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+
+    // Send a notification to the kitty admin
+    const adminNotification = new NotificationSchema({
+      userId: kitty.userId, // Notification to the group admin
+      kittyId: kittyId,
+      requestUserId: requestUserId,
+      message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
+      type: 'kitty-join-request'
+    });
+
+    // Save the notification
+    await adminNotification.save();
+
+
+
     return res.status(200).json({ message: 'Member status updated successfully', updatedKitty });
 
   } catch (error) {
