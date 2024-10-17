@@ -5716,6 +5716,7 @@ router.delete('/deleteTermsAndServices/:id', deleteTermsAndServices);
  */
 router.post('/walletTransactions', walletTransactionControllers.createWalletTransaction);
 
+
 /**
  * @swagger
  * /walletTransactions:
@@ -6423,6 +6424,12 @@ router.delete('/delete/:id', iconControllers.deleteIcon);
 
 router.get('/getUserWalletForGroup/:userId/:groupId', wallet_Controller.getUserWalletForGroup);
 router.get('/getAllUsersWalletForGroup/:groupId', wallet_Controller.getAllUsersWalletForGroup);
+
+//by pukhraj
+router.post('/addExpenseAndContributionForKitty',wallet_Controller.addExpenseAndContributionForKitty);
+router.get('/getAllWalletTransactionsForKitty/:kittyId',wallet_Controller.getAllWalletTransactionsForKitty);
+router.get('/getAllWalletTransactionsForUser/:userId',wallet_Controller.getAllWalletTransactionsForUser);
+
 
 
 router.get('/getNotificationsOfUser/:userId', notification_Controller.getNotificationsOfUser);
