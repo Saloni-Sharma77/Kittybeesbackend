@@ -6429,6 +6429,8 @@ router.get('/getAllUsersWalletForGroup/:groupId', wallet_Controller.getAllUsersW
 router.post('/addExpenseAndContributionForKitty',wallet_Controller.addExpenseAndContributionForKitty);
 router.get('/getAllWalletTransactionsForKitty/:kittyId',wallet_Controller.getAllWalletTransactionsForKitty);
 router.get('/getAllWalletTransactionsForUser/:userId',wallet_Controller.getAllWalletTransactionsForUser);
+router.get('/getAllWalletTransactionHistory/:userId',wallet_Controller.getAllWalletTransactionHistory);
+
 
 
 
