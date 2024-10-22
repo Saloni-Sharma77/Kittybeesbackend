@@ -809,8 +809,12 @@ exports.performSpin = async (req, res) => {
   try {
     const groupId = req.params.groupId;
 
-    // Fetch the group by ID
-    const group = await Group.findById(groupId);
+    // Fetch the group by ID and populate userId in userIds
+    const group = await Group.findById(groupId).populate({
+      path: 'userIds.userId', // Populate userId field in userIds
+      select: 'fullName' // Select only the fullName field
+    });
+
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
@@ -818,15 +822,15 @@ exports.performSpin = async (req, res) => {
     // Get userIds with status "approved"
     const userIds = group.userIds
       .filter(user => user.status === 'approved') // Only approved users
-      .map(user => user.userId)
+      .map(user => user.userId) // Extract the userId objects
       .filter(Boolean); // Ensure valid userIds
 
-    // Get previous winners from group or initialize if not present
+    // Get previous winners from the group or initialize if not present
     let winners = group.winners || []; // Winners should be stored in the group
 
     // Exclude previous winners from eligible users
-    const eligibleUsers = userIds.filter(userId => 
-      !winners.some(winner => winner.userId.toString() === userId.toString())
+    const eligibleUsers = userIds.filter(user => 
+      !winners.some(winner => winner.userId.toString() === user._id.toString())
     );
 
     // Check if there are any eligible users left
@@ -842,22 +846,27 @@ exports.performSpin = async (req, res) => {
     const winnerNumber = winners.length + 1;
 
     // Add the selected user to the winners list and assign them the winner number
-    winners.push({ userId: selectedUser, winnerNumber });
+    winners.push({ userId: selectedUser._id, winnerNumber });
 
     // Save the updated group with the new winner
     group.winners = winners;
     await group.save();
 
-    // Return the spin result
+    // Return the spin result including the selected user's full name
     res.status(200).json({
       message: "Spin completed successfully",
-      spinResult: { winnerUserId: selectedUser, winnerNumber },
+      spinResult: { 
+        winnerUserId: selectedUser._id, 
+        fullName: selectedUser.fullname, // Include full name
+        winnerNumber 
+      },
       allWinners: winners // Returning all winners so far for clarity
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
