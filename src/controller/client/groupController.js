@@ -812,7 +812,7 @@ exports.performSpin = async (req, res) => {
     // Fetch the group by ID and populate userId in userIds
     const group = await Group.findById(groupId).populate({
       path: 'userIds.userId', // Populate userId field in userIds
-      select: 'fullName' // Select only the fullName field
+      select: 'fullname' // Select only the fullName field
     });
 
     if (!group) {
