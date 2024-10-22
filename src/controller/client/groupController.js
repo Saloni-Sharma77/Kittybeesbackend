@@ -943,3 +943,40 @@ exports.getGroupDetails = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch group details" });
   }
 };
+
+
+
+// Function to get eligible users and winners
+exports.getEligibleUsersAndWinners = async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+
+    // Fetch the group by ID
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Get userIds with status "approved"
+    const userIds = group.userIds
+      .filter(user => user.status === 'approved') // Only approved users
+      .map(user => user.userId)
+      .filter(Boolean); // Ensure valid userIds
+
+    // Get previous winners from the group
+    const winners = group.winners || []; // Winners should be stored in the group
+
+    // Exclude previous winners from eligible users
+    const eligibleUsers = userIds.filter(userId => 
+      !winners.some(winner => winner.userId.toString() === userId.toString())
+    );
+
+    // Return the eligible users and winners
+    res.status(200).json({
+      eligibleUsers,
+      winners
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

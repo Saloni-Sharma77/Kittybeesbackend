@@ -2174,6 +2174,9 @@ router.post('/generateReferalCode/:groupId', group_controller.generateReferalCod
  *       500:
  *         description: Server error
  */
+router.get('/getEligibleUsersAndWinners/:groupId', group_controller.getEligibleUsersAndWinners);
+
+
 router.get('/spin/:groupId', group_controller.performSpin);
 
 // gorup frequency routes
