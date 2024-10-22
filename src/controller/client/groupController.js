@@ -846,7 +846,7 @@ exports.performSpin = async (req, res) => {
     const winnerNumber = winners.length + 1;
 
     // Add the selected user to the winners list and assign them the winner number
-    winners.push({ userId: selectedUser._id, winnerNumber });
+    winners.push({ userId: selectedUser._id,fullName: selectedUser.fullname, winnerNumber });
 
     // Save the updated group with the new winner
     group.winners = winners;
