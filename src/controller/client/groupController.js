@@ -804,6 +804,7 @@ exports.addUserRequest = async (req, res) => {
 
 
 // Function to perform spin
+// Function to perform spin
 exports.performSpin = async (req, res) => {
   try {
     const groupId = req.params.groupId;
@@ -814,13 +815,19 @@ exports.performSpin = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    const userIds = group.userIds.map(user => user.userId).filter(Boolean); // Ensure valid userIds
+    // Get userIds with status "approved"
+    const userIds = group.userIds
+      .filter(user => user.status === 'approved') // Only approved users
+      .map(user => user.userId)
+      .filter(Boolean); // Ensure valid userIds
 
     // Get previous winners from group or initialize if not present
     let winners = group.winners || []; // Winners should be stored in the group
 
     // Exclude previous winners from eligible users
-    const eligibleUsers = userIds.filter(userId => !winners.some(winner => winner.userId.toString() === userId.toString()));
+    const eligibleUsers = userIds.filter(userId => 
+      !winners.some(winner => winner.userId.toString() === userId.toString())
+    );
 
     // Check if there are any eligible users left
     if (eligibleUsers.length === 0) {
@@ -851,6 +858,7 @@ exports.performSpin = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 const generateReferralCode = () => {
