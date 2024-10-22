@@ -959,32 +959,40 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
   try {
     const groupId = req.params.groupId;
 
-    // Fetch the group by ID
-    const group = await Group.findById(groupId);
+    // Fetch the group by ID and populate userIds
+    const group = await Group.findById(groupId).populate({
+      path: 'userIds.userId', // Populate the userId field in the userIds array
+      select: 'fullname' // Select only the fields you want, e.g., fullName
+    });
+
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // Get userIds with status "approved"
-    const userIds = group.userIds
+    // Get userIds with status "approved" and include full names
+    const eligibleUsers = group.userIds
       .filter(user => user.status === 'approved') // Only approved users
-      .map(user => user.userId)
-      .filter(Boolean); // Ensure valid userIds
+      .map(user => ({
+        userId: user.userId._id, // Get the userId
+        fullName: user.userId.fullname // Get the fullName from populated data
+      }))
+      .filter(Boolean); // Ensure valid users
 
     // Get previous winners from the group
     const winners = group.winners || []; // Winners should be stored in the group
 
-    // Exclude previous winners from eligible users
-    const eligibleUsers = userIds.filter(userId => 
-      !winners.some(winner => winner.userId.toString() === userId.toString())
+    // Return eligible users and winners, filtering out previous winners
+    const eligibleUsersFiltered = eligibleUsers.filter(eligibleUser => 
+      !winners.some(winner => winner.userId.toString() === eligibleUser.userId.toString())
     );
 
     // Return the eligible users and winners
     res.status(200).json({
-      eligibleUsers,
+      eligibleUsers: eligibleUsersFiltered,
       winners
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
