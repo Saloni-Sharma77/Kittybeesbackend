@@ -61,36 +61,40 @@ exports.updateActivity = async (req, res) => {
     }
   };
 
- exports.getAllActivityOfUser = async (req, res) => {
-  try {
-    const userId = req.params.id; // Extract userId from request parameters
-
-    // Query the ActivityModel to find activities that match userId and were created by admin
-    const getAllActivity = await ActivityModel.find({
-      userId: userId,    // Match userId
-      createdBy: 'admin', // Ensure the activity was created by admin
-    }).sort({ createdAt: -1 }); // Sort activities by creation date in descending order
-
-    // Check if any activities were found
-    if (getAllActivity.length === 0) {
-      return res.status(404).json({
-        message: "No activities found for this user created by admin.",
+  exports.getAllActivityOfUser = async (req, res) => {
+    try {
+      const userId = req.params.id; // Extract userId from request parameters
+  
+      // Query to get activities created by admin
+      const adminActivities = await ActivityModel.find({ createdBy: 'admin' }).sort({ createdAt: -1 });
+  
+      // Query to get activities associated with the userId
+      const userActivities = await ActivityModel.find({ userId: userId }).sort({ createdAt: -1 });
+  
+      // Combine both admin-created and user-specific activities
+      const allActivities = [...adminActivities, ...userActivities];
+  
+      // Check if any activities were found
+      if (allActivities.length === 0) {
+        return res.status(404).json({
+          message: "No activities found for this user or created by admin.",
+        });
+      }
+  
+      // Return success response with the retrieved activities
+      res.status(200).json({
+        message: "Activities retrieved successfully",
+        data: { events: allActivities }, // Wrap activities in an events object
+      });
+    } catch (err) {
+      // Handle errors and return a failure response
+      res.status(500).json({
+        error: "Failed to retrieve activities",
+        details: err.message, // Include error details for debugging
       });
     }
-
-    // Return success response with the retrieved activities
-    res.status(200).json({
-      message: "Activity retrieved successfully",
-      data: { events: getAllActivity }, // Wrap activities in an events object
-    });
-  } catch (err) {
-    // Handle errors and return a failure response
-    res.status(500).json({
-      error: "Failed to get information",
-      details: err.message, // Include error details for debugging
-    });
-  }
-};
+  };
+  
 
   
   exports.getAllActivity = async (req, res) => {
