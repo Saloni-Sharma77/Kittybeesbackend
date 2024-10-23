@@ -23,6 +23,7 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       image,
+      referralCode
     } = req.body;
 
     // Validate required fields
@@ -35,7 +36,9 @@ exports.addGroup = async (req, res) => {
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'contributionAmount', value: contributionAmount },
-      { name: 'image', value: image }
+      { name: 'image', value: image },
+      { name: 'referralCode', value: referralCode }
+
     ];
 
     for (const field of requiredFields) {
@@ -59,6 +62,7 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       image,
+      referralCode
     });
 
     newGroup?.userIds.forEach(item => {
