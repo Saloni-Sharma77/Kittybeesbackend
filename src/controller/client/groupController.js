@@ -576,17 +576,17 @@ exports.addGroupFrequency = async (req, res) => {
 exports.getAllGroupsFrequencyOfUser = async (req, res) => {
   try {
     const userId = req.params.id; // Extract userId from request parameters
-    const getAllFrequency = await GroupFrequencyModel.find({
-      userId: userId,    // Match userId
-      createdBy: 'admin', // Ensure the activity was created by admin
-    }).sort({ createdAt: -1 }); // Sort activities by creation date in descending order
-    if (getAllFrequency.length === 0) {
-      return res.status(404).json({
-        message: "No activities found for this user created by admin.",
-      });
-    }
+
+  
+    const getadminfre = await GroupFrequencyModel.find({ createdBy: 'admin' }).sort({ createdAt: -1 });
+    const getuserfre = await GroupFrequencyModel.find({userId:userId}).sort({ createdAt: -1 });
+
+    const getAllFrequency = [...getadminfre,...getuserfre]
+
+   
+
     res.status(200).json({
-      message: "Activity retrieved successfully",
+      message: "Activities retrieved successfully",
       data: { events: getAllFrequency }, // Wrap activities in an events object
     });
   } catch (err) {
@@ -596,6 +596,7 @@ exports.getAllGroupsFrequencyOfUser = async (req, res) => {
     });
   }
 };
+
 exports.getAllGroupsFrequency = async (req, res) => {
   try {
     const getAllGroupCat = await GroupFrequencyModel.find().sort({ createdAt: -1 }) ;
