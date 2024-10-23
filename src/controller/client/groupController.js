@@ -556,9 +556,13 @@ exports.addGroupFrequency = async (req, res) => {
   try {
     const {
         name ,
+        userId,
+        createdBy
     } = req.body;
     const newGroupCat= new GroupFrequencyModel({
         name ,
+        userId,
+        createdBy
     });
 
     await newGroupCat.save();
@@ -566,6 +570,30 @@ exports.addGroupFrequency = async (req, res) => {
     res.status(201).json({ message: "Group Frequency added successfully", task: newGroupCat });
   } catch (err) {
     res.status(500).json({ error: "Failed to add GroupFrequency" });
+  }
+};
+
+exports.getAllGroupsFrequencyOfUser = async (req, res) => {
+  try {
+    const userId = req.params.id; // Extract userId from request parameters
+    const getAllFrequency = await GroupFrequencyModel.find({
+      userId: userId,    // Match userId
+      createdBy: 'admin', // Ensure the activity was created by admin
+    }).sort({ createdAt: -1 }); // Sort activities by creation date in descending order
+    if (getAllFrequency.length === 0) {
+      return res.status(404).json({
+        message: "No activities found for this user created by admin.",
+      });
+    }
+    res.status(200).json({
+      message: "Activity retrieved successfully",
+      data: { events: getAllFrequency }, // Wrap activities in an events object
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to get information",
+      details: err.message, // Include error details for debugging
+    });
   }
 };
 exports.getAllGroupsFrequency = async (req, res) => {

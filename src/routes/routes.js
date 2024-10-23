@@ -2235,6 +2235,10 @@ router.post("/addGroupFrequency", group_controller.addGroupFrequency);
  *         description: Server error
  */
 router.get("/getAllGroupsFrequency", group_controller.getAllGroupsFrequency);
+router.get("/getAllGroupsFrequencyOfUser/:id", group_controller.getAllGroupsFrequencyOfUser);
+
+
+
 
 /**
  * @swagger

@@ -5,6 +5,9 @@ const groupFrequencySchema = new mongoose.Schema({
         unique: true, // Ensure the name is unique
         trim: true
     },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    createdBy: { type: String, enum: ['admin', 'user'], default: 'admin' },
+
     isActive:{type:Boolean,default : true},
 },{timestamps:true} );
 
