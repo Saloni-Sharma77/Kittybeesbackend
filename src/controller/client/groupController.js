@@ -887,6 +887,11 @@ exports.joinGroupByReferralCode = async (req, res) => {
     });
 
     await group.save();
+    const notification = new Notification({
+      userId: userId,
+      message: `You have successfully joined the group: ${group.name}`,
+    });
+    await notification.save();
 
     res.status(200).json({ message: "User successfully joined the group" });
   } catch (error) {
