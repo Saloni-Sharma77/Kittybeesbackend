@@ -85,8 +85,8 @@ exports.addGroup = async (req, res) => {
     const userNotifications = approvedUserIds.map(userId => ({
       userId,
       groupId: newGroup._id,
-      message: `You have been added to the group: ${newGroup.name}`,
       type: 'group',
+      message: `You have been added to the group: ${newGroup.name}`,
     }));
 
     // Combine notifications for the creator and the users
@@ -889,7 +889,9 @@ exports.joinGroupByReferralCode = async (req, res) => {
     await group.save();
     const notification = new NotificationSchema({
       userId: userId,
-      message: `You have successfully joined the group: ${group.name}`,
+      groupId: group._id,
+      type: 'group',
+      message: `You have joined the group: ${group.name}`,
     });
     await notification.save();
 
