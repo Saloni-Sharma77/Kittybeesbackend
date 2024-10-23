@@ -2136,8 +2136,8 @@ router.patch("/updateGroupStatus/:id", group_controller.updateStatus);
  *       404:
  *         description: Group not found
  */
-router.post('/join-by-referral/:groupId', group_controller.joinGroupByReferralCode);
-router.post('/generateReferalCode/:groupId', group_controller.generateReferalCode);
+router.post('/joinGroupByReferralCode', group_controller.joinGroupByReferralCode);
+router.get('/generateReferalCode', group_controller.generateReferalCode);
 
 
 
