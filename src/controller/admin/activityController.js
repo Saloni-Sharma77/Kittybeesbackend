@@ -1,6 +1,6 @@
 
 const ActivityModel = require("../../schema/activitySchema");
-
+const mongoose =require('mongoose')
 exports.addActivity = async (req, res) => {
   try {
       const { name ,description,userId,createdBy} = req.body;
@@ -64,12 +64,13 @@ exports.updateActivity = async (req, res) => {
   exports.getAllActivityOfUser = async (req, res) => {
     try {
       const userId = req.params.id; // Extract userId from request parameters
-  
+      const objectIdUserId = new mongoose.Types.ObjectId(userId);
+
       // Query to get activities created by admin
       const adminActivities = await ActivityModel.find({ createdBy: 'admin' }).sort({ createdAt: -1 });
   
       // Query to get activities associated with the userId
-      const userActivities = await ActivityModel.find({ userId: userId }).sort({ createdAt: -1 });
+      const userActivities = await ActivityModel.find({ userId: objectIdUserId }).sort({ createdAt: -1 });
   
       // Combine both admin-created and user-specific activities
       const allActivities = [...adminActivities, ...userActivities];

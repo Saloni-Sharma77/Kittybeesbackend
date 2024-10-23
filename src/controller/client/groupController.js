@@ -576,10 +576,11 @@ exports.addGroupFrequency = async (req, res) => {
 exports.getAllGroupsFrequencyOfUser = async (req, res) => {
   try {
     const userId = req.params.id; // Extract userId from request parameters
+    const objectIdUserId = new mongoose.Types.ObjectId(userId);
 
   
     const getadminfre = await GroupFrequencyModel.find({ createdBy: 'admin' }).sort({ createdAt: -1 });
-    const getuserfre = await GroupFrequencyModel.find({userId:userId}).sort({ createdAt: -1 });
+    const getuserfre = await GroupFrequencyModel.find({userId:objectIdUserId}).sort({ createdAt: -1 });
 
     const getAllFrequency = [...getadminfre,...getuserfre]
 
