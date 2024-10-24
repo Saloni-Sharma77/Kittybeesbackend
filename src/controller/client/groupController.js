@@ -266,6 +266,7 @@ exports.getAllGroups = async (req, res) => {
       const objectId = new mongoose.Types.ObjectId(userId);
       
       query.$and = [
+        {groupType: {$eq : 'public'} },
         { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
         
         { userIds: { $not: { $elemMatch: { userId: objectId, status: 'approved'} } } }, // Exclude groups where userIds contains the userId,
