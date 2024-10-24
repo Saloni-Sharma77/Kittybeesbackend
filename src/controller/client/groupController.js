@@ -421,24 +421,20 @@ exports.addGroupMemories = async (req, res) => {
     // Check if the user is a member of the kitty or the creator
     const isMember = kitty?.members.find(member => member?.userId?.toString() === userId?.toString());
     const isCreator = kitty?.userId?.toString() === userId?.toString();
-    console.log(isMember); // Logging the groupId to verify if it's correct
-
+    
     if (isMember || isCreator) {
       // Add the new memory to the groupMemories array
       groupdata.groupMemories.push({
         memoryimage: image, // Assuming 'image' is the correct field name
         userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
       });
+      console.log(groupdata.groupMemories); // Logging the groupId to verify if it's correct
       
       // Add the memory to the kitty's kittyMemories array
       kitty.kittyMemories.push({
         memoryimage: image, // Assuming 'image' is the correct field name
         userId: userId, // Storing userId 
-      });
-      groupdata.winners =[];
-      groupdata.groupMemories =[];
-
-
+      });     
       // Save the updated documents
       await groupdata.save();
       await kitty.save();
