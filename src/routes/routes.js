@@ -2177,7 +2177,7 @@ router.get('/generateReferalCode', group_controller.generateReferalCode);
 router.get('/getEligibleUsersAndWinners/:groupId', group_controller.getEligibleUsersAndWinners);
 
 
-router.post('/spin/:groupId', group_controller.performSpin);
+router.post('/spin/:groupId/:userId', group_controller.performSpin);
 
 // gorup frequency routes
 /**
