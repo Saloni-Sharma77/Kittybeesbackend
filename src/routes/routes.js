@@ -3082,7 +3082,7 @@ router.put("/updateWishlistById/:id", wishlist_controller.updateWishlistById);
  *       500:
  *         description: Server error
  */
-router.delete("/deleteWishlistById/:venueId", wishlist_controller.deleteWishlistById);
+router.delete("/deleteWishlistById/:venueId/:userId", wishlist_controller.deleteWishlistById);
 
 // Venue routes
 /**

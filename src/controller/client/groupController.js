@@ -427,9 +427,7 @@ exports.addGroupMemories = async (req, res) => {
       groupdata.groupMemories.push({
         memoryimage: image, // Assuming 'image' is the correct field name
         userId: userId, // Storing userId (assuming 'createdBy' field exists in schema)
-      });
-      console.log(groupdata.groupMemories); // Logging the groupId to verify if it's correct
-      
+      });      
       // Add the memory to the kitty's kittyMemories array
       kitty.kittyMemories.push({
         memoryimage: image, // Assuming 'image' is the correct field name
