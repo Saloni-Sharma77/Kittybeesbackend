@@ -938,19 +938,18 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
 
     // Get userIds with status "approved" and include full names
     const eligibleUsers = group?.userIds
-      .filter(user => user.status === 'approved') // Only approved users
+      .filter(user => user.status === 'approved' && user?.userId) // Ensure userId is populated and status is approved
       .map(user => ({
-        userId: user?.userId?._id, // Get the userId
-        fullName: user?.userId?.fullname // Get the fullName from populated data
-      }))
-      .filter(Boolean); // Ensure valid users
+        userId: user.userId._id, // Get the userId (assumes userId is populated)
+        fullName: user.userId.fullname // Get the fullName from populated data
+      }));
 
     // Get previous winners from the group
     const winners = group.winners || []; // Winners should be stored in the group
 
-    // Return eligible users and winners, filtering out previous winners
+    // Filter eligible users by excluding those who are already winners
     const eligibleUsersFiltered = eligibleUsers.filter(eligibleUser => 
-      !winners.some(winner => winner?.userId?.toString() === eligibleUser?.userId?.toString())
+      !winners.some(winner => winner.userId.toString() === eligibleUser.userId.toString())
     );
 
     // Return the eligible users and winners
@@ -962,6 +961,7 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 // Function to perform spin
