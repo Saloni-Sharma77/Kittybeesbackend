@@ -937,11 +937,11 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
     }
 
     // Get userIds with status "approved" and include full names
-    const eligibleUsers = group.userIds
+    const eligibleUsers = group?.userIds
       .filter(user => user.status === 'approved') // Only approved users
       .map(user => ({
-        userId: user.userId._id, // Get the userId
-        fullName: user.userId.fullname // Get the fullName from populated data
+        userId: user?.userId?._id, // Get the userId
+        fullName: user?.userId?.fullname // Get the fullName from populated data
       }))
       .filter(Boolean); // Ensure valid users
 
@@ -950,7 +950,7 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
 
     // Return eligible users and winners, filtering out previous winners
     const eligibleUsersFiltered = eligibleUsers.filter(eligibleUser => 
-      !winners.some(winner => winner.userId.toString() === eligibleUser.userId.toString())
+      !winners.some(winner => winner?.userId?.toString() === eligibleUser?.userId?.toString())
     );
 
     // Return the eligible users and winners
@@ -1042,9 +1042,9 @@ exports.performSpin = async (req, res) => {
     }
 
     // Check if the current user is either the group creator or in userIds with approved status
-    const isGroupCreator = group.userId.toString() === userId;
-    const isApprovedUser = group.userIds.some(user => 
-      user.userId && user.userId._id.toString() === userId && user.status === 'approved'
+    const isGroupCreator = group?.userId?.toString() === userId;
+    const isApprovedUser = group?.userIds?.some(user => 
+      user?.userId && user?.userId?._id?.toString() === userId && user?.status === 'approved'
     );
 
     if (!isGroupCreator && !isApprovedUser) {
@@ -1061,7 +1061,7 @@ exports.performSpin = async (req, res) => {
     let winners = group.winners || [];
 
     // Check if the current user has already won
-    const hasUserAlreadyWon = winners.some(winner => winner.userId.toString() === userId);
+    const hasUserAlreadyWon = winners.some(winner => winner?.userId.toString() === userId);
 
     if (hasUserAlreadyWon) {
       return res.status(403).json({ message: "You have already won and cannot spin again." });
@@ -1069,23 +1069,23 @@ exports.performSpin = async (req, res) => {
 
     // Exclude previous winners from eligible users
     const eligibleUsers = approvedUsers.filter(user => 
-      !winners.some(winner => winner.userId.toString() === user._id.toString())
+      !winners.some(winner => winner?.userId.toString() === user?._id?.toString())
     );
 
     // Check if there are any eligible users left
-    if (eligibleUsers.length === 0) {
+    if (eligibleUsers?.length === 0) {
       return res.status(200).json({ message: "No eligible users left to spin." });
     }
 
     // Select one random user for the spin
-    const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
+    const randomIndex = Math.floor(Math.random() * eligibleUsers?.length);
     const selectedUser = eligibleUsers[randomIndex];
 
     // Assign winner number based on the number of users already in the winners list
-    const winnerNumber = winners.length + 1;
+    const winnerNumber = winners?.length + 1;
 
     // Add the selected user to the winners list and assign them the winner number
-    winners.push({ userId: selectedUser._id, fullName: selectedUser.fullname, winnerNumber });
+    winners.push({ userId: selectedUser?._id, fullName: selectedUser?.fullname, winnerNumber });
 
     // Save the updated group with the new winner
     group.winners = winners;
