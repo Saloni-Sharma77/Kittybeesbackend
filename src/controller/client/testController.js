@@ -68,7 +68,7 @@ exports.sendotptest = async (req, res) => {
 exports.verifyotptest = async (req, res) => {
   const { phoneNumber, otp ,verificationId} = req.body;
 
-  if (!phoneNumber || !otp  || !verificationId) {
+  if (!phoneNumber || !otp ) {
     return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
   }
   if (phoneNumber === '9999999999' && otp === '1234') {
