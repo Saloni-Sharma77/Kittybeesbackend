@@ -14,6 +14,15 @@ exports.sendotptest = async (req, res) => {
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
   }
+  if (phoneNumber === '9999999999') {
+    const userInfo = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
+    
+    return res.status(200).send({
+      success: true,
+      message: 'OTP sent successfully successfully',
+      userData: userInfo,
+    });
+  }
 
   try {
     // Make the request to the external API (MessageCentral) for sending OTP
@@ -61,6 +70,17 @@ exports.verifyotptest = async (req, res) => {
 
   if (!phoneNumber || !otp  || !verificationId) {
     return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
+  }
+  if (phoneNumber === '9999999999' && otp === '1234') {
+    const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const userInfo = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
+    
+    return res.status(200).send({
+      success: true,
+      message: 'OTP verified successfully (test credentials)',
+      token: token,
+      userData: userInfo,
+    });
   }
 
   try {
