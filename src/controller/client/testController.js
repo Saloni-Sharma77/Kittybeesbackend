@@ -51,7 +51,7 @@ exports.sendotptest = async (req, res) => {
       success: true,
       message: 'OTP sent successfully',
       data: axiosResponse.data , // Send the response data from the API
-      uerData: userInfo,
+      userData: userInfo,
     });
   } catch (error) {
     console.error('Error sending OTP:', error.response ? error.response.data : error.message);
@@ -117,7 +117,7 @@ exports.verifyotptest = async (req, res) => {
       message: 'OTP verified successfully',
       token: token,
       data :response.data,
-      uerData: userInfo,
+      userData: userInfo,
 
     });
   } catch (error) {
