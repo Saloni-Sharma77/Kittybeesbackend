@@ -830,3 +830,14 @@ exports.updateKittyStatus = async (req, res) => {
       .json({ error: "Failed to update data", details: error.message });
   }
 };
+
+
+exports.getNearByKitty =async(req, res)=>{
+  try {
+    
+    
+  } catch (error) {
+    return res.status(200).json({error:'Internal Server Error'})
+    
+  }
+}

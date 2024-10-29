@@ -19,7 +19,7 @@ exports.sendotptest = async (req, res) => {
     
     return res.status(200).send({
       success: true,
-      message: 'OTP sent successfully successfully',
+      message: 'OTP sent successfully',
       userData: userInfo,
     });
   }
@@ -73,11 +73,12 @@ exports.verifyotptest = async (req, res) => {
   }
   if (phoneNumber === '9999999999' && otp === '1234') {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const userInfo = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
-    
+    const userdetail = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
+    const userInfo = await User.find({phoneNumber});
+
     return res.status(200).send({
       success: true,
-      message: 'OTP verified successfully (test credentials)',
+      message: 'OTP verified successfully',
       token: token,
       userData: userInfo,
     });
