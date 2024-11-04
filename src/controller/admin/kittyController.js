@@ -878,8 +878,8 @@ exports.getNearByKitty = async (req, res) => {
     const kitties = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
       .populate({
         path: 'venueId',
-        select: 'name location lat long',  // Include venue name, location, lat, and long
-      });
+        select: 'name location lat long pricing',  // Include venue name, location, lat, and long
+      }).populate('themeId','name')
 
     return res.status(200).json({ success: true,kitties });
   } catch (error) {
