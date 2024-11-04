@@ -1,4 +1,6 @@
 const Kitty = require("../../schema/kittySchema");
+const Venue = require("../../schema/venueSchema");
+
 const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
 const UserSchema = require("../../schema/userSchema");
@@ -832,12 +834,56 @@ exports.updateKittyStatus = async (req, res) => {
 };
 
 
-exports.getNearByKitty =async(req, res)=>{
-  try {
-    
-    
-  } catch (error) {
-    return res.status(200).json({error:'Internal Server Error'})
-    
-  }
+
+
+// Function to calculate distance between two points using the Haversine formula
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in km
+  return distance;
 }
+
+exports.getNearByKitty = async (req, res) => {
+  try {
+    const { lat, long } = req.body;
+
+    if (!lat || !long) {
+      return res.status(400).json({ error: 'Latitude and longitude are required.' });
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(long);
+
+    // Find all venues (since we don’t have a geospatial index in this schema)
+    const venues = await Venue.find().select('_id lat long');
+
+    // Filter venues within 5 km radius
+    const nearbyVenueIds = venues
+      .filter(venue => {
+        const venueLat = parseFloat(venue.lat);
+        const venueLong = parseFloat(venue.long);
+        const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
+        return distance <= 5;
+      })
+      .map(venue => venue._id);
+
+    // Find kitties associated with the nearby venues
+    const kitties = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
+      .populate({
+        path: 'venueId',
+        select: 'name location lat long',  // Include venue name, location, lat, and long
+      });
+
+    return res.status(200).json({ success: true,kitties });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
