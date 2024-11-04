@@ -875,11 +875,20 @@ exports.getNearByKitty = async (req, res) => {
       .map(venue => venue._id);
 
     // Find kitties associated with the nearby venues
-    const kitties = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
+    const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds } })
       .populate({
         path: 'venueId',
         select: 'name location lat long pricing',  // Include venue name, location, lat, and long
       }).populate('themeId','name')
+      .exec();
+
+      const  kitties= kittiesWithApprovedCount.map(kitty => {
+        const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
+        return {
+          ...kitty.toObject(),
+          approvedMembersCount: approvedCount
+        };
+      });
 
     return res.status(200).json({ success: true,kitties });
   } catch (error) {
