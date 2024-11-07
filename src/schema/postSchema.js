@@ -37,9 +37,11 @@ const postSchema = new mongoose.Schema(
   {
     name: { type: String },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    postTagId: { type: mongoose.Schema.Types.ObjectId, ref: "PostTag" },
     description: { type: String },
     image: { type: String },
     isActive: { type: Boolean, default: true },
+    anonymous: { type: Boolean, default: false },
     poll: pollSchema, // Poll field
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Array of users who liked the post
     comments: [commentSchema], // Array of comments

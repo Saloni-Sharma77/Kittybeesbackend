@@ -2,7 +2,7 @@ const PostModel = require("../../schema/postSchema");
 // Add a new post
 exports.addPost = async (req, res) => {
   try {
-    const { name, userId, description, image, isActive, poll } = req.body;
+    const { name, userId, description, image, isActive, poll,postTagId ,anonymous} = req.body;
 
     // Create a new post
     const newPost = new PostModel({
@@ -10,7 +10,9 @@ exports.addPost = async (req, res) => {
       userId,
       description,
       image,
+      postTagId,
       isActive,
+      anonymous,
       poll // Add the poll data here
     });
 
@@ -194,7 +196,7 @@ exports.getAllPostByme = async (req, res) => {
       const userId = req.params.id;
   
       // Fetch posts by userId
-      const posts = await PostModel.find({ userId }).populate('userId');
+      const posts = await PostModel.find({ userId }).populate('userId').populate('postTagId');
   
       res.status(200).json({ message: 'Posts by user fetched successfully', data: posts });
     } catch (err) {
