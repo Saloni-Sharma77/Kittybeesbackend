@@ -37,23 +37,32 @@ exports.voteForPost = async (req, res) => {
       return res.status(404).json({ message: 'Post or poll not found' });
     }
 
-    // Find the option by ID
-    const option = post.poll.options.id(optionId);
-    if (!option) {
-      return res.status(404).json({ message: 'Option not found' });
-    }
+    // Check if the user has already voted for any option in the poll
+    const alreadyVotedOption = post.poll.options.find(option =>
+      option.voters.some(voter => voter.toString() === userId)
+    );
 
-    // Check if the user has already voted for this option
-    const hasVotedIndex = option.voters.findIndex(voter => voter.toString() === userId); // Ensure string comparison
-
-    if (hasVotedIndex !== -1) {
-      // If the user has already voted, remove their vote
-      option.votes -= 1;
-      option.voters.splice(hasVotedIndex, 1); // Remove the user from voters array
+    if (alreadyVotedOption) {
+      if (alreadyVotedOption._id.toString() === optionId) {
+        // User is trying to remove their vote from the current option
+        alreadyVotedOption.votes -= 1;
+        alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
+          voter => voter.toString() !== userId
+        );
+      } else {
+        // User has voted for a different option
+        return res.status(400).json({ message: 'You have already voted for another option' });
+      }
     } else {
-      // If the user hasn't voted, add their vote
+      // Find the option by ID
+      const option = post.poll.options.id(optionId);
+      if (!option) {
+        return res.status(404).json({ message: 'Option not found' });
+      }
+
+      // Add the user's vote to the selected option
       option.votes += 1;
-      option.voters.push(userId); // Add userId to voters array
+      option.voters.push(userId);
     }
 
     // Save the updated post
@@ -65,6 +74,7 @@ exports.voteForPost = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 // Like or Unlike a Post
 exports.toggleLike = async (req, res) => {
   try {
