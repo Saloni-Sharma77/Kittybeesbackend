@@ -138,7 +138,7 @@ exports.addComment = async (req, res) => {
 exports.getAllComments = async (req,res) =>{
   try {
     const {postId} = req.body
-    const post = await PostModel.findById(postId)
+    const post = await PostModel.findById(postId).populate('userId','fullname','profileImage','_id')
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
