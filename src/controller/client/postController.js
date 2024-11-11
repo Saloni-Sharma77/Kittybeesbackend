@@ -135,21 +135,45 @@ exports.addComment = async (req, res) => {
 };
 
 
-exports.getAllComments = async (req,res) =>{
+exports.getAllComments = async (req, res) => {
   try {
-    const {postId} = req.body
-    const post = await PostModel.findById(postId).populate('userId','fullname','profileImage','_id')
+    const { postId } = req.body;
+
+    // Validate postId
+    if (!postId) {
+      return res.status(400).json({ message: 'Post ID is required' });
+    }
+
+    // Fetch the post and populate the userId field
+    const post = await PostModel.findById(postId)
+    .populate('userId', 'name profileImage') // Populate user who created the post
+    .populate({
+      path: 'comments.userId', // Populate userId in comments
+      select: 'fullname profileImage', // Select specific fields to return
+    })
+    .populate({
+      path: 'comments.replies.userId', // Populate userId in replies
+      select: 'fullname profileImage',
+    });
+      
+    // Check if the post exists
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    const comments = post.comments;
-    res.status(200).json({ message: 'All commentes fetched successfully', data: comments });
 
+    // Fetch comments
+    const comments = post.comments;
+
+    res.status(200).json({
+      message: 'All comments fetched successfully',
+      data: comments,
+    });
   } catch (error) {
-    console.error(err);
-    res.status(500).json({ message: 'Error in fetching all comments' });
+    console.error(error); // Correct error logging
+    res.status(500).json({ message: 'Error fetching comments', error: error.message });
   }
-}
+};
+
 
 // Delete a comment from a post
 exports.deleteComment = async (req, res) => {
