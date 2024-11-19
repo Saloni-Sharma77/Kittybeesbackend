@@ -74,18 +74,48 @@ exports.createMessage = async (req, res) => {
 
 
 
+// exports.getMessages = async (req, res) => {
+//   try {
+//     // Find the document for the given groupId (chatId)
+//     const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate('messages.senderId','fullname profileImage');
+
+//     if (!messageDoc) {
+//       return res.status(404).json({ error: 'Messages not found' });
+//     }
+
+//     // Return the messages array from the document
+//     res.status(200).json(messageDoc.messages);
+//   } catch (error) {
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// };
+
 exports.getMessages = async (req, res) => {
   try {
-    // Find the document for the given groupId (chatId)
-    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate('messages.senderId','fullname profileImage');
+    const { search } = req.query; // Extract the optional `search` query parameter
+
+    // Find the document for the given groupId
+    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate(
+      'messages.senderId',
+      'fullname profileImage'
+    );
 
     if (!messageDoc) {
       return res.status(404).json({ error: 'Messages not found' });
     }
 
-    // Return the messages array from the document
-    res.status(200).json(messageDoc.messages);
+    // Filter messages based on the search query, if provided
+    let filteredMessages = messageDoc.messages;
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+      filteredMessages = filteredMessages.filter((message) => searchRegex.test(message.content));
+    }
+
+    // Return the filtered messages array (or the original array if no search)
+    res.status(200).json(filteredMessages);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
