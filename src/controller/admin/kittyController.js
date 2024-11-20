@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Kitty = require("../../schema/kittySchema");
 const Venue = require("../../schema/venueSchema");
 
@@ -9,6 +10,31 @@ const WalletSchema = require("../../schema/walletSchema");
 const moment = require("moment"); // For date and time parsing
 
 const mongoose = require("mongoose");
+
+exports.checkLatestVersion = async(req, res)=>{
+  const { currentVersion } = req.body;
+
+  if (!currentVersion) {
+      return res.status(400).json({
+          success: false,
+          message: 'Current version is required.',
+      });
+  }
+
+  const latestVersion = process.env.LATEST_VERSION;
+
+  if (currentVersion === latestVersion) {
+      return res.status(200).json({
+          success: true,
+          message: 'Your app is up to date.',
+      });
+  } else {
+      return res.status(400).json({
+          success: false,
+          message: `A new version (${latestVersion}) is available. Please update your app.`,
+      });
+  }
+}
 
 // exports.addKitty = async (req, res) => {
 //   try {

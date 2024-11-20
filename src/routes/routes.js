@@ -3521,6 +3521,7 @@ router.delete("/deleteVenueCategory/:id", venueCategory_controller.deleteVenueCa
 router.get("/getAllKittys", kitty_controller.getAllKittys);
 router.get("/getKittyAttendance/:userId", kitty_controller.getKittyAttendance);
 router.get("/getAllKittyForMe/:userId", kitty_controller.getAllKittyForMe);
+router.post("/checkLatestVersion", kitty_controller.checkLatestVersion);
 
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 

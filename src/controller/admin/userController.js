@@ -61,8 +61,11 @@ exports.signup = async (req, res) => {
   exports.getAllUsersList = async (req, res) => {
     try {
       const { fullname } = req.query; // Get the search term from the query parameters
-
-      const query = fullname ? { fullname: { $regex: fullname, $options: "i" } } : {};
+      const query = {
+        isActive: true, // Filter only active users
+        ...(fullname && { fullname: { $regex: fullname, $options: "i" } }), // Add search condition if fullname is provided
+      };
+      // const query = fullname ? { fullname: { $regex: fullname, $options: "i" } } : {};
       let getAllUsers = await UsersModel.find(query).sort({ createdAt: -1 });
       getAllUsers = getAllUsers.filter((item)=> item?.role !== 'admin')
       res.status(200).json({ 
