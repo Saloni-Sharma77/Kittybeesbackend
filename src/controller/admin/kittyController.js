@@ -526,16 +526,21 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
   }
 };
 
+
 exports.getAllKittyForMe = async (req, res) => {
   try {
     const userId = req.params.userId;
-    const currentTime = moment(); // Current date and time
-    const searchName = req.query.name || ""; // Get the search query (default is empty)
+    const { name, page = 1, limit = 0 } = req.query;
 
-    // Fetch all kitties
-    const KittyData = await Kitty.find({
-      name: { $regex: searchName, $options: "i" }, // Case-insensitive search
-    })
+    const currentTime = moment(); // Current date and time
+
+    // Fetch all kitties with optional name search
+    const query = {};
+    if (name) {
+      query.name = { $regex: new RegExp(name, "i") };
+    }
+
+    let KittyData = await Kitty.find(query)
       .lean()
       .populate("venueId", "name")
       .populate("groupId", "name contributionAmount")
@@ -550,8 +555,17 @@ exports.getAllKittyForMe = async (req, res) => {
       return kittyDateTime.isAfter(currentTime);
     });
 
-    // Modify response to add kittymemberstatus for each kitty
-    const response = filteredKitties.map((kitty) => {
+    // Total records after filtering
+    const totalKitties = filteredKitties.length;
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const paginatedKitties = limit
+      ? filteredKitties.slice(startIndex, startIndex + parseInt(limit))
+      : filteredKitties;
+
+    // Modify response to add `kittymemberstatus` for each kitty
+    const response = paginatedKitties.map((kitty) => {
       const member = kitty.members.find(
         (member) => member.userId.toString() === userId
       );
@@ -577,13 +591,85 @@ exports.getAllKittyForMe = async (req, res) => {
       };
     });
 
-    return res.status(200).json({ data: response });
+    // Response metadata
+    const totalPages = limit ? Math.ceil(totalKitties / limit) : 1;
+
+    return res.status(200).json({
+      data: response,
+      meta: {
+        currentPage: parseInt(page),
+        totalKitties,
+        totalPages,
+        limit: parseInt(limit),
+      },
+    });
   } catch (error) {
     return res
       .status(500)
       .json({ error: error.message, message: "Internal Server Error" });
   }
 };
+
+
+
+// exports.getAllKittyForMe = async (req, res) => {
+//   try {
+//     const userId = req.params.userId;
+//     const currentTime = moment(); // Current date and time
+//     const searchName = req.query.name || ""; // Get the search query (default is empty)
+
+//     // Fetch all kitties
+//     const KittyData = await Kitty.find({
+//       name: { $regex: searchName, $options: "i" }, // Case-insensitive search
+//     })
+//       .lean()
+//       .populate("venueId", "name")
+//       .populate("groupId", "name contributionAmount")
+//       .populate("themeId", "name");
+
+//     // Filter kitties by future date and time
+//     const filteredKitties = KittyData.filter((kitty) => {
+//       const kittyDateTime = moment(
+//         kitty.date + " " + kitty.time,
+//         "DD/MM/YYYY hh:mm A"
+//       );
+//       return kittyDateTime.isAfter(currentTime);
+//     });
+
+//     // Modify response to add kittymemberstatus for each kitty
+//     const response = filteredKitties.map((kitty) => {
+//       const member = kitty.members.find(
+//         (member) => member.userId.toString() === userId
+//       );
+//       let kittymemberstatus = "guest"; // Default if not in members array
+
+//       // Set status based on membership or if the user is the host
+//       if (member) {
+//         kittymemberstatus =
+//           member.status === "approved"
+//             ? "member"
+//             : member.status === "rejected"
+//             ? "rejected"
+//             : "requested";
+//       } else if (kitty.userId.toString() === userId) {
+//         kittymemberstatus = "host";
+//       } else {
+//         kittymemberstatus = "notmember";
+//       }
+
+//       return {
+//         ...kitty,
+//         kittymemberstatus,
+//       };
+//     });
+
+//     return res.status(200).json({ data: response });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ error: error.message, message: "Internal Server Error" });
+//   }
+// };
 
 exports.joinKitty = async (req, res) => {
   try {
