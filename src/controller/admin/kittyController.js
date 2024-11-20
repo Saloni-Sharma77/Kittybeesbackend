@@ -530,9 +530,12 @@ exports.getAllKittyForMe = async (req, res) => {
   try {
     const userId = req.params.userId;
     const currentTime = moment(); // Current date and time
+    const searchName = req.query.name || ""; // Get the search query (default is empty)
 
     // Fetch all kitties
-    const KittyData = await Kitty.find()
+    const KittyData = await Kitty.find({
+      name: { $regex: searchName, $options: "i" }, // Case-insensitive search
+    })
       .lean()
       .populate("venueId", "name")
       .populate("groupId", "name contributionAmount")
