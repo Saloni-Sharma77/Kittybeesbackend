@@ -32,6 +32,8 @@ exports.checkLatestVersion = async(req, res)=>{
       return res.status(400).json({
           success: false,
           message: `A new version (${latestVersion}) is available. Please update your app.`,
+          latestVersion: latestVersion
+
       });
   }
 }
