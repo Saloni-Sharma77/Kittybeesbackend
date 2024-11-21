@@ -37,7 +37,7 @@ const postSchema = new mongoose.Schema(
   {
     name: { type: String },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    postTagId: { type: mongoose.Schema.Types.ObjectId, ref: "PostTag" },
+    postTagId: { type: mongoose.Schema.Types.ObjectId, ref: "PostTag" ,index: true },
     description: { type: String },
     image: { type: String },
     isActive: { type: Boolean, default: true },
