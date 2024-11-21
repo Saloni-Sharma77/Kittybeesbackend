@@ -2712,6 +2712,10 @@ router.post("/deleteComment", post_controller.deleteComment);
  *         description: Server error
  */
 router.get("/getAllPost", post_controller.getAllPost);
+router.get("/getPostByTag", post_controller.getPostByTag);
+
+
+
 
 /**
  * @swagger

@@ -244,6 +244,32 @@ exports.deleteComment = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+
+  exports.getPostByTag = async (req, res) => {
+    try {
+      const { postTagId } = req.query; // Extract postTagId from query parameters
+  
+ 
+  
+      // Find posts matching the provided postTagId
+      const posts = await PostModel.find({ postTagId }).populate("userId");
+  
+      if (!posts || posts.length === 0) {
+        return res.status(404).json({ message: "No posts found for the given tag" });
+      }
+  
+      res.status(200).json({
+        message: "Posts retrieved successfully",
+        data: posts,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to retrieve posts",
+        error: error.message,
+      });
+    }
+  };
+  
   
   // Get all posts by user ID
 exports.getAllPostByme = async (req, res) => {
