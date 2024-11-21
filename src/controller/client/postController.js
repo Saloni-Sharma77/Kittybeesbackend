@@ -209,13 +209,34 @@ exports.deleteComment = async (req, res) => {
 
 
   // Get all posts
-exports.getAllPost = async (req, res) => {
+  exports.getAllPost = async (req, res) => {
+    
     try {
-      const { description } = req.query; // Get the search term from the query parameters
-
-      const query = description ? { description: { $regex: description, $options: "i" } } : {};
-      // Fetch all posts, populate userId with user information
-      const posts = await PostModel.find(query).populate('userId').sort({ createdAt: -1 });
+      const { fullname } = req.query; // Get the search term from the query parameters
+  
+      const matchStage = fullname
+        ? { 'userId.fullname': { $regex: fullname, $options: 'i' } }
+        : {};
+  
+      const posts = await PostModel.aggregate([
+        {
+          $lookup: {
+            from: 'users', // The collection name of the User model
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userId',
+          },
+        },
+        {
+          $unwind: '$userId', // Unwind the userId array to work with the object
+        },
+        {
+          $match: matchStage, // Apply the search filter on the populated fullname field
+        },
+        {
+          $sort: { createdAt: -1 }, // Sort by creation date
+        },
+      ]);
   
       res.status(200).json({ message: 'All posts fetched successfully', data: posts });
     } catch (err) {
@@ -223,7 +244,7 @@ exports.getAllPost = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
-
+  
   // Get all posts by user ID
 exports.getAllPostByme = async (req, res) => {
     try {
