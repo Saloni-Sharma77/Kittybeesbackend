@@ -10,7 +10,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-
 const mongoose = require("mongoose");
 
 
@@ -104,29 +103,48 @@ exports.addGroup = async (req, res) => {
     await NotificationSchema.insertMany(allNotifications);
 
     const fcmTokens = await FcmToken.find({ userId: { $in: approvedUserIds } });
-
-    // Send push notifications
-    if (fcmTokens.length > 0) {
-      const tokens = fcmTokens.map(tokenDoc => tokenDoc.fcmToken);
-
-      const payload = {
-        notification: {
-          title: "Group Created",
-          body: `You have been added to the group: ${newGroup.name}`,
-        },
-        data: {
-          groupId: newGroup._id.toString(),
-          type: "group",
-        }
-      };
-
+    console.log(fcmTokens, 'ffffff');
+    
+    // Ensure all tokens are valid, non-empty strings
+    const tokens = fcmTokens
+    .map(tokenDoc => tokenDoc.fcmToken)
+    .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
+  
+    console.log(tokens, 'Filtered Tokens');
+    
+    // Send push notifications if there are valid tokens
+    const payload = {
+      notification: {
+        title: 'Added to Group',
+        body: `You have been added to the group: ${newGroup.name}`,
+        sound: 'default',
+        icon: 'ic_launcher',
+        color: '#ff5e3a',
+        click_action: 'FCM_PLUGIN_ACTIVITY',
+        badge: '1',
+      },
+      data: {
+        route: 'your_route', 
+        title: 'Added to Group',
+        body: `You have been added to the group: ${newGroup.name}`,
+      },
+    };
+    
+    const options = {
+      priority: 'high',
+    };
+    
+    if (tokens.length > 0) {
       try {
-        await admin.messaging().sendToDevice(tokens, payload);
-        console.log("Push notifications sent successfully");
+        const result = await admin.messaging().sendToDevice(tokens, payload, options);
+        console.log('Push notifications sent successfully', result);
       } catch (pushError) {
-        console.error("Error sending push notifications:", pushError);
+        console.error('Error sending push notifications:', pushError);
       }
+    } else {
+      console.log('No valid tokens found to send notifications');
     }
+    
 
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });

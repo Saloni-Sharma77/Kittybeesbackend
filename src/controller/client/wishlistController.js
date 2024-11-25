@@ -69,31 +69,40 @@ exports.getAllWishlist = async (req, res) => {
 exports.getAllWishlistByme = async (req, res) => {
   try {
     const userId = req.params.id;
+    const { name } = req.query; // Retrieve the optional 'name' query parameter
 
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
 
+    // Prepare the match criteria
+    const matchCriteria = { userId: new mongoose.Types.ObjectId(userId) };
+
+    // If 'name' is provided in the query, add a condition to match the venue name
+    if (name) {
+      matchCriteria['venueId.name'] = { $regex: name, $options: 'i' }; // Case-insensitive search for name
+    }
+
     const wishlists = await WishListModel.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      { $match: matchCriteria }, // Match the user and optionally filter by venue name
       {
         $lookup: {
-          from: 'venues', // Assuming 'venues' is the collection name for venues
+          from: 'venues',
           localField: 'venueId',
           foreignField: '_id',
-          as: 'venueId' // Populate venueId directly
+          as: 'venueId'
         }
       },
       {
         $unwind: {
           path: '$venueId',
-          preserveNullAndEmptyArrays: true // Optional, if no venue is found
+          preserveNullAndEmptyArrays: true
         }
       },
       {
         $lookup: {
-          from: 'venuereviews', // Lookup for reviews
-          localField: 'venueId._id', // Reference the populated venueId
+          from: 'venuereviews',
+          localField: 'venueId._id',
           foreignField: 'venueId',
           as: 'reviews'
         }
@@ -117,6 +126,7 @@ exports.getAllWishlistByme = async (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 };
+
 
 
 
