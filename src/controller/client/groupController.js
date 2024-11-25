@@ -5,6 +5,11 @@ const GroupInterestModel = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const admin = require('firebase-admin'); // Firebase Admin SDK
+const serviceAccount = require('../../../service_acc/kitty-bee02-firebase-adminsdk-hbomy-4258fc176b.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 
 const mongoose = require("mongoose");
 
