@@ -4,6 +4,8 @@ const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
+const admin = require('firebase-admin'); // Firebase Admin SDK
+
 const mongoose = require("mongoose");
 
 
