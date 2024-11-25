@@ -3,6 +3,7 @@ const KittySchema = require("../../schema/kittySchema");
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
+const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const mongoose = require("mongoose");
 
 
@@ -94,6 +95,31 @@ exports.addGroup = async (req, res) => {
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
+
+    const fcmTokens = await FcmToken.find({ userId: { $in: approvedUserIds } });
+
+    // Send push notifications
+    if (fcmTokens.length > 0) {
+      const tokens = fcmTokens.map(tokenDoc => tokenDoc.fcmToken);
+
+      const payload = {
+        notification: {
+          title: "Group Created",
+          body: `You have been added to the group: ${newGroup.name}`,
+        },
+        data: {
+          groupId: newGroup._id.toString(),
+          type: "group",
+        }
+      };
+
+      try {
+        await admin.messaging().sendToDevice(tokens, payload);
+        console.log("Push notifications sent successfully");
+      } catch (pushError) {
+        console.error("Error sending push notifications:", pushError);
+      }
+    }
 
 
     res.status(201).json({ message: "Group added successfully", group: newGroup });

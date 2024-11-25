@@ -3125,6 +3125,11 @@ router.delete("/deleteWishlistById/:venueId/:userId", wishlist_controller.delete
  *         description: Server error
  */
 router.post("/addVenue", venue_controller.addVenue);
+router.get("/searchPlace", venue_controller.searchPlace);
+router.get("/getPlaceDetails", venue_controller.getPlaceDetails);
+
+
+
 
 /**
  * @swagger

@@ -4,6 +4,55 @@ const VenueType = require('../../schema/typeofvanueSchema');
 const Venue = require("../../schema/venueSchema");
 const VenueReview = require('../../schema/venueReviewSchema'); // Ensure this import matches your path
 
+const axios = require('axios');
+
+
+exports.searchPlace = async (req, res) => {
+  const { query } = req.query;
+  let apikey = "AIzaSyCb3G660acSLL7W4xS4wkgDBHUd8popUz4";
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apikey}`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching data from Google Maps API:', error.message);
+    res.status(500).json({ error: 'Failed to fetch data' });
+  }
+};
+
+exports.getPlaceDetails = async (req, res) => {
+  const { placeId } = req.query;
+
+  if (!placeId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required parameter: placeId',
+    });
+  }
+
+  const apiKey = "AIzaSyCb3G660acSLL7W4xS4wkgDBHUd8popUz4";
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,photos&key=${apiKey}`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    console.log(response.data,'rwerwerwerwerwe')
+    return res.status(200).json({
+      success: true,
+      message: 'Place details fetched successfully',
+      data: response.data.result,
+    });
+  } catch (error) {
+    console.error('Error fetching place details:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch place details',
+      error: error.message,
+    });
+  }
+};
+
+
 // exports.addVenue = async (req, res) => {
 //   try {
 //     const {
@@ -451,6 +500,8 @@ exports.getFilteredVenues = async (req, res) => {
     res.status(500).json({ message: 'Error fetching venues', error });
   }
 };
+
+
 
 //
 
