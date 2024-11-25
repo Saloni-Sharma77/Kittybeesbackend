@@ -336,6 +336,8 @@ router.post("/sendotptestwhatsapp", test_controller.sendotptestwhatsapp);
  *         description: Invalid request data
  */
 router.post("/adduserInfo", user_controller.adduserInfo);
+router.post("/addOrUpdateFcmToken", user_controller.addOrUpdateFcmToken);
+
 
 /**
  * @swagger
