@@ -4,11 +4,8 @@ const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
-const admin = require('firebase-admin'); // Firebase Admin SDK
-const serviceAccount = require('../../../service_acc/kitty-bee02-firebase-adminsdk-hbomy-4258fc176b.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+const { sendPushNotifications } = require('../../PushNotification/pushNotification');
+
 
 const mongoose = require("mongoose");
 
@@ -26,7 +23,6 @@ exports.addGroup = async (req, res) => {
       groupType,
       description,
       rulesAndRegulation,
-      // kittyFrequency,
       groupCityArea,
       contributionAmount,
       image,
@@ -45,11 +41,9 @@ exports.addGroup = async (req, res) => {
       { name: 'contributionAmount', value: contributionAmount },
       { name: 'image', value: image },
       { name: 'referralCode', value: referralCode }
-
     ];
 
     for (const field of requiredFields) {
-      
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
       }
@@ -65,18 +59,20 @@ exports.addGroup = async (req, res) => {
       groupType,
       description,
       rulesAndRegulation,
-      groupFrequencyId,
       groupCityArea,
       contributionAmount,
       image,
       referralCode
     });
 
-    newGroup?.userIds.forEach(item => {
+    // Set status for userIds as 'approved'
+    newGroup.userIds.forEach(item => {
       item.status = 'approved';
     });
+
     await newGroup.save();
-    //notification work------------------------->>>>
+
+    // Notification work ------------------------->>>>
     const creatorNotification = {
       userId, // the creator's userId
       groupId: newGroup._id,
@@ -102,58 +98,41 @@ exports.addGroup = async (req, res) => {
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
 
+    // Fetch FCM tokens for approved users
     const fcmTokens = await FcmToken.find({ userId: { $in: approvedUserIds } });
     console.log(fcmTokens, 'ffffff');
-    
+
     // Ensure all tokens are valid, non-empty strings
     const tokens = fcmTokens
-    .map(tokenDoc => tokenDoc.fcmToken)
-    .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
-  
+      .map(tokenDoc => tokenDoc.fcmToken)
+      .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
+
     console.log(tokens, 'Filtered Tokens');
-    
-    // Send push notifications if there are valid tokens
-    const payload = {
-      notification: {
-        title: 'Added to Group',
-        body: `You have been added to the group: ${newGroup.name}`,
-        sound: 'default',
-        icon: 'ic_launcher',
-        color: '#ff5e3a',
-        click_action: 'FCM_PLUGIN_ACTIVITY',
-        badge: '1',
-      },
-      data: {
-        route: 'your_route', 
-        title: 'Added to Group',
-        body: `You have been added to the group: ${newGroup.name}`,
-      },
-    };
-    
-    const options = {
-      priority: 'high',
-    };
-    
+
     if (tokens.length > 0) {
-      try {
-        const result = await admin.messaging().sendToDevice(tokens, payload, options);
-        console.log('Push notifications sent successfully', result);
-      } catch (pushError) {
-        console.error('Error sending push notifications:', pushError);
-      }
+      // Send notification to all the tokens
+      await sendPushNotifications({
+        title: 'Group Added', // Customize the title as needed
+        message: `You have been added to the group: ${newGroup.name}`,
+        userId: userId,
+      });
+
+      console.log('Notification sent');
     } else {
-      console.log('No valid tokens found to send notifications');
+      console.log('No tokens found');
     }
-    
 
-
-    res.status(201).json({ message: "Group added successfully", group: newGroup });
-
+    // Send the response only once, after everything is done
+    res.status(201).json({ message: 'Group added successfully', group: newGroup });
   } catch (err) {
     console.error("Error adding group:", err);
-    res.status(500).json({ error: "Failed to add group" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to add group' });
+    }
   }
 };
+
+
 // const admin = require("firebase-admin");
 
 // // Initialize Firebase Admin SDK with your credentials
@@ -360,63 +339,67 @@ exports.getAllGroups = async (req, res) => {
 
 
 
-exports.getGroupHostedByMe = async (req, res) => {
-  try {
-    const { page = 1, limit = 10 } = req.query;
-    const userId = req.params.id;
+// exports.getGroupHostedByMe = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, name = '' } = req.query; // Destructure name from query
+//     const userId = req.params.id;
 
-    // Convert page and limit to numbers
-    const pageNumber = parseInt(page, 10);  
-    const pageSize = parseInt(limit, 10);
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);  
+//     const pageSize = parseInt(limit, 10);
+//     const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {}; // Case-insensitive search by name
 
-    // Count total groups hosted and joined for pagination
-    const hostedCount = await Group.countDocuments({ userId });
-    const joinedCount = await Group.countDocuments({
-      userIds: {
-        $elemMatch: { userId, status: 'approved' }
-      }
-    });
-    const totalGroups = hostedCount + joinedCount;
-    const hostedGroups = await Group.find({ userId })
-      .sort({ createdAt: -1 })
-      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
-      .populate('groupFrequencyId')  // Populate groupFrequencyId
-      .populate('userIds.userId','_id fullname')
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
-    const joinedGroups = await Group.find({
-      userIds: {
-        $elemMatch: { userId, status: 'approved' }
-      }
-    })
-      .sort({ createdAt: -1 })
-      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
-      .populate('groupFrequencyId')  // Populate groupFrequencyId
-      // .populate('userIds.userId')    // Populate user IDs in the group
-      .populate('userIds.userId','_id fullname')
 
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
+//     // Count total groups hosted and joined for pagination
+//     const hostedCount = await Group.countDocuments({ userId, ...nameFilter });
+//     const joinedCount = await Group.countDocuments({
+//       userIds: {
+//         $elemMatch: { userId, status: 'approved' }
+//       },
+//       ...nameFilter
 
-    // Combine both results
-    const allGroups = [...hostedGroups, ...joinedGroups];
+//     });
+//     const totalGroups = hostedCount + joinedCount;
+//     const hostedGroups = await Group.find({ userId })
+//       .sort({ createdAt: -1 })
+//       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+//       .populate('groupFrequencyId')  // Populate groupFrequencyId
+//       .populate('userIds.userId','_id fullname')
+//       .skip((pageNumber - 1) * pageSize)
+//       .limit(pageSize);
+//     const joinedGroups = await Group.find({
+//       userIds: {
+//         $elemMatch: { userId, status: 'approved' }
+//       }
+//     })
+//       .sort({ createdAt: -1 })
+//       .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+//       .populate('groupFrequencyId')  // Populate groupFrequencyId
+//       // .populate('userIds.userId')    // Populate user IDs in the group
+//       .populate('userIds.userId','_id fullname')
 
-    if (allGroups.length === 0) {
-      return res.status(404).json({ message: "No groups found hosted or joined by this user." });
-    }
+//       .skip((pageNumber - 1) * pageSize)
+//       .limit(pageSize);
 
-    res.status(200).json({
-      message: "Groups fetched successfully",
-      data: allGroups,
-      totalGroups,
-      currentPage: pageNumber,
-      totalPages: Math.ceil(totalGroups / pageSize),
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     // Combine both results
+//     const allGroups = [...hostedGroups, ...joinedGroups];
+
+//     if (allGroups.length === 0) {
+//       return res.status(404).json({ message: "No groups found hosted or joined by this user." });
+//     }
+
+//     res.status(200).json({
+//       message: "Groups fetched successfully",
+//       data: allGroups,
+//       totalGroups,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalGroups / pageSize),
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 // exports.addGroupMemories = async (req,res)=>{
 //   try {
@@ -444,6 +427,72 @@ exports.getGroupHostedByMe = async (req, res) => {
 //   }
 
 // }
+
+exports.getGroupHostedByMe = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, name = '' } = req.query; // Destructure name from query
+    const userId = req.params.id;
+
+    // Convert page and limit to numbers
+    const pageNumber = parseInt(page, 10);  
+    const pageSize = parseInt(limit, 10);
+
+    // Build search filter for group name if provided
+    const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {}; // Case-insensitive search by name
+
+    // Count total groups hosted and joined for pagination, applying the name filter
+    const hostedCount = await Group.countDocuments({ userId, ...nameFilter });
+    const joinedCount = await Group.countDocuments({
+      userIds: {
+        $elemMatch: { userId, status: 'approved' }
+      },
+      ...nameFilter
+    });
+    const totalGroups = hostedCount + joinedCount;
+
+    // Fetch hosted groups with the name filter
+    const hostedGroups = await Group.find({ userId, ...nameFilter })
+      .sort({ createdAt: -1 })
+      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+      .populate('groupFrequencyId')  // Populate groupFrequencyId
+      .populate('userIds.userId','_id fullname')
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize);
+
+    // Fetch joined groups with the name filter
+    const joinedGroups = await Group.find({
+      userIds: {
+        $elemMatch: { userId, status: 'approved' }
+      },
+      ...nameFilter
+    })
+      .sort({ createdAt: -1 })
+      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
+      .populate('groupFrequencyId')  // Populate groupFrequencyId
+      .populate('userIds.userId','_id fullname')
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize);
+
+    // Combine both results
+    const allGroups = [...hostedGroups, ...joinedGroups];
+
+    if (allGroups.length === 0) {
+      return res.status(404).json({ message: "No groups found hosted or joined by this user." });
+    }
+
+    res.status(200).json({
+      message: "Groups fetched successfully",
+      data: allGroups,
+      totalGroups,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalGroups / pageSize),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 
 
