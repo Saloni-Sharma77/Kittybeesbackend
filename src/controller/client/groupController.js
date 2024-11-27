@@ -430,59 +430,52 @@ exports.getAllGroups = async (req, res) => {
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit = 10, name = '' } = req.query; // Destructure name from query
+    const { page = 1, limit = 10, name = '' } = req.query; // Destructure query params
     const userId = req.params.id;
 
     // Convert page and limit to numbers
-    const pageNumber = parseInt(page, 10);  
+    const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    // Build search filter for group name if provided
-    const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {}; // Case-insensitive search by name
+    // Build search filter for group name
+    const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
 
-    // Count total groups hosted and joined for pagination, applying the name filter
-    const hostedCount = await Group.countDocuments({ userId, ...nameFilter });
-    const joinedCount = await Group.countDocuments({
-      userIds: {
-        $elemMatch: { userId, status: 'approved' }
-      },
-      ...nameFilter
-    });
-    const totalGroups = hostedCount + joinedCount;
-
-    // Fetch hosted groups with the name filter
+    // Fetch hosted groups
     const hostedGroups = await Group.find({ userId, ...nameFilter })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
-      .populate('groupFrequencyId')  // Populate groupFrequencyId
-      .populate('userIds.userId','_id fullname')
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
+      .populate('groupInterestId') // Populate groupInterestId
+      .populate('groupFrequencyId') // Populate groupFrequencyId
+      .populate('userIds.userId', '_id fullname');
 
-    // Fetch joined groups with the name filter
+    // Fetch joined groups
     const joinedGroups = await Group.find({
+      ...nameFilter,
       userIds: {
-        $elemMatch: { userId, status: 'approved' }
+        $elemMatch: { userId, status: 'approved' },
       },
-      ...nameFilter
     })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId')  // Populate groupInterestId from groupinterest collection
-      .populate('groupFrequencyId')  // Populate groupFrequencyId
-      .populate('userIds.userId','_id fullname')
-      .skip((pageNumber - 1) * pageSize)
-      .limit(pageSize);
+      .populate('groupInterestId') // Populate groupInterestId
+      .populate('groupFrequencyId') // Populate groupFrequencyId
+      .populate('userIds.userId', '_id fullname');
 
-    // Combine both results
+    // Combine results
     const allGroups = [...hostedGroups, ...joinedGroups];
 
-    if (allGroups.length === 0) {
+    // Total count for pagination
+    const totalGroups = allGroups.length;
+
+    // Paginate combined results
+    const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+
+    // Check if no groups are found
+    if (paginatedGroups.length === 0) {
       return res.status(404).json({ message: "No groups found hosted or joined by this user." });
     }
 
     res.status(200).json({
       message: "Groups fetched successfully",
-      data: allGroups,
+      data: paginatedGroups,
       totalGroups,
       currentPage: pageNumber,
       totalPages: Math.ceil(totalGroups / pageSize),
