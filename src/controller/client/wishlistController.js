@@ -33,12 +33,46 @@ exports.addWishlist = async (req, res) => {
 // Get all wishlists
 exports.getAllWishlist = async (req, res) => {
   try {
-    // Fetch all wishlists, populate userId and venueId with user and venue information
-    const wishlists = await WishListModel.find()
-      .populate('userId', 'fullname') // Populate only necessary fields
-      .populate('venueId');
+    const { page = 1, limit = 20, name = '', cityName,
+      venueTypeName,
+      pricing,
+      distance,
+      sortByPartyCount } = req.query; // Get pagination, search term, and userId from the query parameters
 
-    res.status(200).json({ message: 'All wishlists fetched successfully', data: wishlists });
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    let query = {};
+
+    if (cityName) {
+      query.cityName = cityName;
+    }
+
+    if (venueTypeName) {
+      query.venueTypeName = { $in: venueTypeName.split(',') }; // Split comma-separated values
+    }
+
+    if (pricing) {
+      const { minPrice, maxPrice } = JSON.parse(pricing); // Parse pricing as an object
+      query['pricing.minPrice'] = { $gte: parseInt(minPrice) };
+      query['pricing.maxPrice'] = { $lte: parseInt(maxPrice) };
+    }
+
+    if (distance) {
+      query.distance = { $lte: parseInt(distance) }; // Assuming distance is a maximum limit
+    }
+    const totalWishlist = await WishListModel.countDocuments(query);
+
+
+    // Fetch all wishlists, populate userId and venueId with user and venue information
+    const wishlists = await WishListModel.find(query)
+      .populate('userId', 'fullname') // Populate only necessary fields
+      .populate('venueId').skip((pageNumber - 1) * pageSize)
+      .limit(pageSize);
+ if (sortByPartyCount === 'true') {
+            wishlists = wishlists.sort((a, b) => b.partyCount - a.partyCount);
+        }
+    res.status(200).json({ message: 'All wishlists fetched successfully', data: wishlists, currentPage: pageNumber,
+      totalPages: Math.ceil(totalWishlist / pageSize), });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
