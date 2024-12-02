@@ -57,5 +57,57 @@ async function sendPushNotifications({ title, message, userId }) {
         throw error;
     }
 }
+async function sendPushNotificationsCreateMessage({ title, message, userId,responseData }) {
+    try {
+        const userTokensDoc = await FcmModel.find({
+            userId,
+            deviceType: 'Android',
+        });
 
-module.exports = { sendPushNotifications };
+        console.log(userTokensDoc, 'Tokens for the user');
+
+        const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
+
+        if (userTokens.length === 0) {
+            throw new Error('No tokens found for the user');
+        }
+
+        const payload = {
+            notification: {
+                title: title,
+                body: message,
+                image: responseData?.image, // Optional image URL if needed
+            },
+            data: {
+                route: 'your_route', 
+                title: title,
+                body: message,
+            },
+        };
+
+        const options = {
+            priority: "high",
+        };
+
+        // Send notification to each token using the send method
+        const response = await Promise.all(userTokens.map(token =>
+            admin.messaging().send({
+                token: token,
+                notification: payload.notification,
+                data: payload.data,
+                android: {
+                    priority: options.priority,
+                },
+                fullData:responseData
+            })
+        ));
+
+        console.log('FCM Response:', response);
+        return response;
+    } catch (error) {
+        console.error('Error sending push notification:', error);
+        throw error;
+    }
+}
+
+module.exports = { sendPushNotifications,sendPushNotificationsCreateMessage };

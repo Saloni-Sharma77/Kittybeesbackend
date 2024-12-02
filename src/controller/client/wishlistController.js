@@ -103,7 +103,10 @@ exports.getAllWishlistByme = async (req, res) => {
   try {
     const userId = req.params.id;
     const { name } = req.query; // Optional query parameter for venue name
+    const { page = 1, limit = 20 } = req.query; // Include userId in query params
 
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
@@ -175,13 +178,24 @@ exports.getAllWishlistByme = async (req, res) => {
           reviews: 1,
           averageRating: 1 // Include average rating
         }
-      }
+      },
+      { $skip: (pageNumber - 1) * pageSize },
+      { $limit: pageSize }
     ]);
+
+    const totalCount = await WishListModel.countDocuments({userId: new mongoose.Types.ObjectId(userId)});
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     // Return the response
     res.status(200).json({
       message: 'Wishlists by user fetched successfully',
-      data: wishlists
+      data: wishlists,
+      pagination: {
+        page: pageNumber,
+        limit: pageSize,
+        totalPages,
+        totalCount
+      }
     });
   } catch (err) {
     console.error('Error details:', err);

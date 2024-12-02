@@ -1,4 +1,7 @@
 const Message = require('../../schema/messageSchema');
+const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
+const { sendPushNotificationsCreateMessage } = require('../../PushNotification/pushNotification');
+
 
 exports.createMessage = async (req, res) => {
   try {
@@ -33,7 +36,6 @@ exports.createMessage = async (req, res) => {
 
     // Find the message document by groupId
     let messageDoc = await Message.findOne({ groupId });
-
     if (!messageDoc) {
       // If no document exists for this groupId, create a new one
       messageDoc = new Message({
@@ -46,24 +48,66 @@ exports.createMessage = async (req, res) => {
     }
 
     // Save the document (either newly created or updated)
-    await messageDoc.save();
+    // await messageDoc.save();
 
-    // Populate senderId details for the new message
-    await messageDoc.populate('messages.senderId', 'fullname');
+    // // Populate senderId details for the new message
+    // await messageDoc.populate('messages.senderId', 'fullname');
+    let savedDoc = await messageDoc.save(); // Save the document
 
-    // Get the last message added to the array
-    const newMessage = messageDoc.messages[messageDoc.messages.length - 1];
+// Populate the fields
+savedDoc = await savedDoc.populate([
+  { path: 'messages.senderId', select: 'fullname' }, // Populate senderId with fullname
+  { path: 'groupId'}, // Populate groupId
+]);
+
+
+// Get the last message added to the array
+let newUserIds=[];
+const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
+savedDoc?.groupId?.userIds?.filter((item)=>{
+  if(item?.userId&&item?.status == 'approved'&&item?.userId != senderId){
+    newUserIds.push(item?.userId)
+  }
+})
+const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds } });
+const tokens = fcmTokens
+.map(tokenDoc => tokenDoc.fcmToken)
+.filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
+
+const response = {
+  fullname: newMessage.senderId.fullname,
+  content: newMessage.content || '',
+  image: newMessage.image || '',
+  video: newMessage.video || '',
+  document:newMessage.document || '',
+  timestamp: newMessage.timestamp,
+  _id:newMessage._id,
+  groupId:groupId,
+  senderId:senderId,
+  userIds:newUserIds
+};
+
+// if (tokens.length > 0) {
+// // Send notification to all the tokens
+//   // Send notification to all the tokens
+//   await sendPushNotificationsCreateMessage({
+//     title: 'Create Message', // Customize the title as needed
+//     message: newMessage.content,
+//     userId: senderId,
+//     response
+//   });
+
+
+// console.log('Notification sent');
+// } else {
+//   res.status(500).json({ error: 'No tokens found' });
+
+// }
+    // console.log(newMessage,'newMessage',newUserIds)
+    // return
 
     // Create a response object with required fields
-    const response = {
-      fullname: newMessage.senderId.fullname,
-      content: newMessage.content || '',
-      image: newMessage.image || '',
-      video: newMessage.video || '',
-      document:newMessage.document || '',
-      timestamp: newMessage.timestamp,
-      _id:newMessage._id
-    };
+   
 
     res.status(201).json(response); // Return only the new message details
   } catch (error) {
