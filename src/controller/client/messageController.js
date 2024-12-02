@@ -86,23 +86,28 @@ const response = {
   senderId:senderId,
   userIds:newUserIds
 };
+try{
 
-// if (tokens.length > 0) {
-// // Send notification to all the tokens
-//   // Send notification to all the tokens
-//   await sendPushNotificationsCreateMessage({
-//     title: 'Create Message', // Customize the title as needed
-//     message: newMessage.content,
-//     userId: senderId,
-//     response
-//   });
+if (tokens.length > 0) {
+// Send notification to all the tokens
+  // Send notification to all the tokens
+  await sendPushNotificationsCreateMessage({
+    title: 'Create Message', // Customize the title as needed
+    message: newMessage.content,
+    userId: senderId,
+    response
+  });
 
 
-// console.log('Notification sent');
-// } else {
-//   res.status(500).json({ error: 'No tokens found' });
+console.log('Notification sent');
+} else {
+  return res.status(404).json({ message: 'No FCM tokens found for the provided user IDs.' });
 
-// }
+}
+}catch{
+  res.status(500).json({ message: 'An error occurred while fetching FCM tokens.', error: error.message });
+
+}
     // console.log(newMessage,'newMessage',newUserIds)
     // return
 
