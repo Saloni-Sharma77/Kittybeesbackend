@@ -76,7 +76,7 @@ async function sendPushNotificationsCreateMessage({ title, message, userId,respo
             notification: {
                 title: title,
                 body: message,
-                image: responseData?.image, // Optional image URL if needed
+                image: 'your_image_url', // Optional image URL if needed
             },
             data: {
                 route: 'your_route', 

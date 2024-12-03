@@ -64,7 +64,7 @@ let newUserIds=[];
 if(savedDoc?.groupId?.userId != senderId){
   newUserIds.push(savedDoc?.groupId?.userId)
 }
-console.log(savedDoc,'savedDoc',newUserIds)
+console.log(savedDoc?.groupId?.name,'savedDoc',newUserIds)
 const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
 savedDoc?.groupId?.userIds?.filter((item)=>{
   if(item?.userId&&item?.status == 'approved'&&item?.userId != senderId){
@@ -94,7 +94,7 @@ if (tokens.length > 0) {
 // Send notification to all the tokens
   // Send notification to all the tokens
   await sendPushNotificationsCreateMessage({
-    title: 'Message Recieved', // Customize the title as needed
+    title: savedDoc?.groupId?.name, // Customize the title as needed
     message: newMessage.content,
     userId: savedDoc?.groupId?.userId,
     response
