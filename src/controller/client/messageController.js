@@ -59,10 +59,12 @@ savedDoc = await savedDoc.populate([
   { path: 'messages.senderId', select: 'fullname' }, // Populate senderId with fullname
   { path: 'groupId'}, // Populate groupId
 ]);
-
-
 // Get the last message added to the array
 let newUserIds=[];
+if(savedDoc?.groupId?.userId != senderId){
+  newUserIds.push(savedDoc?.groupId?.userId)
+}
+console.log(savedDoc?.groupId?.userId,'savedDoc',newUserIds)
 const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
 savedDoc?.groupId?.userIds?.filter((item)=>{
   if(item?.userId&&item?.status == 'approved'&&item?.userId != senderId){
@@ -92,9 +94,9 @@ if (tokens.length > 0) {
 // Send notification to all the tokens
   // Send notification to all the tokens
   await sendPushNotificationsCreateMessage({
-    title: 'Create Message', // Customize the title as needed
+    title: 'Message Recieved', // Customize the title as needed
     message: newMessage.content,
-    userId: senderId,
+    userId: savedDoc?.groupId?.userId,
     response
   });
 
