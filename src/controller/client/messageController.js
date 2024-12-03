@@ -71,10 +71,9 @@ savedDoc?.groupId?.userIds?.filter((item)=>{
     newUserIds.push(item?.userId)
   }
 })
-const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds } });
+const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds },deviceType: 'Android',});
 const tokens = fcmTokens
 .map(tokenDoc => tokenDoc.fcmToken)
-.filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
 
 const response = {
   fullname: newMessage.senderId.fullname,
@@ -86,8 +85,9 @@ const response = {
   _id:newMessage._id,
   groupId:groupId,
   senderId:senderId,
-  userIds:newUserIds
+  userIds:newUserIds,
 };
+console.log(tokens,'tokens')
 try{
 
 if (tokens.length > 0) {
@@ -96,8 +96,8 @@ if (tokens.length > 0) {
   await sendPushNotificationsCreateMessage({
     title: savedDoc?.groupId?.name, // Customize the title as needed
     message: newMessage.content,
-    userId: savedDoc?.groupId?.userId,
-    response
+    response,
+    tokens
   });
 
 

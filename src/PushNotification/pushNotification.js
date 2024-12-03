@@ -57,16 +57,8 @@ async function sendPushNotifications({ title, message, userId }) {
         throw error;
     }
 }
-async function sendPushNotificationsCreateMessage({ title, message, userId,responseData }) {
+async function sendPushNotificationsCreateMessage({ title, message,responseData,userTokens }) {
     try {
-        const userTokensDoc = await FcmModel.find({
-            userId,
-            deviceType: 'Android',
-        });
-
-        console.log(userTokensDoc, 'Tokens for the user');
-
-        const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
 
         if (userTokens.length === 0) {
             throw new Error('No tokens found for the user');

@@ -316,12 +316,39 @@ exports.filterVenues = async (req, res) => {
 
 exports.getAllVenues = async (req, res) => {
   try {
-    const { page = 1, limit = 20, name = '', userId } = req.query; // Include userId in query params
+    const { page = 1, limit = 20, name = '', userId, cityId, venueTypeId,min,max ,lat, long} = req.query;
 
+    let filterData = {};
+    if (cityId) {
+      filterData.cityId = new mongoose.Types.ObjectId(cityId);
+    }
+    if (venueTypeId) {
+      filterData.venueTypeId = new mongoose.Types.ObjectId(venueTypeId);
+    }
+    if (min && max) {
+      filterData.$expr = {
+        $and: [
+          { $gte: [{ $toInt: { $arrayElemAt: [{ $split: ["$pricing", "-"] }, 0] } }, parseInt(min)] },
+          { $lte: [{ $toInt: { $arrayElemAt: [{ $split: ["$pricing", "-"] }, 1] } }, parseInt(max)] }
+        ]
+      };
+    }
+    if (lat && long) {
+      filterData.location = {
+        $geoWithin: {
+          $centerSphere: [
+            [parseFloat(long), parseFloat(lat)], // [longitude, latitude]
+            distance / 3963.2 // Convert miles to radians (1 mile = 3963.2 miles on Earth)
+          ]
+        }
+      };
+    }
+console.log(filterData,'filterData')
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
+    // const searchQuery = name ? { name: new RegExp(name, 'i') } : {};
+    const searchQuery = name ? { ...filterData, name: new RegExp(name, 'i') } : filterData;
 
     const venuesWithRatings = await Venue.aggregate([
       { $match: searchQuery },
