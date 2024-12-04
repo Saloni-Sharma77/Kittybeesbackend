@@ -57,10 +57,9 @@ async function sendPushNotifications({ title, message, userId }) {
         throw error;
     }
 }
-async function sendPushNotificationsCreateMessage({ title, message,responseData,userTokens }) {
+async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
     try {
-
-        if (userTokens.length === 0) {
+        if (!userTokens || userTokens.length === 0) {
             throw new Error('No tokens found for the user');
         }
 
@@ -68,36 +67,38 @@ async function sendPushNotificationsCreateMessage({ title, message,responseData,
             notification: {
                 title: title,
                 body: message,
-                image: 'your_image_url', // Optional image URL if needed
+                image: 'your_image_url', // Optional: replace with actual image URL if needed
             },
             data: {
-                route: 'your_route', 
+                route: 'your_route', // Adjust to the route you need to pass
                 title: title,
                 body: message,
+                ...responseData, // Pass additional data if required
             },
         };
 
         const options = {
-            priority: "high",
+            android: {
+                priority: "high",
+            },
         };
 
-        // Send notification to each token using the send method
-        const response = await Promise.all(userTokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-                fullData:responseData
-            })
-        ));
+        // Send notifications to all tokens in parallel
+        const responses = await Promise.all(
+            userTokens.map(token =>
+                admin.messaging().send({
+                    token: token,
+                    notification: payload.notification,
+                    data: payload.data,
+                    android: options.android,
+                })
+            )
+        );
 
-        console.log('FCM Response:', response);
-        return response;
+        console.log('Notifications sent successfully:', responses);
+        return responses;
     } catch (error) {
-        console.error('Error sending push notification:', error);
+        console.error('Error sending push notifications:', error.message);
         throw error;
     }
 }

@@ -5,123 +5,112 @@ const { sendPushNotificationsCreateMessage } = require('../../PushNotification/p
 
 exports.createMessage = async (req, res) => {
   try {
-    // Destructure only groupId and senderId
     const { groupId, senderId } = req.body;
 
-    // Initialize message data object
+    if (!groupId || !senderId) {
+      return res.status(400).json({ error: "Group ID and Sender ID are required." });
+    }
+
+    // Initialize message data
     const newMessageData = { senderId };
 
-    // Check and add content if provided
-    if (req.body.content) {
-      newMessageData.content = req.body.content;
-    }
-    if (req.body.document) {
-      newMessageData.document = req.body.document;
-    }
+    if (req.body.content) newMessageData.content = req.body.content;
+    if (req.body.document) newMessageData.document = req.body.document;
+    if (req.body.image) newMessageData.image = req.body.image;
+    if (req.body.video) newMessageData.video = req.body.video;
 
-    // Check and add image if provided
-    if (req.body.image) {
-      newMessageData.image = req.body.image;
-    }
-
-    // Check and add video if provided
-    if (req.body.video) {
-      newMessageData.video = req.body.video;
-    }
-
-    // Ensure at least one of content, image, or video is provided
+    // Ensure at least one type of message is provided
     if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document) {
-      return res.status(400).json({ error: 'At least one of content,document, image, or video must be provided' });
+      return res.status(400).json({ error: "At least one of content, document, image, or video must be provided." });
     }
 
-    // Find the message document by groupId
+    // Find or create a message document for the group
     let messageDoc = await Message.findOne({ groupId });
     if (!messageDoc) {
-      // If no document exists for this groupId, create a new one
       messageDoc = new Message({
         groupId,
-        messages: [newMessageData] // Add the new message to the messages array
+        messages: [newMessageData],
       });
     } else {
-      // If the document exists, push the new message to the messages array
       messageDoc.messages.push(newMessageData);
     }
 
-    // Save the document (either newly created or updated)
-    // await messageDoc.save();
+    // Save the message document
+    let savedDoc = await messageDoc.save();
 
-    // // Populate senderId details for the new message
-    // await messageDoc.populate('messages.senderId', 'fullname');
-    let savedDoc = await messageDoc.save(); // Save the document
+    // Populate relevant fields
+    savedDoc = await savedDoc.populate([
+      { path: "messages.senderId", select: "fullname" },
+      { path: "groupId" },
+    ]);
 
-// Populate the fields
-savedDoc = await savedDoc.populate([
-  { path: 'messages.senderId', select: 'fullname' }, // Populate senderId with fullname
-  { path: 'groupId'}, // Populate groupId
-]);
-// Get the last message added to the array
-let newUserIds=[];
-if(savedDoc?.groupId?.userId != senderId){
-  newUserIds.push(savedDoc?.groupId?.userId)
-}
-console.log(savedDoc?.groupId?.name,'savedDoc',newUserIds)
-const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
-savedDoc?.groupId?.userIds?.filter((item)=>{
-  if(item?.userId&&item?.status == 'approved'&&item?.userId != senderId){
-    newUserIds.push(item?.userId)
-  }
-})
-const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds },deviceType: 'Android',});
-const tokens = fcmTokens
-.map(tokenDoc => tokenDoc.fcmToken)
+    // Retrieve the last added message
+    const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
+    if (!newMessage) {
+      return res.status(500).json({ error: "Failed to retrieve the new message." });
+    }
 
-const response = {
-  fullname: newMessage.senderId.fullname,
-  content: newMessage.content || '',
-  image: newMessage.image || '',
-  video: newMessage.video || '',
-  document:newMessage.document || '',
-  timestamp: newMessage.timestamp,
-  _id:newMessage._id,
-  groupId:groupId,
-  senderId:senderId,
-  userIds:newUserIds,
-};
-console.log(tokens,'tokens')
-try{
+    // Determine users to notify
+    let newUserIds = [];
+    if (savedDoc?.groupId?.userId !== senderId) {
+      newUserIds.push(savedDoc.groupId.userId);
+    }
 
-if (tokens?.length > 0) {
-// Send notification to all the tokens
-  // Send notification to all the tokens
-  await sendPushNotificationsCreateMessage({
-    title: savedDoc?.groupId?.name, // Customize the title as needed
-    message: newMessage?.content,
-    response,
-    tokens
-  });
+    if (Array.isArray(savedDoc?.groupId?.userIds)) {
+      savedDoc.groupId.userIds.forEach((item) => {
+        if (item?.userId && item?.status === "approved" && item.userId !== senderId) {
+          newUserIds.push(item.userId);
+        }
+      });
+    }
 
+    // Fetch FCM tokens for notification
+    const fcmTokens = await FcmToken.find({
+      userId: { $in: newUserIds },
+      deviceType: "Android",
+    });
 
-console.log('Notification sent');
-} else {
-  return res.status(404).json({ message: 'No FCM tokens found for the provided user IDs.' });
+    const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
 
-}
-}catch{
-  res.status(500).json({ message: 'An error occurred while fetching FCM tokens.', error: error.message });
+    // Prepare response
+    const response = {
+      fullname: newMessage.senderId?.fullname || "",
+      content: newMessage.content || "",
+      image: newMessage.image || "",
+      video: newMessage.video || "",
+      document: newMessage.document || "",
+      timestamp: newMessage.timestamp || new Date(),
+      _id: newMessage._id,
+      groupId,
+      senderId,
+      userIds: newUserIds,
+    };
 
-}
-    // console.log(newMessage,'newMessage',newUserIds)
-    // return
+    // Send notifications if tokens exist
+    if (tokens.length > 0) {
+      try {
+        await sendPushNotificationsCreateMessage({
+          title: savedDoc?.groupId?.name || "New Message",
+          message: newMessage.content || "You have a new message",
+          response,
+          tokens,
+        });
+        console.log("Notification sent successfully.");
+      } catch (notificationError) {
+        console.error("Error sending notifications:", notificationError.message);
+      }
+    } else {
+      console.warn("No FCM tokens found for the provided user IDs.");
+    }
 
-    // Create a response object with required fields
-   
-
-    res.status(201).json(response); // Return only the new message details
+    // Respond with the created message
+    res.status(201).json(response);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error creating message:", error.message);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 };
+
 
 
 
