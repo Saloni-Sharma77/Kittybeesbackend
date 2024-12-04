@@ -3690,6 +3690,8 @@ router.post("/acceptOrRejectRequestOfKitty", kitty_controller.acceptOrRejectRequ
  *         description: Server error
  */
 router.get("/getKittyById/:id", kitty_controller.getKittyById);
+router.get("/getKittyMemoriesById/:id", kitty_controller.getKittyMemoriesById);
+
 
 /**
  * @swagger
