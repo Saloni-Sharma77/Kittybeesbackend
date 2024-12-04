@@ -90,12 +90,12 @@ const response = {
 console.log(tokens,'tokens')
 try{
 
-if (tokens.length > 0) {
+if (tokens?.length > 0) {
 // Send notification to all the tokens
   // Send notification to all the tokens
   await sendPushNotificationsCreateMessage({
     title: savedDoc?.groupId?.name, // Customize the title as needed
-    message: newMessage.content,
+    message: newMessage?.content,
     response,
     tokens
   });
