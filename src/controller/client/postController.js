@@ -1,4 +1,7 @@
 const PostModel = require("../../schema/postSchema");
+const UserModel = require("../../schema/userSchema");
+const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
+
 // Add a new post
 exports.addPost = async (req, res) => {
   try {
@@ -18,6 +21,31 @@ exports.addPost = async (req, res) => {
 
     // Save the post to the database
     await newPost.save();
+    //notification work starts here
+    const allActiveUsers = await UserModel.find({ isActive: true, _id: { $ne: userId } });
+
+    // Create notifications for all active users
+    const notifications = allActiveUsers.map(user => ({
+      userId: user._id,
+      groupId: newPost._id,
+      message: `A new post has been created`,
+      type: 'group',
+    }));
+
+    // Add a notification for the post creator
+    const creatorNotification = {
+      userId, // Post creator's userId
+      groupId: newPost._id,
+      message: `You have successfully created the post`,
+      type: 'group',
+    };
+
+    // Combine notifications
+    notifications.push(creatorNotification);
+
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(notifications);
+
 
     res.status(201).json({ message: 'Post created successfully', data: newPost });
   } catch (err) {
