@@ -59,20 +59,21 @@ savedDoc = await savedDoc.populate([
   { path: 'messages.senderId', select: 'fullname' }, // Populate senderId with fullname
   { path: 'groupId'}, // Populate groupId
 ]);
-
-
 // Get the last message added to the array
 let newUserIds=[];
+if(savedDoc?.groupId?.userId != senderId){
+  newUserIds.push(savedDoc?.groupId?.userId)
+}
+console.log(savedDoc?.groupId?.name,'savedDoc',newUserIds)
 const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
 savedDoc?.groupId?.userIds?.filter((item)=>{
   if(item?.userId&&item?.status == 'approved'&&item?.userId != senderId){
     newUserIds.push(item?.userId)
   }
 })
-const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds } });
+const fcmTokens = await FcmToken.find({ userId: { $in: newUserIds },deviceType: 'Android',});
 const tokens = fcmTokens
 .map(tokenDoc => tokenDoc.fcmToken)
-.filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
 
 const response = {
   fullname: newMessage.senderId.fullname,
@@ -84,18 +85,19 @@ const response = {
   _id:newMessage._id,
   groupId:groupId,
   senderId:senderId,
-  userIds:newUserIds
+  userIds:newUserIds,
 };
+console.log(tokens,'tokens')
 try{
 
 if (tokens.length > 0) {
 // Send notification to all the tokens
   // Send notification to all the tokens
   await sendPushNotificationsCreateMessage({
-    title: 'Create Message', // Customize the title as needed
+    title: savedDoc?.groupId?.name, // Customize the title as needed
     message: newMessage.content,
-    userId: senderId,
-    response
+    response,
+    tokens
   });
 
 

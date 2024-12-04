@@ -1,6 +1,7 @@
 require('dotenv').config();
 const Kitty = require("../../schema/kittySchema");
 const Venue = require("../../schema/venueSchema");
+const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 
 const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
@@ -743,9 +744,45 @@ exports.joinKitty = async (req, res) => {
       message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
       type: "kitty-join-request",
     });
-
+   
     // Save the notification
     await adminNotification.save();
+    const fcmTokens = await FcmToken.find({ userId: kitty.userId,deviceType: 'Android',});
+    const tokens = fcmTokens
+    .map(tokenDoc => tokenDoc.fcmToken)
+  
+        const payload = {
+          notification: {
+              title: kitty.name,
+              body: adminNotification?.message,
+              image: 'your_image_url', // Optional image URL if needed
+          },
+          data: {
+              route: 'your_route', 
+              title: kitty.name,
+              body: adminNotification?.message,
+          },
+      };
+    
+      const options = {
+          priority: "high",
+      };
+    
+      // Send notification to each token using the send method
+      if(tokens?.length > 0){
+
+        const response = await Promise.all(tokens.map(token =>
+            admin.messaging().send({
+                token: token,
+                notification: payload.notification,
+                data: payload.data,
+                android: {
+                    priority: options.priority,
+                },
+            })
+        ));
+      }
+    
 
     return res
       .status(200)
@@ -822,6 +859,41 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     });
 
     await userNotification.save();
+    const fcmTokens = await FcmToken.find({ userId: userId,deviceType: 'Android',});
+    const tokens = fcmTokens
+    .map(tokenDoc => tokenDoc.fcmToken)
+  
+        const payload = {
+          notification: {
+              title: findWhichKitty.name,
+              body: notificationMessage,
+              image: 'your_image_url', // Optional image URL if needed
+          },
+          data: {
+              route: 'your_route', 
+              title: findWhichKitty.name,
+              body: notificationMessage,
+          },
+      };
+    
+      const options = {
+          priority: "high",
+      };
+    
+      // Send notification to each token using the send method
+      if(tokens?.length > 0){
+
+        const response = await Promise.all(tokens.map(token =>
+            admin.messaging().send({
+                token: token,
+                notification: payload.notification,
+                data: payload.data,
+                android: {
+                    priority: options.priority,
+                },
+            })
+        ));
+      }
 
     // Respond with success message
     res.status(200).json({ message: `Request ${status}` });
