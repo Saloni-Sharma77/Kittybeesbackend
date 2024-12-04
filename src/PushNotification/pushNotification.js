@@ -104,9 +104,10 @@ async function sendPushNotifications({ title, message, userId }) {
 // }
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
-    
+
     try {
         // Filter out invalid or empty tokens
+
         const validTokens = userTokens?.filter(token => token) || [];
 
         if (validTokens.length === 0) {

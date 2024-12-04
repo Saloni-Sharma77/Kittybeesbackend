@@ -85,23 +85,18 @@ exports.createMessage = async (req, res) => {
       senderId,
       userIds: newUserIds,
     };
-
+    
     // Send notifications if tokens exist
-    if (tokens.length > 0) {
-      try {
-        await sendPushNotificationsCreateMessage({
-          title: savedDoc?.groupId?.name || "New Message",
-          message: newMessage.content || "You have a new message",
-          response,
-          tokens,
-        });
+    
+    await sendPushNotificationsCreateMessage({
+      title: savedDoc?.groupId?.name || "New Message",
+      message: newMessage.content || "You have a new message",
+        response,
+      userTokens: tokens,
+    });
+    console.log(tokens,'tttttttttttttt')
         console.log("Notification sent successfully.");
-      } catch (notificationError) {
-        console.error("Error sending notifications:", notificationError.message);
-      }
-    } else {
-      console.warn("No FCM tokens found for the provided user IDs.");
-    }
+  
 
     // Respond with the created message
     res.status(201).json(response);
