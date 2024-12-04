@@ -66,9 +66,10 @@ exports.createMessage = async (req, res) => {
 
     // Fetch FCM tokens for notification
     const fcmTokens = await FcmToken.find({
-      userId: { $in: newUserIds },
+      userId: { $in: newUserIds, $ne: senderId }, 
       deviceType: "Android",
-    });
+  });
+  
 
     const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
 
@@ -93,6 +94,7 @@ exports.createMessage = async (req, res) => {
       message: newMessage.content || "You have a new message",
         response,
       userTokens: tokens,
+      
     });
     console.log(tokens,'tttttttttttttt')
         console.log("Notification sent successfully.");
