@@ -164,7 +164,9 @@ exports.updateUserInfo = async (req, res) => {
   if (req.body.profileImage) updateData.profileImage = req.body.profileImage;
   if (req.body.location) updateData.location = req.body.location;
   if (req.body.verifiedBy) updateData.verifiedBy = req.body.verifiedBy;
-
+  if (req.body.newKittyReminder) updateData.newKittyReminder = req.body.newKittyReminder;
+  if (req.body.communityReminder) updateData.communityReminder = req.body.communityReminder;
+  if (req.body.paymentReminder) updateData.paymentReminder = req.body.paymentReminder;
 
   try {
     const updatedUser = await UsersModel.findOneAndUpdate(

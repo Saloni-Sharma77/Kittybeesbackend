@@ -983,7 +983,7 @@ exports.getKittyMemoriesById = async (req, res) => {
 
   try {
     const getKitty = await Kitty.findById(kittyId)
-      .populate("kittyMemories.userId", "fullname") // Select the fullname field
+      .populate("kittyMemories.userId", "fullname profileImage") // Select the fullname field
       .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
 
     if (!getKitty) {

@@ -25,6 +25,9 @@ sociallinks: [
     }
   ],
   isnotvalid :{type:Boolean},
+  newKittyReminder :{type:Boolean,default: true},
+  communityReminder :{type:Boolean,default: true},
+  paymentReminder :{type:Boolean,default: true},
   phoneOtp:{type:String},
   isActive:{type:Boolean,default : true},
   eventArr:{type:Array},
