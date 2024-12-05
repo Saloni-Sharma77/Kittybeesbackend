@@ -3534,6 +3534,7 @@ router.get("/getKittyAttendance/:userId", kitty_controller.getKittyAttendance);
 router.get("/getAllKittyForMe/:userId", kitty_controller.getAllKittyForMe);
 router.post("/checkLatestVersion", kitty_controller.checkLatestVersion);
 router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
+router.put("/quitKittyByUser/:id", kitty_controller.quitKittyByUser);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 
 

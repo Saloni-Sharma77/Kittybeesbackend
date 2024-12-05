@@ -1155,3 +1155,46 @@ exports.submitKittyReview = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+exports.quitKittyByUser = async (req, res) => {
+  const kittyId = req.params.id; // Extract Kitty ID from route parameter
+  const userId = req.body.userId; // Extract userId from request body
+
+  try {
+    if (!kittyId) {
+      return res.status(400).json({ error: 'KittyId is required' });
+    }
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Fetch the Kitty to check if the user exists in the members array
+    const kitty = await Kitty.findById(kittyId);
+    if (!kitty) {
+      return res.status(404).json({ error: 'Kitty not found' });
+    }
+
+    const memberExists = kitty.members.some(
+      (member) => member.userId.toString() === userId && member.status === 'approved'
+    );
+
+    if (!memberExists) {
+      return res.status(400).json({ error: 'User not found in approved members of this Kitty' });
+    }
+
+    // Update the Kitty and remove the user from the `members` array
+    const updatedKitty = await Kitty.findByIdAndUpdate(
+      kittyId,
+      {
+        $pull: { members: { userId: userId, status: 'approved' } },
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({ success: true, message: 'User successfully quit the Kitty', data: updatedKitty });
+  } catch (error) {
+    console.error('Error quitting Kitty:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
