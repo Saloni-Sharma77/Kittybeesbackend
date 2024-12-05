@@ -543,6 +543,10 @@ router.get("/getMessages/:groupId", message_controller.getMessages);
  *         description: Admin signed up successfully
  */
 router.post("/signup", user_admin_controller.signup);
+router.post("/updateAllUsersReminderStatus", user_admin_controller.updateAllUsersReminderStatus);
+
+
+
 
 /**
  * @swagger

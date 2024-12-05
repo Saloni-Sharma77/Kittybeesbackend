@@ -546,32 +546,39 @@ exports.addGroupMemories = async (req, res) => {
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
-  const { page = 0, limit = 10 } = req.query; // Default values for page and limit
+  const { page = 0, limit = 10, userId } = req.query; // Get userId from query parameters
+  const filter = userId ? { 'groupMemories.userId': userId } : {}; // Filter based on userId if provided
 
   try {
-    const user = await Group.findById(groupId)
+    const group = await Group.findById(groupId)
       .populate('userIds.userId')
       .populate('userId')
       .populate('groupFrequencyId')
       .populate('groupInterestId')
       .populate('groupMemories.userId');
     
-    if (!user) {
+    if (!group) {
       return res.status(404).json({ error: "Request not found" });
     }
-    
-    const totalMemories = user.groupMemories.length;
-    const paginatedMemories = user.groupMemories.slice(page * limit, (page * limit) + limit); // Corrected pagination logic
 
-    user.groupMemories = paginatedMemories
+    // Apply filter to groupMemories if userId is passed
+    let filteredGroupMemories = group.groupMemories.filter(mem => 
+      !userId || String(mem.userId._id) === String(userId) // Compare userIds to filter groupMemories
+    );
+
+    // Pagination logic
+    const totalMemories = filteredGroupMemories.length;
+    const paginatedMemories = filteredGroupMemories.slice(page * limit, (page * limit) + limit);
+
+    group.groupMemories = paginatedMemories;
+
     res.status(200).json({
-      data: user,
-      members: user.userIds.length,
-      // Memories: paginatedMemories, // Paginated groupMemories
+      data: group,
+      members: group.userIds.length,
       pagination: {
-        totalMemories, // Total number of memories
-        currentPage: parseInt(page), // Current page number
-        totalPages: Math.ceil(totalMemories / limit), // Total number of pages
+        totalMemories, 
+        currentPage: parseInt(page), 
+        totalPages: Math.ceil(totalMemories / limit),
       }
     });
   } catch (error) {
@@ -579,6 +586,7 @@ exports.getGroupById = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 
 exports.updateGroup = async (req, res) => {

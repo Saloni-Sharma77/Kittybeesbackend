@@ -320,8 +320,29 @@ exports.signup = async (req, res) => {
     }
   };
 
-
+  exports.updateAllUsersReminderStatus = async (req, res) => {
+    try {
+      // Update all users to set reminder statuses to true
+      const result = await UsersModel.updateMany(
+        {}, // Empty filter to select all documents
+        {
+          $set: {
+            newKittyReminder: true,
+            communityReminder: true,
+            paymentReminder: true,
+          },
+        }
+      );
   
+      res.status(200).json({
+        success: true,
+        message: `${result.modifiedCount} user(s) updated successfully`,
+      });
+    } catch (error) {
+      console.error('Error updating reminder statuses:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
 // exports.updateUserImage = async (req, res) => {
 //   const { userId }  = req.params;
 //   const { image } = req.body;
