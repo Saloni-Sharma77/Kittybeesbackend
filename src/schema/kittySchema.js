@@ -46,6 +46,12 @@ kittyMemories:[{
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   memoryimage: { type: String }, 
   }],
+  kittyReviews: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, // Reviewer
+    rating: { type: Number, min: 1, max: 5, required: true },      // Star rating
+    comment: { type: String },                                    // Optional comment
+    checkboxOptions: [{ type: String }]                           // Checkbox selections
+  }],
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

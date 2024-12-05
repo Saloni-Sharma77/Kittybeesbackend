@@ -1126,3 +1126,32 @@ exports.getNearByKitty = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
+exports.submitKittyReview = async (req, res) => {
+  const kittyId = req.params.id; // Extract Kitty ID from route parameter
+  const reviewData = req.body;  // Extract review data from request body
+
+  try {
+    if (!kittyId) {
+      return res.status(400).json({ error: 'KittyId is required' });
+    }
+    if(!req.body.rating || !req.body.userId){
+      return res.status(400).json({ error: 'Rating and userId is required' });
+
+    }
+
+
+    // Update the Kitty with the new review
+    await Kitty.findByIdAndUpdate(
+      kittyId,
+      { $push: { kittyReviews: reviewData } },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({ success: true, message: 'Review Submitted Successfully' });
+  } catch (error) {
+    console.error('Error adding review:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

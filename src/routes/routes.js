@@ -3533,7 +3533,7 @@ router.get("/getAllKittys", kitty_controller.getAllKittys);
 router.get("/getKittyAttendance/:userId", kitty_controller.getKittyAttendance);
 router.get("/getAllKittyForMe/:userId", kitty_controller.getAllKittyForMe);
 router.post("/checkLatestVersion", kitty_controller.checkLatestVersion);
-
+router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 
 
