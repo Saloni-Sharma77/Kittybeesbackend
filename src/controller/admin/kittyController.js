@@ -976,31 +976,42 @@ exports.getKittyById = async (req, res) => {
 
 exports.getKittyMemoriesById = async (req, res) => {
   const kittyId = req.params.id;
-  const page = parseInt(req.query.page) || 0; // Default to page 1
+  const userId = req.params.userId; // Extract userId from params if provided
+  const page = parseInt(req.query.page) || 0; // Default to page 0
   const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
-  
   const skip = page * limit; // Calculate the number of items to skip based on the page
 
   try {
     const getKitty = await Kitty.findById(kittyId)
-    .populate("kittyMemories.userId", "fullname") // Select the fullname field
-    .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
+      .populate("kittyMemories.userId", "fullname") // Select the fullname field
+      .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
 
     if (!getKitty) {
       return res.status(404).json({ error: "Kitty not found" });
     }
 
-      const kittyMemories = getKitty.kittyMemories.slice(skip, skip + limit);
+    // Reorder memories: prioritize those uploaded by the given userId
+    let orderedMemories = getKitty.kittyMemories;
+    if (userId) {
+      const byUser = orderedMemories.filter(
+        (memory) => memory.userId?._id?.toString() === userId
+      );
+      const others = orderedMemories.filter(
+        (memory) => memory.userId?._id?.toString() !== userId
+      );
+      orderedMemories = [...byUser, ...others];
+    }
+
+    // Paginate the ordered memories
+    const paginatedMemories = orderedMemories.slice(skip, skip + limit);
 
     // Count the total number of memories for pagination information
-    const totalMemories = getKitty.kittyMemories.length;
+    const totalMemories = orderedMemories.length;
     const totalPages = Math.ceil(totalMemories / limit); // Calculate total pages
-
-
 
     res.status(200).json({
       message: "Kitty memories fetched successfully",
-      data: kittyMemories || [],
+      data: paginatedMemories || [],
       pagination: {
         currentPage: page,
         totalPages: totalPages,
@@ -1013,6 +1024,48 @@ exports.getKittyMemoriesById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// exports.getKittyMemoriesById = async (req, res) => {
+//   const kittyId = req.params.id;
+//   const userId = req.params.userId; // Extract userId from params if provided
+
+//   const page = parseInt(req.query.page) || 0; // Default to page 1
+//   const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+  
+//   const skip = page * limit; // Calculate the number of items to skip based on the page
+
+//   try {
+//     const getKitty = await Kitty.findById(kittyId)
+//     .populate("kittyMemories.userId", "fullname") // Select the fullname field
+//     .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
+
+//     if (!getKitty) {
+//       return res.status(404).json({ error: "Kitty not found" });
+//     }
+
+//       const kittyMemories = getKitty.kittyMemories.slice(skip, skip + limit);
+
+//     // Count the total number of memories for pagination information
+//     const totalMemories = getKitty.kittyMemories.length;
+//     const totalPages = Math.ceil(totalMemories / limit); // Calculate total pages
+
+
+
+//     res.status(200).json({
+//       message: "Kitty memories fetched successfully",
+//       data: kittyMemories || [],
+//       pagination: {
+//         currentPage: page,
+//         totalPages: totalPages,
+//         totalItems: totalMemories,
+//         itemsPerPage: limit,
+//       },
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 
 exports.deleteKittyById = async (req, res) => {
