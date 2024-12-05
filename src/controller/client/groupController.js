@@ -546,19 +546,40 @@ exports.addGroupMemories = async (req, res) => {
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
+  const { page = 0, limit = 10 } = req.query; // Default values for page and limit
 
   try {
-    const user = await Group.findById(groupId).populate('userIds.userId').populate('userId').populate('groupFrequencyId').populate('groupInterestId').populate('groupMemories.userId');
+    const user = await Group.findById(groupId)
+      .populate('userIds.userId')
+      .populate('userId')
+      .populate('groupFrequencyId')
+      .populate('groupInterestId')
+      .populate('groupMemories.userId');
+    
     if (!user) {
       return res.status(404).json({ error: "Request not found" });
     }
+    
+    const totalMemories = user.groupMemories.length;
+    const paginatedMemories = user.groupMemories.slice(page * limit, (page * limit) + limit); // Corrected pagination logic
 
-    res.status(200).json({data:user,members:user.userIds.length});
+    user.groupMemories = paginatedMemories
+    res.status(200).json({
+      data: user,
+      members: user.userIds.length,
+      // Memories: paginatedMemories, // Paginated groupMemories
+      pagination: {
+        totalMemories, // Total number of memories
+        currentPage: parseInt(page), // Current page number
+        totalPages: Math.ceil(totalMemories / limit), // Total number of pages
+      }
+    });
   } catch (error) {
-    console.error("Error fetching Group Request by ID:", error);
-    res.status(500).json({ error: "Failed to fetch user by ID" });
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 exports.updateGroup = async (req, res) => {
   try {
