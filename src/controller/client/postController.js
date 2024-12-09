@@ -48,11 +48,13 @@ exports.addPost = async (req, res) => {
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(notifications);
+    console.log(newPost._id,'newPost._id')
 
     const notificationMessage = `A new post has been created. Check it out!`;
     await sendPostCreatedNotifications({
       title: 'New Post Alert!',
       message: notificationMessage,
+      newPost: newPost._id,
       userIds: allActiveUsers.map(user => user._id),
     });
     res.status(201).json({ message: 'Post created successfully', data: newPost });

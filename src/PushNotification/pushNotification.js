@@ -166,8 +166,64 @@ async function sendPushNotificationsCreateMessage({ title, message, responseData
     }
 }
 
-async function sendPostCreatedNotifications({ title, message, postId, userIds }) {
+// async function sendPostCreatedNotifications({ title, message, postId, userIds }) {
+//     try {
+//         console.log(title, message, postId, userIds ,'nnnnnnnn')
+//         // Fetch FCM tokens for the specified users who use Android devices
+//         const userTokensDocs = await FcmModel.find({
+//             userId: { $in: userIds },
+//             deviceType: 'Android',
+//         });
+
+//         const userTokens = userTokensDocs.map((fcm) => fcm.fcmToken);
+
+//         if (userTokens.length === 0) {
+//             console.warn('No tokens found for the specified users.');
+//             return;
+//         }
+
+//         const payload = {
+//             notification: {
+//                 title: title,
+//                 body: message,
+//                 image: 'your_image_url', // Optional image URL if needed
+//             },
+//             data: {
+//                 route: 'post_details', // Route for navigating to post details
+//                 postId: String(postId), // Convert to string
+//                 title: title,
+//                 body: message,
+//             },
+//         };
+
+//         const options = {
+//             priority: "high",
+//         };
+
+//         // Send notifications to all tokens
+//         const response = await Promise.all(userTokens.map(token =>
+//             admin.messaging().send({
+//                 token: token,
+//                 notification: payload.notification,
+//                 data: payload.data,
+//                 android: {
+//                     priority: options.priority,
+//                 },
+//             })
+//         ));
+
+//         console.log('Push notifications sent successfully:', response);
+//         return response;
+//     } catch (error) {
+//         console.error('Error sending post creation notifications:', error);
+//         throw error;
+//     }
+// }
+
+async function sendPostCreatedNotifications({ title, message, newPost, userIds }) {
     try {
+        console.log(title, message, newPost, userIds ,'nnnnnnnn')
+
         // Fetch FCM tokens for the specified users who use Android devices
         const userTokensDocs = await FcmModel.find({
             userId: { $in: userIds },
@@ -185,39 +241,53 @@ async function sendPostCreatedNotifications({ title, message, postId, userIds })
             notification: {
                 title: title,
                 body: message,
-                image: 'your_image_url', // Optional image URL if needed
+                image: 'your_image_url', // Optional image URL
             },
             data: {
-                route: 'post_details', // Route for navigating to post details
-                postId: postId,
+                route: 'post_details',
+                newPost: newPost.toString(), // Convert to string as required
                 title: title,
                 body: message,
             },
         };
 
         const options = {
-            priority: "high",
+            priority: 'high',
         };
 
-        // Send notifications to all tokens
-        const response = await Promise.all(userTokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-            })
-        ));
+        const responses = await Promise.allSettled(
+            userTokens.map(token =>
+                admin.messaging().send({
+                    token: token,
+                    notification: payload.notification,
+                    data: payload.data,
+                    android: { priority: options.priority },
+                })
+            )
+        );
 
-        console.log('Push notifications sent successfully:', response);
-        return response;
+        // Filter out invalid tokens
+        const invalidTokens = [];
+        responses.forEach((result, index) => {
+            if (result.status === 'rejected' && result.reason.code === 'messaging/registration-token-not-registered') {
+                invalidTokens.push(userTokens[index]);
+            }
+        });
+
+        // Remove invalid tokens from the database
+        if (invalidTokens.length > 0) {
+            console.log(`Removing ${invalidTokens.length} invalid tokens.`);
+            await FcmModel.deleteMany({ fcmToken: { $in: invalidTokens } });
+        }
+
+        console.log('Push notifications sent successfully:', responses);
+        return responses;
     } catch (error) {
         console.error('Error sending post creation notifications:', error);
         throw error;
     }
 }
+
 
 
 module.exports = { sendPushNotifications,sendPushNotificationsCreateMessage ,sendPostCreatedNotifications};
