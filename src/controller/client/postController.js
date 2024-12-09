@@ -1,6 +1,7 @@
 const PostModel = require("../../schema/postSchema");
 const UserModel = require("../../schema/userSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
+const { sendPostCreatedNotifications } = require('../../PushNotification/pushNotification');
 
 // Add a new post
 exports.addPost = async (req, res) => {
@@ -22,13 +23,15 @@ exports.addPost = async (req, res) => {
     // Save the post to the database
     await newPost.save();
     //notification work starts here
-    const allActiveUsers = await UserModel.find({ isActive: true, _id: { $ne: userId } });
+    const allActiveUsers = await UserModel.find({ isActive: true,
+      newKittyReminder: true,
+      _id: { $ne: userId } });
 
     // Create notifications for all active users
     const notifications = allActiveUsers.map(user => ({
       userId: user._id,
       groupId: newPost._id,
-      message: `A new post has been created`,
+      message: `A new post has been created. Check it out!`,
       type: 'group',
     }));
 
@@ -46,7 +49,12 @@ exports.addPost = async (req, res) => {
     // Insert all notifications into the database
     await NotificationSchema.insertMany(notifications);
 
-
+    const notificationMessage = `A new post has been created. Check it out!`;
+    await sendPostCreatedNotifications({
+      title: 'New Post Alert!',
+      message: notificationMessage,
+      userIds: allActiveUsers.map(user => user._id),
+    });
     res.status(201).json({ message: 'Post created successfully', data: newPost });
   } catch (err) {
     console.error(err);
