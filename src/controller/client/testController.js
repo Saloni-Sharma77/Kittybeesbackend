@@ -23,7 +23,8 @@ exports.sendotptest = async (req, res) => {
       userData: userInfo,
     });
   }
-  const checkUserAlreadyLoggedIn = await User.findOne({phoneNumber})
+  const checkUserAlreadyLoggedIn = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
+
 
   if(checkUserAlreadyLoggedIn.verifiedBy == 'notyet'){
     try {
