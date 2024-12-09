@@ -17,9 +17,9 @@ async function sendPushNotifications({ title, message, userId }) {
 
         const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
 
-        if (userTokens.length === 0) {
-            throw new Error('No tokens found for the user');
-        }
+        // if (userTokens.length === 0) {
+        //     throw new Error('No tokens found for the user');
+        // }
 
         const payload = {
             notification: {

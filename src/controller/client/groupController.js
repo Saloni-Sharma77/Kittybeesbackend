@@ -104,12 +104,12 @@ exports.addGroup = async (req, res) => {
 
     // Ensure all tokens are valid, non-empty strings
     const tokens = fcmTokens
-      .map(tokenDoc => tokenDoc.fcmToken)
+      .map(tokenDoc => tokenDoc?.fcmToken)
       .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
 
     console.log(tokens, 'Filtered Tokens');
 
-    if (tokens.length > 0) {
+    if (tokens?.length > 0) {
       // Send notification to all the tokens
       await sendPushNotifications({
         title: 'Group Added', // Customize the title as needed
