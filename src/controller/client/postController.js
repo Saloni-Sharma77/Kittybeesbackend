@@ -125,7 +125,7 @@ exports.toggleLike = async (req, res) => {
     }
 
     // Check if the user has already liked the post
-    const likeIndex = post.likes.findIndex(like => like.toString() === userId);
+    const likeIndex = post.likes.findIndex(like => like?.toString() === userId);
 
     if (likeIndex !== -1) {
       // User has already liked the post, so unlike (remove the like)

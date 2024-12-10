@@ -39,85 +39,6 @@ exports.checkLatestVersion = async(req, res)=>{
   }
 }
 
-// exports.addKitty = async (req, res) => {
-//   try {
-//     const {
-//       name,
-//       groupId,
-//       userId,
-//       date,
-//       time,
-//       image,
-//       themeId,
-//       instructions,
-//       colorId,
-//       venueId,
-//       activityId,
-//       templateId,
-//       addressId,
-//       theamepoll,   // Updated to poll structure
-//       locationpoll, // Updated to poll structure
-//       venuepoll     // Updated to poll structure
-//     } = req.body;
-
-//     // Validate and structure the poll data
-//     const theamePollData = theamepoll ? {
-//       question: theamepoll.question,
-//       options: theamepoll.options.map(option => ({
-//         optionText: option.optionText,
-//         votes: option.votes || 0  // Default to 0 if not provided
-//       })),
-//       type: 'theampolls'
-//     } : null;
-
-//     const locationPollData = locationpoll ? {
-//       question: locationpoll.question,
-//       options: locationpoll.options.map(option => ({
-//         optionText: option.optionText,
-//         votes: option.votes || 0
-//       })),
-//       type: 'locationpolls'
-//     } : null;
-
-//     const venuePollData = venuepoll ? {
-//       question: venuepoll.question,
-//       options: venuepoll.options.map(option => ({
-//         optionText: option.optionText,
-//         votes: option.votes || 0
-//       })),
-//       type: 'venuepolls'
-//     } : null;
-
-//     // Create new Kitty with poll data
-//     const newKitty = new Kitty({
-//       name,
-//       groupId,
-//       userId,
-//       date,
-//       time,
-//       image,
-//       themeId,
-//       instructions,
-//       colorId,
-//       venueId,
-//       activityId,
-//       templateId,
-//       addressId,
-//       theamepoll: theamePollData,   // Add structured poll data
-//       locationpoll: locationPollData, // Add structured poll data
-//       venuepoll: venuePollData,     // Add structured poll data
-//     });
-
-//     // Save the new Kitty to the database
-//     await newKitty.save();
-
-//     // Send success response
-//     res.status(201).json({ message: "Kitty added successfully", data: newKitty });
-//   } catch (err) {
-//     console.error("Error adding kitty", err);
-//     res.status(500).json({ error: "Failed to add kitty" });
-//   }
-// };
 
 exports.addKitty = async (req, res) => {
   try {
@@ -408,35 +329,6 @@ exports.getAllKittys = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-// exports.getKittyAttendance = async (req, res) => {
-//   try {
-//       const { userId } = req.params; // Assuming userId is passed as a route parameter
-
-//       // Find the kitty where the userId is inside the members array
-//       let kittyincludes = await Kitty.find({
-//           members: {
-//               $elemMatch: { userId }  // Find kitty with this userId in the members array
-//           }
-//       });
-
-//       if (!kittyincludes) {
-//           return res.status(404).json({ message: "Kitty not found for this user" });
-//       }
-
-//       // Filter members where status is 'approved'
-//       const approvedMembers = kittyincludes.members.filter(member => member.status === 'approved');
-
-//       // Get the count of approved members
-//       const approvedCount = approvedMembers.length;
-
-//       // Respond with the count and kitty details
-//       res.status(200).json({counts :approvedCount || 0});
-//   } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ message: "Server error", error });
-//   }
-// };
 
 exports.getKittyAttendance = async (req, res) => {
   try {
