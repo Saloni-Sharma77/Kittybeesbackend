@@ -186,9 +186,13 @@ exports.getAllGroups = async (req, res) => {
     ...group.toObject(),
     userCount: group.userIds.length, // Add userCount to each group object
     groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
+      console.log(group.userIds,'memmmmm1111')
+
       const member = group.userIds.find(
-        member => member?.userId?.toString() === userId
+        // console.log()
+        mem => mem?.userId?._id?.toString() == userId?.toString()
       );
+      console.log(member,'memmmmm')
   
       if (member) {
         return member.status === "approved"
