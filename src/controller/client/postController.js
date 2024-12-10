@@ -24,7 +24,7 @@ exports.addPost = async (req, res) => {
     await newPost.save();
     //notification work starts here
     const allActiveUsers = await UserModel.find({ isActive: true,
-      newKittyReminder: true,
+      communityReminder: true,
       _id: { $ne: userId } });
 
     // Create notifications for all active users
@@ -57,6 +57,40 @@ exports.addPost = async (req, res) => {
       userIds: allActiveUsers.map(user => user._id),
     });
     res.status(201).json({ message: 'Post created successfully', data: newPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+// Like or Unlike a Post
+exports.toggleLike = async (req, res) => {
+  try {
+    const { postId, userId } = req.body;
+
+    // Find the post by ID
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if the user has already liked the post
+    const likeIndex = post.likes.findIndex(like => like?.toString() === userId);
+
+    if (likeIndex !== -1) {
+      // User has already liked the post, so unlike (remove the like)
+      post.likes.splice(likeIndex, 1);
+    } else {
+      // User has not liked the post yet, so add the like
+      post.likes.push(userId);
+    }
+
+    // Save the updated post
+    await post.save();
+
+    res.status(200).json({ message: 'Like status updated successfully', post });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
@@ -112,38 +146,6 @@ exports.voteForPost = async (req, res) => {
   }
 };
 
-// Like or Unlike a Post
-exports.toggleLike = async (req, res) => {
-  try {
-    const { postId, userId } = req.body;
-
-    // Find the post by ID
-    const post = await PostModel.findById(postId);
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-
-    // Check if the user has already liked the post
-    const likeIndex = post.likes.findIndex(like => like?.toString() === userId);
-
-    if (likeIndex !== -1) {
-      // User has already liked the post, so unlike (remove the like)
-      post.likes.splice(likeIndex, 1);
-    } else {
-      // User has not liked the post yet, so add the like
-      post.likes.push(userId);
-    }
-
-    // Save the updated post
-    await post.save();
-
-    res.status(200).json({ message: 'Like status updated successfully', post });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
 
 
 // Add a comment to a post
