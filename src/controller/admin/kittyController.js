@@ -59,6 +59,8 @@ exports.addKitty = async (req, res) => {
       theamepoll,
       locationpoll,
       venuepoll,
+      planKittypoll,
+
     } = req.body;
 
     // Validation checks
@@ -114,6 +116,17 @@ exports.addKitty = async (req, res) => {
         }
       : null;
 
+      const planKittyPollData = planKittypoll
+      ? {
+          question: planKittypoll.question,
+          options: planKittypoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "planKittypolls",
+        }
+      : null;
+
     // Create new Kitty with poll data
     const newKitty = new Kitty({
       name,
@@ -132,6 +145,7 @@ exports.addKitty = async (req, res) => {
       theamepoll: theamePollData,
       locationpoll: locationPollData,
       venuepoll: venuePollData,
+      planKittypoll: planKittyPollData,
     });
 
     // Save the new Kitty to the database
@@ -1087,13 +1101,14 @@ exports.submitKittyReview = async (req, res) => {
 
 
     // Update the Kitty with the new review
-    await Kitty.findByIdAndUpdate(
+   let kittyData =  await Kitty.findByIdAndUpdate(
       kittyId,
       { $push: { kittyReviews: reviewData } },
       { new: true, runValidators: true }
     );
+    console.log(kittyData,'kkkkkkk')
 
-    return res.status(200).json({ success: true, message: 'Review Submitted Successfully' });
+    return res.status(200).json({kittyData, success: true, message: 'Review Submitted Successfully' });
   } catch (error) {
     console.error('Error adding review:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
