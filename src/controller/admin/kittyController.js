@@ -655,8 +655,11 @@ exports.joinKitty = async (req, res) => {
     // Save the notification
     await adminNotification.save();
     const fcmTokens = await FcmToken.find({ userId: kitty.userId,deviceType: 'Android',});
+    // const tokens = fcmTokens
+    // .map(tokenDoc => tokenDoc.fcmToken)
     const tokens = fcmTokens
-    .map(tokenDoc => tokenDoc.fcmToken)
+    .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
+    .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
   
         const payload = {
           notification: {
@@ -767,9 +770,14 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
 
     await userNotification.save();
     const fcmTokens = await FcmToken.find({ userId: userId,deviceType: 'Android',});
-    const tokens = fcmTokens
-    .map(tokenDoc => tokenDoc.fcmToken)
+    // const tokens = fcmTokens
+    // .map(tokenDoc => tokenDoc.fcmToken)
   
+    const tokens = fcmTokens
+  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
+  .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
+
+
         const payload = {
           notification: {
               title: findWhichKitty.name,

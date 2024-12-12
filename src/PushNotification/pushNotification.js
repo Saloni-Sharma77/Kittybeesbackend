@@ -15,7 +15,11 @@ async function sendPushNotifications({ title, message, userId }) {
 
         console.log(userTokensDoc, 'Tokens for the user');
 
-        const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
+        // const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
+        const userTokens = userTokensDoc
+    .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
+    .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+
 
         // if (userTokens.length === 0) {
         //     throw new Error('No tokens found for the user');
@@ -178,7 +182,11 @@ async function sendPostCreatedNotifications({ title, message, newPost, userIds }
             deviceType: 'Android',
         });
 
-        const userTokens = userTokensDocs.map((fcm) => fcm.fcmToken);
+        // const userTokens = userTokensDocs.map((fcm) => fcm.fcmToken);
+        const userTokens = userTokensDocs
+    .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
+    .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+
 
         if (userTokens.length === 0) {
             console.warn('No tokens found for the specified users.');

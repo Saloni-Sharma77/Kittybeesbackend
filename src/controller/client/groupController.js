@@ -103,9 +103,13 @@ exports.addGroup = async (req, res) => {
     console.log(fcmTokens, 'ffffff');
 
     // Ensure all tokens are valid, non-empty strings
+    // const tokens = fcmTokens
+    //   .map(tokenDoc => tokenDoc?.fcmToken)
+    //   .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
     const tokens = fcmTokens
-      .map(tokenDoc => tokenDoc?.fcmToken)
-      .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
+  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of fcmTokens
+  .filter((token) => token && token.trim() !== ''); // Ensure tokens are valid and non-empty
+
 
     console.log(tokens, 'Filtered Tokens');
 
