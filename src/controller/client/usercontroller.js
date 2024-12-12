@@ -6,7 +6,6 @@ const UsersModel = require("../../schema/userSchema");
 
 const FcmToken = require('../../schema/FcmSchema');
 
-
 exports.addOrUpdateFcmToken = async (req, res) => {
   const { userId, deviceType, fcmToken } = req.body;
 
@@ -15,22 +14,73 @@ exports.addOrUpdateFcmToken = async (req, res) => {
   }
 
   try {
-    const result = await FcmToken.findOneAndUpdate(
-      { userId, deviceType },
-      { fcmToken, updatedAt: new Date() },
-      { upsert: true, new: true }
-    );
+    const record = await FcmToken.findOne({ userId, deviceType });
 
-    return res.status(200).json({
+    if (record) {
+      // Check if the fcmToken already exists
+      const tokenExists = record.fcmToken.includes(fcmToken);
+
+      if (!tokenExists) {
+        // Add new token to the array
+        record.fcmToken.push(fcmToken);
+      }
+
+      // Update the `updatedAt` field
+      record.updatedAt = new Date();
+      await record.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'FCM Token added/updated successfully',
+        data: record,
+      });
+    }
+
+    // If no record exists, create a new one
+    const result = new FcmToken({
+      userId,
+      deviceType,
+      fcmToken: [fcmToken], // Initialize as an array
+    });
+
+    await result.save();
+
+    return res.status(201).json({
       success: true,
       message: 'FCM Token added/updated successfully',
       data: result,
     });
   } catch (error) {
     console.error('Error adding/updating FCM token:', error);
-    return res.status(500).json({ success: false, message: 'Failed to add/update FCM Token', error: error.message });
+     return res.status(500).json({ success: false, message: 'Failed to add/update FCM Token', error: error.message });
   }
 };
+
+
+// exports.addOrUpdateFcmToken = async (req, res) => {
+//   const { userId, deviceType, fcmToken } = req.body;
+
+//   if (!userId || !deviceType || !fcmToken) {
+//     return res.status(400).json({ success: false, message: 'Missing required fields: userId, deviceType, or fcmToken' });
+//   }
+
+//   try {
+//     const result = await FcmToken.findOneAndUpdate(
+//       { userId, deviceType },
+//       { fcmToken, updatedAt: new Date() },
+//       { upsert: true, new: true }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'FCM Token added/updated successfully',
+//       data: result,
+//     });
+//   } catch (error) {
+//     console.error('Error adding/updating FCM token:', error);
+//     return res.status(500).json({ success: false, message: 'Failed to add/update FCM Token', error: error.message });
+//   }
+// };
 
 
 
