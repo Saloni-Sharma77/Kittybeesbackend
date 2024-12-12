@@ -60,6 +60,8 @@ exports.addKitty = async (req, res) => {
       locationpoll,
       venuepoll,
       planKittypoll,
+      activityKittypoll,
+
 
     } = req.body;
 
@@ -127,6 +129,17 @@ exports.addKitty = async (req, res) => {
         }
       : null;
 
+      const activityKittyPollData = activityKittypoll
+      ? {
+          question: activityKittypoll.question,
+          options: activityKittypoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "activityKittypolls",
+        }
+      : null;
+
     // Create new Kitty with poll data
     const newKitty = new Kitty({
       name,
@@ -146,6 +159,8 @@ exports.addKitty = async (req, res) => {
       locationpoll: locationPollData,
       venuepoll: venuePollData,
       planKittypoll: planKittyPollData,
+      activityKittypoll: activityKittyPollData,
+
     });
 
     // Save the new Kitty to the database

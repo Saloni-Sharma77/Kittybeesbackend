@@ -16,7 +16,7 @@ const pollSchema = new mongoose.Schema({
   }],
   type: {
     type: String,
-    enum: ['theampolls', 'locationpolls', 'venuepolls','planKittypolls'],
+    enum: ['theampolls', 'locationpolls', 'venuepolls','planKittypolls','activityKittypolls'],
   }
 }, { _id: false }); // _id: false to prevent creating an additional _id for the embedded schema
 
@@ -29,7 +29,7 @@ const KittySchema = new mongoose.Schema({
   locationpoll: { type: pollSchema, default: null }, // Embed the poll schema
   venuepoll: { type: pollSchema, default: null }, // Embed the poll schema
   planKittypoll: { type: pollSchema, default: null }, // Embed the poll schema
-
+  activityKittypoll: { type: pollSchema, default: null }, // Embed the poll schema
   date: { type: String },
   time: { type: String },
   instructions: { type: String },

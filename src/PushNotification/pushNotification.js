@@ -16,9 +16,9 @@ async function sendPushNotifications({ title, message, userId }) {
         console.log(userTokensDoc, 'Tokens for the user');
 
         // const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
-        const userTokens = userTokensDoc
-    .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
-    .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+            const userTokens = userTokensDoc
+        .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
+        .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
 
 
         // if (userTokens.length === 0) {
@@ -33,8 +33,8 @@ async function sendPushNotifications({ title, message, userId }) {
             },
             data: {
                 route: 'your_route', 
-                title: title,
-                body: message,
+                title: title, 
+                body: message, 
             },
         };
 
@@ -61,51 +61,7 @@ async function sendPushNotifications({ title, message, userId }) {
         throw error;
     }
 }
-// async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
-//     try {
-//         if (!userTokens || userTokens.length === 0) {
-//             throw new Error('No tokens found for the user');
-//         }
 
-//         const payload = {
-//             notification: {
-//                 title: title,
-//                 body: message,
-//                 image: 'your_image_url', // Optional: replace with actual image URL if needed
-//             },
-//             data: {
-//                 route: 'your_route', // Adjust to the route you need to pass
-//                 title: title,
-//                 body: message,
-//                 ...responseData, // Pass additional data if required
-//             },
-//         };
-
-//         const options = {
-//             android: {
-//                 priority: "high",
-//             },
-//         };
-
-//         // Send notifications to all tokens in parallel
-//         const responses = await Promise.all(
-//             userTokens.map(token =>
-//                 admin.messaging().send({
-//                     token: token,
-//                     notification: payload.notification,
-//                     data: payload.data,
-//                     android: options.android,
-//                 })
-//             )
-//         );
-
-//         console.log('Notifications sent successfully:', responses);
-//         return responses;
-//     } catch (error) {
-//         console.error('Error sending push notifications:', error.message);
-//         throw error;
-//     }
-// }
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
 
