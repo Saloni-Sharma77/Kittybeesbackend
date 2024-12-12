@@ -71,7 +71,10 @@ exports.createMessage = async (req, res) => {
   });
   
 
-    const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
+    // const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
+    const tokens = fcmTokens
+  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of tokens
+  .filter(Boolean); // Remove null or undefined values
 
     // Prepare response
     const response = {
