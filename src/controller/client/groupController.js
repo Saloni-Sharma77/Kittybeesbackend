@@ -879,70 +879,7 @@ exports.getEligibleUsersAndWinners = async (req, res) => {
 };
 
 
-
-// Function to perform spin
-// exports.performSpin = async (req, res) => {
-//   try {
-//     const groupId = req.params.groupId;
-
-//     // Fetch the group by ID and populate userId in userIds
-//     const group = await Group.findById(groupId).populate({
-//       path: 'userIds.userId', // Populate userId field in userIds
-//       select: 'fullname' // Select only the fullName field
-//     });
-
-//     if (!group) {
-//       return res.status(404).json({ message: "Group not found" });
-//     }
-
-//     // Get userIds with status "approved"
-//     const userIds = group.userIds
-//       .filter(user => user.status === 'approved') // Only approved users
-//       .map(user => user.userId) // Extract the userId objects
-//       .filter(Boolean); // Ensure valid userIds
-
-//     // Get previous winners from the group or initialize if not present
-//     let winners = group.winners || []; // Winners should be stored in the group
-
-//     // Exclude previous winners from eligible users
-//     const eligibleUsers = userIds.filter(user => 
-//       !winners.some(winner => winner.userId.toString() === user._id.toString())
-//     );
-
-//     // Check if there are any eligible users left
-//     if (eligibleUsers.length === 0) {
-//       return res.status(200).json({ message: "No eligible users left to spin." });
-//     }
-
-//     // Select one random user for the spin
-//     const randomIndex = Math.floor(Math.random() * eligibleUsers.length);
-//     const selectedUser = eligibleUsers[randomIndex];
-
-//     // Assign winner number based on the number of users already in the winners list
-//     const winnerNumber = winners.length + 1;
-
-//     // Add the selected user to the winners list and assign them the winner number
-//     winners.push({ userId: selectedUser._id,fullName: selectedUser.fullname, winnerNumber });
-
-//     // Save the updated group with the new winner
-//     group.winners = winners;
-//     await group.save();
-
-//     // Return the spin result including the selected user's full name
-//     res.status(200).json({
-//       message: "Spin completed successfully",
-//       spinResult: { 
-//         winnerUserId: selectedUser._id, 
-//         fullName: selectedUser.fullname, // Include full name
-//         winnerNumber 
-//       },
-//       allWinners: winners // Returning all winners so far for clarity
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
+//perform spin the wheel
 exports.performSpin = async (req, res) => {
   try {
     const { groupId, userId } = req.params; // Extract groupId and userId from the request parameters
@@ -1007,12 +944,31 @@ exports.performSpin = async (req, res) => {
     group.winners = winners;
     await group.save();
 
+      //save the notification start
+      const approvedUserIds = group.userIds
+      .filter(item => item?.status === 'approved')
+      .map(item => item?.userId);
+
+    const userNotifications = approvedUserIds.map(userId => ({
+      userId,
+      groupId: group?._id,
+      type: 'group',
+      message: `${selectedUser?.fullname} is the new host of ${group.name}`,
+    }));
+    const allNotifications = [...userNotifications];
+
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(allNotifications);
+    
+  //notification done
+
+
     // Return the spin result including the selected user's full name
     res.status(200).json({
       message: "Spin completed successfully",
       spinResult: { 
-        winnerUserId: selectedUser._id, 
-        fullName: selectedUser.fullname, 
+        winnerUserId: selectedUser?._id, 
+        fullName: selectedUser?.fullname, 
         winnerNumber 
       },
       allWinners: winners
