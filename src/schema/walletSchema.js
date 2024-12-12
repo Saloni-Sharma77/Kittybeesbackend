@@ -7,6 +7,10 @@ const walletSchema = new Schema({
     ref: 'Users',
     required: true
   },
+  receiverId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Users',
+  },
   groupId: {
     type: Schema.Types.ObjectId,
     ref: 'groups',

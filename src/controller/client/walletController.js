@@ -106,6 +106,7 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
   try {
     const {
       userId,
+      receiverId,
       groupId,
       kittyId,
       amount,
@@ -129,6 +130,7 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
     const newExpense = new WalletModel({
       userId,
       groupId,
+      receiverId,
       kittyId,
       amount,
       transactionType,
@@ -162,6 +164,7 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
     // Fetch all transactions related to the given kittyId
     const transactions = await WalletModel.find({ kittyId })
       .populate("userId")
+      .populate("receiverId","fullname profileImage")
       .populate("kittyId", "name image")
       .populate("groupId", "name");
 
