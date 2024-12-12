@@ -75,6 +75,8 @@ exports.toggleLike = async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
+    const user = await UserModel.findById(userId);
+
 
     // Check if the user has already liked the post
     const likeIndex = post.likes.findIndex(like => like?.toString() === userId);
@@ -89,6 +91,51 @@ exports.toggleLike = async (req, res) => {
 
     // Save the updated post
     await post.save();
+ // Determine if the user is liking or unliking
+    const isLiked = likeIndex === -1;
+
+    // Notification message based on the action
+    const action = isLiked ? 'liked' : 'disliked';
+    const notificationMessage = `${user.fullName} ${action} your post.`;
+
+    // Notification for the post creator
+    const creatorNotification = {
+      userId: post.userId, // Post creator's userId
+      groupId: postId,
+      message: notificationMessage,
+      type: 'group',
+      createdBy: userId,
+    };
+
+    // Insert the notification for the post creator
+    await NotificationSchema.create(creatorNotification);
+
+    // Notify all active users (excluding the user who performed the action)
+    const allActiveUsers = await UserModel.find({
+      isActive: true,
+      communityReminder: true,
+      _id: { $ne: userId },
+    });
+
+    const generalNotificationMessage = `${user?.fullname} ${action} a post. Check it out!`;
+
+    const notifications = allActiveUsers.map(activeUser => ({
+      userId: activeUser._id,
+      groupId: postId,
+      message: generalNotificationMessage,
+      type: 'group',
+      createdBy: userId,
+    }));
+
+    // Insert notifications for all active users
+    await NotificationSchema.insertMany(notifications);
+
+    await sendPostCreatedNotifications({
+      title: 'Post Alert!',
+      message: generalNotificationMessage,
+      newPost: post._id,
+      userIds: allActiveUsers.map(user => user._id),
+    });
 
     res.status(200).json({ message: 'Like status updated successfully', post });
   } catch (err) {

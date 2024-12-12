@@ -170,6 +170,7 @@ async function sendPushNotificationsCreateMessage({ title, message, responseData
 
 async function sendPostCreatedNotifications({ title, message, newPost, userIds }) {
     try {
+        console.log(title, message, newPost, userIds,'dssssssssssssssssssss')
 
         // Fetch FCM tokens for the specified users who use Android devices
         const userTokensDocs = await FcmModel.find({
@@ -213,19 +214,8 @@ async function sendPostCreatedNotifications({ title, message, newPost, userIds }
             )
         );
 
-        // Filter out invalid tokens
-        const invalidTokens = [];
-        responses.forEach((result, index) => {
-            if (result.status === 'rejected' && result.reason.code === 'messaging/registration-token-not-registered') {
-                invalidTokens.push(userTokens[index]);
-            }
-        });
-
         // Remove invalid tokens from the database
-        if (invalidTokens.length > 0) {
-            console.log(`Removing ${invalidTokens.length} invalid tokens.`);
-            await FcmModel.deleteMany({ fcmToken: { $in: invalidTokens } });
-        }
+      
 
         console.log('Push notifications sent successfully:', responses);
         return responses;

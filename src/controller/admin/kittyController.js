@@ -153,7 +153,7 @@ exports.addKitty = async (req, res) => {
 
     //notification work------------>>>
     // Fetch group details to get userIds
-    const group = await GroupSchema.findById(groupId).select("userIds name contributionAmount");
+    const group = await GroupSchema.findById(groupId).select("userIds name contributionAmount").populate('userIds.userId','fullname');
 
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
@@ -169,14 +169,22 @@ exports.addKitty = async (req, res) => {
 
 
     // Create notifications for all users in the group
+    // const userNotifications = group.userIds.map((user) => ({
+    //   userId: user.userId, // assuming userIds is an array of objects with userId field
+    //   groupId: groupId,
+    //   kittyId: newKitty._id,
+    //   message: `A new kitty has been created in your group: ${newKitty.name}`,
+    //   type: "kitty",
+    // }));
+    console.log(group?.userIds,'cccccccccccccccccccccccccccccc')
     const userNotifications = group.userIds.map((user) => ({
-      userId: user.userId, // assuming userIds is an array of objects with userId field
-      groupId: groupId,
+      userId: newKitty?.userId, // assuming userIds is an array of objects with userId field
+      requestUserId: user?.userId,
       kittyId: newKitty._id,
-      message: `A new kitty has been created in your group: ${newKitty.name}`,
-      type: "kitty",
+      message: `${user?.fullname} has requested to join your Kitty: ${newKitty?.name}`,
+      type: "kitty-join-request",
     }));
-
+  
     // Combine notifications for the creator and the group users
     const allNotifications = [creatorNotification, ...userNotifications];
 
