@@ -177,7 +177,20 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
     }
 
     // Group transactions by date
+    let expenseTotal = 0;
+    let contributionTotal = 0;
+
+
     const groupedByDate = transactions.reduce((result, transaction) => {
+      if(transaction?.transactionType == 'Expense'){
+        expenseTotal +=  transaction?.amount;
+        console.log(transaction.expenseTotal,'transactionExpense')
+
+      }
+      if(transaction?.transactionType == 'Contribution'){
+        contributionTotal +=  transaction?.amount;
+        
+      }
       // Format the date to 'YYYY-MM-DD' format to ignore time part
       const date = moment(transaction.date).format("YYYY-MM-DD");
       // Initialize array if date key does not exist
@@ -188,6 +201,7 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
       result[date].push(transaction);
       return result;
     }, {});
+    console.log(groupedByDate,'groupedByDate',expenseTotal,contributionTotal)
 
     // Convert grouped object to an array format if preferred
     const groupedArray = Object.entries(groupedByDate).map(
@@ -196,11 +210,17 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
         transactions,
       })
     );
+    total={
+      expenseTotal:expenseTotal,
+      contributionTotal:contributionTotal
+      
+    }
 
     // Send a success response with grouped transactions
     res.status(200).json({
       message: "Transactions retrieved successfully",
       data: groupedArray,
+      total:total
     });
   } catch (error) {
     console.error(error);
