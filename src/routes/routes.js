@@ -6461,6 +6461,11 @@ router.post('/addExpenseAndContributionForKitty',wallet_Controller.addExpenseAnd
 router.get('/getAllWalletTransactionsForKitty/:kittyId',wallet_Controller.getAllWalletTransactionsForKitty);
 router.get('/getAllWalletTransactionsForUser/:userId',wallet_Controller.getAllWalletTransactionsForUser);
 router.get('/getAllWalletTransactionHistory/:userId',wallet_Controller.getAllWalletTransactionHistory);
+router.get('/getWalletCategory',wallet_Controller.getWalletCategory);
+router.post('/addWalletCategory',wallet_Controller.addWalletCategory);
+
+
+
 
 
 

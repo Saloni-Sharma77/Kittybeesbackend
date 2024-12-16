@@ -33,7 +33,15 @@ const walletSchema = new Schema({
   },
   description: {
     type: String,
-  }
+  },
+  invoice: {
+    type: String,
+  },
+  walletCategoryId: {
+    type: Schema.Types.ObjectId,
+    ref: 'walletCategory',
+  },
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Wallet', walletSchema);

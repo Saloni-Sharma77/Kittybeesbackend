@@ -1,4 +1,6 @@
 const WalletModel = require("../../schema/walletSchema");
+const WalletCategeorymodel = require("../../schema/WalletCategorySchema");
+
 const moment = require("moment"); // Add moment.js to handle date formatting
 const mongoose = require("mongoose");
 
@@ -64,6 +66,40 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
     });
   }
 };
+
+exports.addWalletCategory = async(req, res)=>{
+    try {
+      const {
+      name
+      } = req.body;
+      const wallcat = new WalletCategeorymodel({
+      name
+      });
+      await wallcat.save();
+  
+      res
+        .status(201)
+        .json({ message: "added successfully"});
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "An error occurred while adding" });
+    }
+}
+
+exports.getWalletCategory = async(req, res)=>{
+  try{
+    const wallCat = await WalletCategeorymodel.find()
+    return  res.status(200).json({
+      data: wallCat
+    });
+
+  }catch(err){
+    return  res.status(500).json({
+      error: "An error occurred while fetching",
+    });
+  }
+}
 
 
 
@@ -172,6 +208,8 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
     const {
       userId,
       receiverId,
+      invoice,
+      walletCategoryId,
       groupId,
       kittyId,
       amount,
@@ -196,6 +234,8 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       userId,
       groupId,
       receiverId,
+      walletCategoryId,
+      invoice,
       kittyId,
       amount,
       transactionType,
