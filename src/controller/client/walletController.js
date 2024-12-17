@@ -77,69 +77,6 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
 };
 
 
-// exports.getAllWalletTransactionHistory = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { type } = req.query;
-
-//     console.log("Received userId:", userId);
-//     console.log("Received type:", type); // Debug type parameter
-
-//     // Validate userId
-//     let userObjectId;
-//     try {
-//       userObjectId = new mongoose.Types.ObjectId(userId);
-//     } catch (err) {
-//       return res.status(400).json({ error: "Invalid userId format" });
-//     }
-
-//     // Define the query condition based on type
-//     const queryCondition = { userId: userObjectId };
-//     if (type) {
-//       queryCondition.transactionType = type; // Match with `type` directly
-//     }
-
-//     console.log("Query Condition:", queryCondition); // Debug query condition
-
-//     const transactions = await WalletModel.find(queryCondition)
-//       .populate("userId")
-//       .populate("kittyId", "name image")
-//       .populate("groupId", "name")
-//       .populate('walletCategoryId','name')
-
-//     if (!transactions.length) {
-//       return res
-//         .status(404)
-//         .json({ message: "No transactions found for this query" });
-//     }
-
-//     const groupedByDate = transactions.reduce((result, transaction) => {
-//       const date = moment(transaction.date).format("YYYY-MM-DD");
-//       if (!result[date]) {
-//         result[date] = [];
-//       }
-//       result[date].push(transaction);
-//       return result;
-//     }, {});
-
-//     const groupedArray = Object.entries(groupedByDate).map(
-//       ([date, transactions]) => ({
-//         date,
-//         transactions,
-//       })
-//     );
-
-//     res.status(200).json({
-//       message: "Transactions fetched successfully",
-//       data: groupedArray,
-//     });
-//   } catch (error) {
-//     console.error("Error:", error); // Log the actual error
-//     res.status(500).json({
-//       error: "An error occurred while fetching transaction history",
-//     });
-//   }
-// };
 
 exports.addWalletCategory = async(req, res)=>{
     try {
@@ -177,57 +114,6 @@ exports.getWalletCategory = async(req, res)=>{
 
 
 
-// exports.getAllWalletTransactionHistory = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-
-//     // Validate userId
-//     let userObjectId;
-//     try {
-//       userObjectId = new mongoose.Types.ObjectId(userId);
-//     } catch (err) {
-//       return res.status(400).json({ error: "Invalid userId format" });
-//     }
-
-//     const transactions = await WalletModel.find({ userId: userObjectId })
-//       .populate("userId")
-//       .populate("kittyId", "name image")
-//       .populate("groupId", "name");
-
-//     if (!transactions.length) {
-//       return res
-//         .status(404)
-//         .json({ message: "No transactions found for this kittyId" });
-//     }
-
-//     const groupedByDate = transactions.reduce((result, transaction) => {
-//       const date = moment(transaction.date).format("YYYY-MM-DD");
-//       if (!result[date]) {
-//         result[date] = [];
-//       }
-//       result[date].push(transaction);
-//       return result;
-//     }, {});
-
-//     // Convert grouped object to an array format if preferred
-//     const groupedArray = Object.entries(groupedByDate).map(
-//       ([date, transactions]) => ({
-//         date,
-//         transactions,
-//       })
-//     );
-
-//     res.status(200).json({
-//       message: "Totals fetched successfully",
-//       data: groupedArray,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       error: "An error occurred while fetching getAllWalletTransactionOfUser",
-//     });
-//   }
-// };
-
 exports.getAllWalletTransactionsForUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -254,15 +140,31 @@ exports.getAllWalletTransactionsForUser = async (req, res) => {
     // Prepare the response structure
     const response = {
       totalContributions: 0,
+      totalTransactionContributions: 0,
       totalExpenses: 0,
+      totalTransactionExpenses: 0,
     };
+    let totalcontrTrans = await WalletModel.aggregate([
+      { $match: { userId: userObjectId,transactionType:'Contribution' } },
+      { $count: "total" }
+    ]);
+
+    let totalexpTrans = await WalletModel.aggregate([
+      { $match: { userId: userObjectId,transactionType:'Expense' } },
+      { $count: "total" }
+    ]);
 
     // Process the totals to get contributions and expenses
     totals.forEach((transaction) => {
       if (transaction._id === "Contribution") {
         response.totalContributions = transaction.totalAmount;
+        response.totalTransactionContributions = totalcontrTrans?.length ? totalcontrTrans[0]?.total : 0;
+
       } else if (transaction._id === "Expense") {
         response.totalExpenses = transaction.totalAmount;
+        response.totalTransactionExpenses =  totalexpTrans?.length ? totalexpTrans[0]?.total : 0;;
+
+        
       }
     });
 
