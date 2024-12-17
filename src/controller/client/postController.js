@@ -38,7 +38,7 @@ exports.addPost = async (req, res) => {
     // Add a notification for the post creator
     const creatorNotification = {
       userId, // Post creator's userId
-      groupId: newPost._id,
+      postId: newPost._id,
       message: `You have successfully created the post`,
       type: 'group',
     };
@@ -53,7 +53,7 @@ exports.addPost = async (req, res) => {
     await sendPostCreatedNotifications({
       title: 'New Post Alert!',
       message: notificationMessage,
-      newPost: newPost._id,
+      postId: newPost._id,
       userIds: allActiveUsers.map(user => user._id),
     });
     res.status(201).json({ message: 'Post created successfully', data: newPost });
@@ -101,7 +101,7 @@ exports.toggleLike = async (req, res) => {
     // Notification for the post creator
     const creatorNotification = {
       userId: post.userId, // Post creator's userId
-      groupId: postId,
+      postId: postId,
       message: notificationMessage,
       type: 'group',
       createdBy: userId,
@@ -121,7 +121,7 @@ exports.toggleLike = async (req, res) => {
 
     const notifications = allActiveUsers.map(activeUser => ({
       userId: activeUser._id,
-      groupId: postId,
+      postId: postId,
       message: generalNotificationMessage,
       type: 'group',
       createdBy: userId,
@@ -133,7 +133,7 @@ exports.toggleLike = async (req, res) => {
     await sendPostCreatedNotifications({
       title: 'Post Alert!',
       message: generalNotificationMessage,
-      newPost: post._id,
+      postId: post._id,
       userIds: allActiveUsers.map(user => user._id),
     });
 

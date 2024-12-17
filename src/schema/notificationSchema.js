@@ -5,11 +5,12 @@ const NotificationSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users'},
     groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'groups' },
+    postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
     kittyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Kitty' },
     requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     message: { type: String},
     type: {type:String,
-      enum: ['group', 'kitty', 'message','group-join-request','kitty-join-request'], 
+      enum: ['group', 'kitty', 'message','group-join-request','kitty-join-request','post'], 
     },
     status: { 
       type: String, 

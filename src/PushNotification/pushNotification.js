@@ -128,9 +128,9 @@ async function sendPushNotificationsCreateMessage({ title, message, responseData
 
 
 
-async function sendPostCreatedNotifications({ title, message, newPost, userIds }) {
+async function sendPostCreatedNotifications({ title, message, postId, userIds }) {
     try {
-        console.log(title, message, newPost, userIds,'dssssssssssssssssssss')
+        console.log(title, message, postId, userIds,'dssssssssssssssssssss')
 
         // Fetch FCM tokens for the specified users who use Android devices
         const userTokensDocs = await FcmModel.find({
@@ -157,7 +157,7 @@ async function sendPostCreatedNotifications({ title, message, newPost, userIds }
             },
             data: {
                 route: 'post_details',
-                newPost: newPost.toString(), // Convert to string as required
+                postId: postId.toString(), // Convert to string as required
                 title: title,
                 body: message,
             },
