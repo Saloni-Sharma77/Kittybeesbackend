@@ -5921,6 +5921,10 @@ router.delete('/walletTransactions/:id', walletTransactionControllers.deleteWall
  *         description: Server error
  */
 router.post('/uploadKittyBanner', uploadImageController.uploadKittyBanner);
+router.post('/uploadWalletInvoice', uploadImageController.uploadWalletInvoice);
+
+
+
 
 // Route to add a draft
 /**
