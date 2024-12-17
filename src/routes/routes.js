@@ -6467,6 +6467,8 @@ router.get('/getAllWalletTransactionsForUser/:userId',wallet_Controller.getAllWa
 router.get('/getAllWalletTransactionHistory/:userId',wallet_Controller.getAllWalletTransactionHistory);
 router.get('/getWalletCategory',wallet_Controller.getWalletCategory);
 router.post('/addWalletCategory',wallet_Controller.addWalletCategory);
+router.get('/getKittiesFundsForUser/:userId',wallet_Controller.getKittiesFundsForUser);
+
 
 
 

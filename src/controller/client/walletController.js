@@ -1,5 +1,6 @@
 const WalletModel = require("../../schema/walletSchema");
 const WalletCategeorymodel = require("../../schema/WalletCategorySchema");
+const Kitty = require("../../schema/kittySchema");
 
 const moment = require("moment"); // Add moment.js to handle date formatting
 const mongoose = require("mongoose");
@@ -351,5 +352,84 @@ exports.getAllUsersWalletForGroup = async (req, res) => {
   } catch (error) {
     console.error("Error fetching wallet entries for group:", error.message);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// exports.getKittiesFundsForUser = async (req, res)=>{
+//   try {
+//     const { userId } = req.params; // Assuming userId is passed as a URL parameter
+
+//     if (!userId) {
+//       return res.status(400).json({ success: false, message: "UserId is required." });
+//     }
+
+//     // Query to find kitties where the given userId exists in members with status 'approved'
+//     const kitties = await Kitty.find({
+//       $or: [
+//         { userId: userId }, // Matches root userId
+//         { "members": { $elemMatch: { userId: userId, status: "approved" } } },
+//       ],
+//     })
+//       .select("name image members userId date time") // Include only name and image fields
+//       .populate("members.userId", "profileImage fullname"); // Populate members.userId with profileImage and fullname
+    
+
+//     if (kitties.length === 0) {
+//       return res.status(404).json({ success: false, message: "No kitties found for the given userId." });
+//     }
+
+//     return res.status(200).json({ success: true, data: kitties });
+//   } catch (error) {
+//     console.error("Error fetching kitties:", error);
+//     return res.status(500).json({ success: false, message: "Internal server error.", error });
+//   }
+
+
+// }
+
+
+const combineDateAndTime = (dateStr, timeStr) => {
+  const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+  const [day, month, year] = dateParts.length === 3 ? dateParts : [null, null, null];
+  const [time, modifier] = timeStr.split(" "); // Split time into time and AM/PM
+  const [hours, minutes] = time.split(":").map(Number); // Extract hours and minutes
+  const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours === 12 && modifier === "AM" ? 0 : hours;
+  return new Date(year, month - 1, day, hours24, minutes); // Create a Date object
+};
+
+exports.getKittiesFundsForUser = async (req, res) => {
+  try {
+    const { userId } = req.params; // Assuming userId is passed as a URL parameter
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "UserId is required." });
+    }
+
+    // Query to find kitties where the given userId exists in members with status 'approved'
+    const kitties = await Kitty.find({
+      $or: [
+        { userId: userId }, // Matches root userId
+        { "members": { $elemMatch: { userId: userId, status: "approved" } } },
+      ],
+    })
+      .select("name image members userId date time") // Include only name and image fields
+      .populate("members.userId", "profileImage fullname"); // Populate members.userId with profileImage and fullname
+
+    if (kitties.length === 0) {
+      return res.status(404).json({ success: false, message: "No kitties found for the given userId." });
+    }
+
+    // Sort kitties based on combined date and time
+    const sortedKitties = kitties.sort((a, b) => {
+      const dateA = combineDateAndTime(a.date, a.time);
+      const dateB = combineDateAndTime(b.date, b.time);
+      return  dateB  - dateA ; // Sort in ascending order
+    });
+
+    return res.status(200).json({ success: true, data: sortedKitties });
+  } catch (error) {
+    console.error("Error fetching kitties:", error);
+    return res.status(500).json({ success: false, message: "Internal server error.", error });
   }
 };
