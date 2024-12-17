@@ -32,7 +32,7 @@ exports.addPost = async (req, res) => {
       userId: user._id,
       groupId: newPost._id,
       message: `A new post has been created. Check it out!`,
-      type: 'group',
+      type: 'post',
     }));
 
     // Add a notification for the post creator
@@ -40,7 +40,7 @@ exports.addPost = async (req, res) => {
       userId, // Post creator's userId
       postId: newPost._id,
       message: `You have successfully created the post`,
-      type: 'group',
+      type: 'post',
     };
 
     // Combine notifications
@@ -103,7 +103,7 @@ exports.toggleLike = async (req, res) => {
       userId: post.userId, // Post creator's userId
       postId: postId,
       message: notificationMessage,
-      type: 'group',
+      type: 'post',
       createdBy: userId,
     };
 
@@ -123,7 +123,7 @@ exports.toggleLike = async (req, res) => {
       userId: activeUser._id,
       postId: postId,
       message: generalNotificationMessage,
-      type: 'group',
+      type: 'post',
       createdBy: userId,
     }));
 
