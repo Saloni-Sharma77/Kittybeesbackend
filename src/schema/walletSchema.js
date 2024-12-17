@@ -39,7 +39,7 @@ const walletSchema = new Schema({
   },
   walletCategoryId: {
     type: Schema.Types.ObjectId,
-    ref: 'walletCategory',
+    ref: 'walletcategory',
   },
   
 }, { timestamps: true });

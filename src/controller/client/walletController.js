@@ -7,11 +7,7 @@ const mongoose = require("mongoose");
 exports.getAllWalletTransactionHistory = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { type } = req.query;
-
-    console.log("Received userId:", userId);
-    console.log("Received type:", type); // Debug type parameter
-
+    const { type, categoryType } = req.query;
     // Validate userId
     let userObjectId;
     try {
@@ -20,18 +16,29 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
       return res.status(400).json({ error: "Invalid userId format" });
     }
 
-    // Define the query condition based on type
+    // Define the query condition based on type and categoryType
     const queryCondition = { userId: userObjectId };
     if (type) {
       queryCondition.transactionType = type; // Match with `type` directly
     }
 
-    console.log("Query Condition:", queryCondition); // Debug query condition
+    // console.log("Query Condition before categoryType:", queryCondition);
 
-    const transactions = await WalletModel.find(queryCondition)
+    // Fetch transactions
+    let transactions = await WalletModel.find(queryCondition)
       .populate("userId")
       .populate("kittyId", "name image")
-      .populate("groupId", "name");
+      .populate("groupId", "name")
+      .populate("walletCategoryId", "name");
+
+    // Filter by categoryType if provided
+    if (categoryType) {
+      transactions = transactions.filter(
+        (transaction) =>
+          transaction.walletCategoryId &&
+          transaction.walletCategoryId.name === categoryType
+      );
+    }
 
     if (!transactions.length) {
       return res
@@ -48,6 +55,7 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
       return result;
     }, {});
 
+    // Convert grouped transactions to array
     const groupedArray = Object.entries(groupedByDate).map(
       ([date, transactions]) => ({
         date,
@@ -55,6 +63,7 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
       })
     );
 
+    // Send response
     res.status(200).json({
       message: "Transactions fetched successfully",
       data: groupedArray,
@@ -66,6 +75,71 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
     });
   }
 };
+
+
+// exports.getAllWalletTransactionHistory = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const { type } = req.query;
+
+//     console.log("Received userId:", userId);
+//     console.log("Received type:", type); // Debug type parameter
+
+//     // Validate userId
+//     let userObjectId;
+//     try {
+//       userObjectId = new mongoose.Types.ObjectId(userId);
+//     } catch (err) {
+//       return res.status(400).json({ error: "Invalid userId format" });
+//     }
+
+//     // Define the query condition based on type
+//     const queryCondition = { userId: userObjectId };
+//     if (type) {
+//       queryCondition.transactionType = type; // Match with `type` directly
+//     }
+
+//     console.log("Query Condition:", queryCondition); // Debug query condition
+
+//     const transactions = await WalletModel.find(queryCondition)
+//       .populate("userId")
+//       .populate("kittyId", "name image")
+//       .populate("groupId", "name")
+//       .populate('walletCategoryId','name')
+
+//     if (!transactions.length) {
+//       return res
+//         .status(404)
+//         .json({ message: "No transactions found for this query" });
+//     }
+
+//     const groupedByDate = transactions.reduce((result, transaction) => {
+//       const date = moment(transaction.date).format("YYYY-MM-DD");
+//       if (!result[date]) {
+//         result[date] = [];
+//       }
+//       result[date].push(transaction);
+//       return result;
+//     }, {});
+
+//     const groupedArray = Object.entries(groupedByDate).map(
+//       ([date, transactions]) => ({
+//         date,
+//         transactions,
+//       })
+//     );
+
+//     res.status(200).json({
+//       message: "Transactions fetched successfully",
+//       data: groupedArray,
+//     });
+//   } catch (error) {
+//     console.error("Error:", error); // Log the actual error
+//     res.status(500).json({
+//       error: "An error occurred while fetching transaction history",
+//     });
+//   }
+// };
 
 exports.addWalletCategory = async(req, res)=>{
     try {
