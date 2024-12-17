@@ -433,3 +433,29 @@ exports.getKittiesFundsForUser = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal server error.", error });
   }
 };
+
+
+exports.getFundOfKitty = async (req, res) => {
+  try {
+    const { kittyId } = req.params; // Assuming kittyId is passed as a URL parameter
+
+    if (!kittyId) {
+      return res.status(400).json({ success: false, message: "Kitty ID is required." });
+    }
+
+    // Fetch wallet details for the given kittyId
+    const walletDetails = await WalletModel.find({ kittyId, transactionType: "Contribution" })
+      .populate("userId", "profileImage fullname") // Populate user details
+      .select("userId amount date description"); // Select relevant fields
+
+    if (walletDetails.length === 0) {
+      return res.status(404).json({ success: false, message: "No contributions found for this kitty." });
+    }
+
+    return res.status(200).json({ success: true, data: walletDetails });
+  } catch (error) {
+    console.error("Error fetching wallet details:", error);
+    return res.status(500).json({ success: false, message: "Internal server error.", error });
+  }
+};
+

@@ -6468,6 +6468,8 @@ router.get('/getAllWalletTransactionHistory/:userId',wallet_Controller.getAllWal
 router.get('/getWalletCategory',wallet_Controller.getWalletCategory);
 router.post('/addWalletCategory',wallet_Controller.addWalletCategory);
 router.get('/getKittiesFundsForUser/:userId',wallet_Controller.getKittiesFundsForUser);
+router.get('/getFundOfKitty/:kittyId',wallet_Controller.getFundOfKitty);
+
 
 
 
