@@ -30,7 +30,7 @@ exports.addPost = async (req, res) => {
     // Create notifications for all active users
     const notifications = allActiveUsers.map(user => ({
       userId: user._id,
-      groupId: newPost._id,
+      postId: newPost._id,
       message: `A new post has been created. Check it out!`,
       type: 'post',
     }));
