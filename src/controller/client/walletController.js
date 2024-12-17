@@ -29,7 +29,8 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
       .populate("userId")
       .populate("kittyId", "name image")
       .populate("groupId", "name")
-      .populate("walletCategoryId", "name");
+      .populate("walletCategoryId", "name")
+      .sort({ date: -1 }); // Sort by date in descending order (latest first)
 
     // Filter by categoryType if provided
     if (categoryType) {
@@ -168,7 +169,6 @@ exports.getAllWalletTransactionsForUser = async (req, res) => {
       }
     });
 
-    console.log(response);
     res.status(200).json({
       message: "Totals fetched successfully",
       data: response,
