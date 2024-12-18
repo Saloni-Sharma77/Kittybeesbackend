@@ -67,10 +67,10 @@ exports.updateActivity = async (req, res) => {
       const objectIdUserId = new mongoose.Types.ObjectId(userId);
 
       // Query to get activities created by admin
-      const adminActivities = await ActivityModel.find({ createdBy: 'admin' }).sort({ createdAt: -1 });
+      const adminActivities = await ActivityModel.find({ createdBy: 'admin' ,isActive:true}).sort({ createdAt: -1 });
   
       // Query to get activities associated with the userId
-      const userActivities = await ActivityModel.find({ userId: objectIdUserId }).sort({ createdAt: -1 });
+      const userActivities = await ActivityModel.find({ userId: objectIdUserId ,isActive:true}).sort({ createdAt: -1 });
   
       // Combine both admin-created and user-specific activities
       const allActivities = [...adminActivities, ...userActivities];
