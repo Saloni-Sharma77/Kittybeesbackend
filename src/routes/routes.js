@@ -3540,6 +3540,7 @@ router.post("/checkLatestVersion", kitty_controller.checkLatestVersion);
 router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
 router.put("/quitKittyByUser/:id", kitty_controller.quitKittyByUser);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
+router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser);
 
 
 

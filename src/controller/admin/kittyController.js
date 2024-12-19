@@ -1182,3 +1182,48 @@ exports.quitKittyByUser = async (req, res) => {
   }
 };
 
+exports.sendKittyReminderToUser = async (req, res) => {
+  try {
+    const { userId, kittyId,requestUserId } = req.body;
+
+    // Validate required fields
+    if (!userId || !kittyId || !requestUserId) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // Check if user exists
+    const user = await UserSchema.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Check if kitty exists
+    const kitty = await Kitty.findById(kittyId);
+    if (!kitty) {
+      return res.status(404).json({ error: "Kitty not found." });
+    }
+
+    // Create a notification
+    const notification = new NotificationSchema({
+      userId,
+      kittyId,
+      message: `${kitty?.name} reminding you this please join`,
+      type: "kitty",
+      status: "pending",
+      isRead: false,
+    });
+
+    // Save the notification to the database
+    await notification.save();
+
+    // Respond to the request
+    return res.status(201).json({
+      success: true,
+      message: "Reminder sent successfully!",
+      notification,
+    });
+  } catch (error) {
+    console.error("Error sending reminder:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
