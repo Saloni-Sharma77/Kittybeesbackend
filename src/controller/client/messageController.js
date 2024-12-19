@@ -3,6 +3,11 @@ const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotificationsCreateMessage } = require('../../PushNotification/pushNotification');
 
 
+// let mystring = 43;
+
+// mystring:Number = 0
+
+
 exports.createMessage = async (req, res) => {
   try {
     const { groupId, senderId } = req.body;
@@ -19,9 +24,13 @@ exports.createMessage = async (req, res) => {
     if (req.body.image) newMessageData.image = req.body.image;
     if (req.body.video) newMessageData.video = req.body.video;
 
+      if (req.body.pollOptions) {
+        newMessageData.pollOptions = pollOptions.map((option) => ({ option }));
+      }
+
     // Ensure at least one type of message is provided
-    if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document) {
-      return res.status(400).json({ error: "At least one of content, document, image, or video must be provided." });
+    if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document && !newMessageData.pollOptions) {
+      return res.status(400).json({ error: "At least one of content, document, image,poll or video must be provided." });
     }
 
     // Find or create a message document for the group
