@@ -23,10 +23,25 @@ exports.createMessage = async (req, res) => {
     if (req.body.document) newMessageData.document = req.body.document;
     if (req.body.image) newMessageData.image = req.body.image;
     if (req.body.video) newMessageData.video = req.body.video;
+    if (req.body.video) newMessageData.video = req.body.video;
+    if (req.body.pollOptions) newMessageData.pollOptions = req.body.pollOptions;
 
-      if (req.body.pollOptions) {
-        newMessageData.pollOptions = pollOptions.map((option) => ({ option }));
-      }
+
+
+    if (req.body.pollOptions) {
+      const pollData = req.body.pollOptions;
+      const venuePollData = pollData ? {
+        question: pollData.question,
+        options: pollData.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "venuepolls",
+      } : null;
+
+      if (venuePollData) newMessageData.pollOptions = venuePollData;
+    }
+    console.log(newMessageData)
 
     // Ensure at least one type of message is provided
     if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document && !newMessageData.pollOptions) {

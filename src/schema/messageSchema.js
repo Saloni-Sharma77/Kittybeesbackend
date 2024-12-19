@@ -1,8 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-
-const pollOptionSchema = new mongoose.Schema({
+const pollSchema = new mongoose.Schema({
   question: {
     type: String,
   },
@@ -16,7 +15,8 @@ const pollOptionSchema = new mongoose.Schema({
     }
   }],
  
-}, { _id: false }); 
+}, { _id: false }); // _id: false to prevent creating an additional _id for the embedded schema
+
 
 const messageArray = new Schema({
 
@@ -26,7 +26,8 @@ const messageArray = new Schema({
   video: { type: String, default: '' },
   document: { type: String, default: '' },
   timestamp: { type: Date, default: Date.now },
-  pollOptions: [pollOptionSchema], 
+  pollOptions: { type: pollSchema, default: null }, // Embed the poll schema
+
 
 })
 
