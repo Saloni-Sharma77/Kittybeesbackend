@@ -41,10 +41,6 @@ exports.createMessage = async (req, res) => {
       if (venuePollData) newMessageData.pollOptions = venuePollData;
     }
 
-    // Ensure at least one type of message is provided
-    if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document && !newMessageData.pollOptions) {
-      return res.status(400).json({ error: "At least one of content, document, image,poll or video must be provided." });
-    }
 
     // Find or create a message document for the group
     let messageDoc = await Message.findOne({ groupId });
