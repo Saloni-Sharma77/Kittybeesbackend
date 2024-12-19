@@ -36,12 +36,10 @@ exports.createMessage = async (req, res) => {
           optionText: option.optionText,
           votes: option.votes || 0,
         })),
-        type: "venuepolls",
       } : null;
 
       if (venuePollData) newMessageData.pollOptions = venuePollData;
     }
-    console.log(newMessageData)
 
     // Ensure at least one type of message is provided
     if (!newMessageData.content && !newMessageData.image && !newMessageData.video && !newMessageData.document && !newMessageData.pollOptions) {
@@ -128,7 +126,7 @@ exports.createMessage = async (req, res) => {
   
 
     // Respond with the created message
-    res.status(201).json(response);
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error creating message:", error.message);
     res.status(500).json({ error: "Internal Server Error", details: error.message });
