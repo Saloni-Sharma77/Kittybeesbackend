@@ -30,7 +30,7 @@ exports.createMessage = async (req, res) => {
 
     if (req.body.pollOptions) {
       const pollData = req.body.pollOptions;
-      const venuePollData = pollData ? {
+      const msgPollData = pollData ? {
         question: pollData.question,
         options: pollData.options.map((option) => ({
           optionText: option.optionText,
@@ -38,7 +38,7 @@ exports.createMessage = async (req, res) => {
         })),
       } : null;
 
-      if (venuePollData) newMessageData.pollOptions = venuePollData;
+      if (msgPollData) newMessageData.pollOptions = msgPollData;
     }
 
 
@@ -103,6 +103,7 @@ exports.createMessage = async (req, res) => {
       document: newMessage.document || "",
       timestamp: newMessage.timestamp || new Date(),
       _id: newMessage._id,
+      pollOptions:  newMessage?.pollOptions || "",
       groupId,
       senderId,
       userIds: newUserIds,
