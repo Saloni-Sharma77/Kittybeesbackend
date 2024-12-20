@@ -228,7 +228,7 @@ exports.getAllGroups = async (req, res) => {
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit = 10, name = '' } = req.query; // Destructure query params
+    const { page = 1, limit = 20, name = '' } = req.query; // Destructure query params
     const userId = req.params.id;
 
     // Convert page and limit to numbers
@@ -252,17 +252,17 @@ exports.getGroupHostedByMe = async (req, res) => {
         $elemMatch: { userId, status: 'approved' },
       },
     })
-      .sort({ createdAt: -1 })
-      .populate('groupInterestId') // Populate groupInterestId
-      .populate('groupFrequencyId') // Populate groupFrequencyId
-      .populate('userIds.userId', '_id fullname');
-
+    .sort({ createdAt: -1 })
+    .populate('groupInterestId') // Populate groupInterestId
+    .populate('groupFrequencyId') // Populate groupFrequencyId
+    .populate('userIds.userId', '_id fullname');
+    
     // Combine results
     const allGroups = [...hostedGroups, ...joinedGroups];
-
+    
     // Total count for pagination
     const totalGroups = allGroups.length;
-
+    
     // Paginate combined results
     const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
 
