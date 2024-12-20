@@ -959,6 +959,9 @@ exports.getKittyById = async (req, res) => {
     if (!getKitty) {
       return res.status(404).json({ error: "Kitty not found" });
     }
+    if (getKitty.members) {
+      getKitty.members = getKitty.members.filter((member) => member.userId !== null);
+    }
 
     let venueRev = await VenueReviewSchema.find({ venueId: getKitty?.venueId });
     res

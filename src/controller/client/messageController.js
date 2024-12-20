@@ -3,9 +3,6 @@ const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotificationsCreateMessage } = require('../../PushNotification/pushNotification');
 
 
-// let mystring = 43;
-
-// mystring:Number = 0
 
 
 exports.createMessage = async (req, res) => {
