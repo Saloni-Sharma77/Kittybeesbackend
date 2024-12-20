@@ -358,6 +358,9 @@ exports.getGroupById = async (req, res) => {
     if (!group) {
       return res.status(404).json({ error: "Request not found" });
     }
+    if (group.userIds) {
+      group.userIds = group.userIds.filter((us) => us.userId !== null);
+    }
 
     // Apply filter to groupMemories if userId is passed
     let filteredGroupMemories = group.groupMemories.filter(mem => 
