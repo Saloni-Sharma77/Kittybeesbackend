@@ -319,7 +319,7 @@ exports.getUserWalletForGroup = async (req, res) => {
     const walletEntries = await WalletModel.find({
       userId: userId,
       groupId: groupId,
-    });
+    }).populate('kittyId','name image').populate('groupId','name image');
 
     if (walletEntries.length === 0) {
       return res.status(404).json({
