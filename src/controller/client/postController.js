@@ -416,13 +416,16 @@ exports.getPostById = async (req, res) => {
       const postId = req.params.id;
   
       // Find post by ID
-      const post = await PostModel.findById(postId).populate('userId');
+      let post = await PostModel.findById(postId).populate('userId');
+      let postObj = post?.toObject();
+
+     delete postObj.postTagId
   
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
       }
   
-      res.status(200).json({ message: 'Post fetched successfully', data: post });
+      res.status(200).json({ message: 'Post fetched successfully', data: postObj });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Internal server error' });
