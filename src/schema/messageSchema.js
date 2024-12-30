@@ -8,7 +8,7 @@ const pollSchema = new mongoose.Schema({
   options: [{
     optionId: {
       type: mongoose.Schema.Types.ObjectId,
-      default: mongoose.Types.ObjectId, // Automatically generate a unique ID
+      default: () => new mongoose.Types.ObjectId(), // Correct way to generate a unique ID
     },
     optionText: {
       type: String,
