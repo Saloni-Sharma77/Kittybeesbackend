@@ -1,4 +1,5 @@
 const Message = require('../../schema/messageSchema');
+const User = require('../../schema/userSchema');
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotificationsCreateMessage } = require('../../PushNotification/pushNotification');
 
@@ -155,7 +156,11 @@ exports.getMessages = async (req, res) => {
     const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate(
       'messages.senderId',
       'fullname profileImage'
-    );
+    ).populate(
+      'messages.pollOptions.options.voters',
+      'fullname profileImage'
+      
+    )
 
     if (!messageDoc) {
       return res.status(404).json({ error: 'Messages not found' });
@@ -180,21 +185,39 @@ exports.getMessages = async (req, res) => {
 
 
 //voting starts here
+
 // exports.addVoteToChatPoll = async (req, res) => {
 //   try {
-//     const {  optionId, userId,groupId} = req.body; // Include userId to track who voted
+//     const { optionId, userId, groupId } = req.body;
 
-//     // Find the post by ID
-//     const pollmsg = await Message.findById(groupId);
+//     // Find the message with the specific groupId
+//     const pollmsg = await Message.findOne({ 'groupId': groupId });
 
+//     // Find the message that contains the poll
+//     const messageWithPoll = pollmsg.messages.find(message =>
+//       message.pollOptions && message.pollOptions.options.some(option => option.optionId.toString() === optionId) // Check for the correct optionId
+//     );
 
-//     const alreadyVotedOption = pollmsg.pollOptions.options.find(option =>
+//     if (!messageWithPoll) {
+//       return res.status(404).json({ message: 'Poll not found in the messages' });
+//     }
+
+//     // Find the option based on optionId
+//     const option = messageWithPoll.pollOptions.options.find(option =>
+//       option.optionId.toString() === optionId
+//     );
+
+//     if (!option) {
+//       return res.status(404).json({ message: 'Option not found' });
+//     }
+
+//     // Check if the user already voted
+//     const alreadyVotedOption = messageWithPoll.pollOptions.options.find(option =>
 //       option.voters.some(voter => voter.toString() === userId)
 //     );
-//     console.log(alreadyVotedOption,'vvvvvvvvvvvvvvvvvvvvvv')
 
 //     if (alreadyVotedOption) {
-//       if (alreadyVotedOption._id.toString() === optionId) {
+//       if (alreadyVotedOption.optionId.toString() === optionId) {
 //         // User is trying to remove their vote from the current option
 //         alreadyVotedOption.votes -= 1;
 //         alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
@@ -205,26 +228,21 @@ exports.getMessages = async (req, res) => {
 //         return res.status(400).json({ message: 'You have already voted for another option' });
 //       }
 //     } else {
-//       // Find the option by ID
-//       const option = post.poll.options.id(optionId);
-//       if (!option) {
-//         return res.status(404).json({ message: 'Option not found' });
-//       }
-
-//       // Add the user's vote to the selected option
+//       // User has not voted yet, so add their vote to the selected option
 //       option.votes += 1;
 //       option.voters.push(userId);
 //     }
 
-//     // Save the updated post
-//     await post.save();
+//     // Save the updated message
+//     await pollmsg.save();
 
-//     res.status(200).json({ message: 'Vote updated successfully', post });
+//     res.status(200).json({ message: 'Vote updated successfully', pollmsg });
 //   } catch (err) {
 //     console.error(err);
 //     res.status(500).json({ message: 'Internal server error' });
 //   }
 // };
+
 exports.addVoteToChatPoll = async (req, res) => {
   try {
     const { optionId, userId, groupId } = req.body;
@@ -234,12 +252,20 @@ exports.addVoteToChatPoll = async (req, res) => {
 
     // Find the message that contains the poll
     const messageWithPoll = pollmsg.messages.find(message =>
-      console.log(message.pollOptions , optionId)
-      // message.pollOptions?._id == optionId // Ensure that the message has poll options
+      message.pollOptions && message.pollOptions.options.some(option => option.optionId.toString() === optionId) // Check for the correct optionId
     );
 
     if (!messageWithPoll) {
       return res.status(404).json({ message: 'Poll not found in the messages' });
+    }
+
+    // Find the option based on optionId
+    const option = messageWithPoll.pollOptions.options.find(option =>
+      option.optionId.toString() === optionId
+    );
+
+    if (!option) {
+      return res.status(404).json({ message: 'Option not found' });
     }
 
     // Check if the user already voted
@@ -248,37 +274,46 @@ exports.addVoteToChatPoll = async (req, res) => {
     );
 
     if (alreadyVotedOption) {
-      if (alreadyVotedOption._id.toString() === optionId) {
+      if (alreadyVotedOption.optionId.toString() === optionId) {
         // User is trying to remove their vote from the current option
         alreadyVotedOption.votes -= 1;
         alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
           voter => voter.toString() !== userId
         );
       } else {
-        // User has voted for a different option
-        return res.status(400).json({ message: 'You have already voted for another option' });
+        // User has voted for a different option, so update the vote
+        alreadyVotedOption.votes -= 1;
+        alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
+          voter => voter.toString() !== userId
+        );
+        
+        // Add the vote to the new option
+        option.votes += 1;
+        option.voters.push(userId);
       }
     } else {
       // User has not voted yet, so add their vote to the selected option
-      const option = messageWithPoll.pollOptions.options.id(optionId);
-      if (!option) {
-        return res.status(404).json({ message: 'Option not found' });
-      }
-
-      // Add the user's vote to the selected option
       option.votes += 1;
       option.voters.push(userId);
     }
 
     // Save the updated message
+    const populatedPollmsg = await pollmsg.populate({
+      path: 'messages.pollOptions.options.voters',
+      model: User,
+      select: 'fullname profileImage' // Select specific fields from the User model (adjust as needed)
+    })
+
+    // Save the updated message
     await pollmsg.save();
 
-    res.status(200).json({ message: 'Vote updated successfully', pollmsg });
+    res.status(200).json({ message: 'Vote updated successfully', pollmsg: populatedPollmsg });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 
 
