@@ -130,6 +130,7 @@ exports.createMessage = async (req, res) => {
 
 
 
+
 // exports.getMessages = async (req, res) => {
 //   try {
 //     // Find the document for the given groupId (chatId)
@@ -175,3 +176,112 @@ exports.getMessages = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+
+
+//voting starts here
+// exports.addVoteToChatPoll = async (req, res) => {
+//   try {
+//     const {  optionId, userId,groupId} = req.body; // Include userId to track who voted
+
+//     // Find the post by ID
+//     const pollmsg = await Message.findById(groupId);
+
+
+//     const alreadyVotedOption = pollmsg.pollOptions.options.find(option =>
+//       option.voters.some(voter => voter.toString() === userId)
+//     );
+//     console.log(alreadyVotedOption,'vvvvvvvvvvvvvvvvvvvvvv')
+
+//     if (alreadyVotedOption) {
+//       if (alreadyVotedOption._id.toString() === optionId) {
+//         // User is trying to remove their vote from the current option
+//         alreadyVotedOption.votes -= 1;
+//         alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
+//           voter => voter.toString() !== userId
+//         );
+//       } else {
+//         // User has voted for a different option
+//         return res.status(400).json({ message: 'You have already voted for another option' });
+//       }
+//     } else {
+//       // Find the option by ID
+//       const option = post.poll.options.id(optionId);
+//       if (!option) {
+//         return res.status(404).json({ message: 'Option not found' });
+//       }
+
+//       // Add the user's vote to the selected option
+//       option.votes += 1;
+//       option.voters.push(userId);
+//     }
+
+//     // Save the updated post
+//     await post.save();
+
+//     res.status(200).json({ message: 'Vote updated successfully', post });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+exports.addVoteToChatPoll = async (req, res) => {
+  try {
+    const { optionId, userId, groupId } = req.body;
+
+    // Find the message with the specific groupId
+    const pollmsg = await Message.findOne({ 'groupId': groupId });
+
+    // Find the message that contains the poll
+    const messageWithPoll = pollmsg.messages.find(message =>
+      console.log(message.pollOptions , optionId)
+      // message.pollOptions?._id == optionId // Ensure that the message has poll options
+    );
+
+    if (!messageWithPoll) {
+      return res.status(404).json({ message: 'Poll not found in the messages' });
+    }
+
+    // Check if the user already voted
+    const alreadyVotedOption = messageWithPoll.pollOptions.options.find(option =>
+      option.voters.some(voter => voter.toString() === userId)
+    );
+
+    if (alreadyVotedOption) {
+      if (alreadyVotedOption._id.toString() === optionId) {
+        // User is trying to remove their vote from the current option
+        alreadyVotedOption.votes -= 1;
+        alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
+          voter => voter.toString() !== userId
+        );
+      } else {
+        // User has voted for a different option
+        return res.status(400).json({ message: 'You have already voted for another option' });
+      }
+    } else {
+      // User has not voted yet, so add their vote to the selected option
+      const option = messageWithPoll.pollOptions.options.id(optionId);
+      if (!option) {
+        return res.status(404).json({ message: 'Option not found' });
+      }
+
+      // Add the user's vote to the selected option
+      option.votes += 1;
+      option.voters.push(userId);
+    }
+
+    // Save the updated message
+    await pollmsg.save();
+
+    res.status(200).json({ message: 'Vote updated successfully', pollmsg });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+//ends here
+
+

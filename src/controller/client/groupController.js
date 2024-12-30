@@ -16,7 +16,7 @@ exports.addGroup = async (req, res) => {
   try {
     const {
       name,
-      userId,
+      userId, 
       userIds,
       groupInterestId,
       groupFrequencyId,

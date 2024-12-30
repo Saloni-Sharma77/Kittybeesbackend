@@ -517,6 +517,7 @@ router.post("/createMessage", message_controller.createMessage);
  *         description: Chat not found
  */
 router.get("/getMessages/:groupId", message_controller.getMessages);
+router.post('/addVoteToChatPoll', message_controller.addVoteToChatPoll);
 
 // Admin routes
 /**

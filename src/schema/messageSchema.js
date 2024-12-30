@@ -6,13 +6,19 @@ const pollSchema = new mongoose.Schema({
     type: String,
   },
   options: [{
+    optionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: mongoose.Types.ObjectId, // Automatically generate a unique ID
+    },
     optionText: {
       type: String,
     },
     votes: {
       type: Number,
       default: 0
-    }
+    },
+    voters: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Track users who voted for this option
+    
   }],
  
 }, { _id: false }); // _id: false to prevent creating an additional _id for the embedded schema

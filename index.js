@@ -13,6 +13,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const socketHandler = require('./src/socket/socket');
+
 socketHandler(wss);
 // Middleware configuration
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
 
 // Database connection
 require('./src/config/db');
+require('dotenv').config();
 
 // Routes
 const routes = require('./src/routes/routes');
