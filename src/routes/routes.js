@@ -518,6 +518,8 @@ router.post("/createMessage", message_controller.createMessage);
  */
 router.get("/getMessages/:groupId", message_controller.getMessages);
 router.post('/addVoteToChatPoll', message_controller.addVoteToChatPoll);
+router.get('/getVotesOnOption', message_controller.getVotesOnOption);
+
 
 // Admin routes
 /**

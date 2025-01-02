@@ -313,9 +313,43 @@ exports.addVoteToChatPoll = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+exports.getVotesOnOption = async (req, res) => {
+  try {
+    const { optionId, groupId } = req.query;  
 
+    const pollmsg = await Message.findOne({ 'groupId': groupId });
 
+    if (!pollmsg) {
+      return res.status(404).json({ message: 'Poll message not found' });
+    }
+    const messageWithPoll = pollmsg.messages.find(message =>
+      message.pollOptions && message.pollOptions.options.some(option => option.optionId.toString() === optionId)
+    );
 
+    if (!messageWithPoll) {
+      return res.status(404).json({ message: 'Poll not found in the messages' });
+    }
+
+    const option = messageWithPoll.pollOptions.options.find(option =>
+      option.optionId.toString() === optionId
+    );
+
+    if (!option) {
+      return res.status(404).json({ message: 'Option not found' });
+    }
+
+    res.status(200).json({
+      message: 'Votes retrieved successfully',
+      optionText: option.optionText,
+      votes: option.votes,
+      voters: option.voters
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 //ends here
 
