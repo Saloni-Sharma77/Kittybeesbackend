@@ -245,7 +245,7 @@ exports.getMessages = async (req, res) => {
 
 exports.addVoteToChatPoll = async (req, res) => {
   try {
-    const { optionId, userId, groupId } = req.body;
+    const { optionId, userId, groupId ,messageId} = req.body;
 
     // Find the message with the specific groupId
     const pollmsg = await Message.findOne({ 'groupId': groupId });
@@ -270,21 +270,21 @@ exports.addVoteToChatPoll = async (req, res) => {
 
     // Check if the user already voted
     const alreadyVotedOption = messageWithPoll.pollOptions.options.find(option =>
-      option.voters.some(voter => voter.toString() === userId)
+      option.voters.some(voter => voter?.toString() === userId)
     );
 
     if (alreadyVotedOption) {
-      if (alreadyVotedOption.optionId.toString() === optionId) {
+      if (alreadyVotedOption.optionId?.toString() === optionId) {
         // User is trying to remove their vote from the current option
         alreadyVotedOption.votes -= 1;
         alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
-          voter => voter.toString() !== userId
+          voter => voter?.toString() !== userId
         );
       } else {
         // User has voted for a different option, so update the vote
         alreadyVotedOption.votes -= 1;
         alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
-          voter => voter.toString() !== userId
+          voter => voter?.toString() !== userId
         );
         
         // Add the vote to the new option
