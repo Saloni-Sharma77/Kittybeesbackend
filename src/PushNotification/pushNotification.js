@@ -5,7 +5,6 @@ const FcmModel = require("../../src/schema/FcmSchema");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-
 async function sendPushNotifications({ title, message, userId }) {
     try {
         const userTokensDoc = await FcmModel.find({
@@ -13,17 +12,11 @@ async function sendPushNotifications({ title, message, userId }) {
             deviceType: 'Android',
         });
 
-        console.log(userTokensDoc, 'Tokens for the user');
+        // console.log(userTokensDoc, 'Tokens for the user');
 
-        // const userTokens = userTokensDoc.map((fcm) => fcm.fcmToken);
-            const userTokens = userTokensDoc
-        .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
-        .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
-
-
-        // if (userTokens.length === 0) {
-        //     throw new Error('No tokens found for the user');
-        // }
+        const userTokens = userTokensDoc
+            .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
+            .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
 
         const payload = {
             notification: {
@@ -32,9 +25,9 @@ async function sendPushNotifications({ title, message, userId }) {
                 image: 'your_image_url', // Optional image URL if needed
             },
             data: {
-                route: 'your_route', 
-                title: title, 
-                body: message, 
+                route: 'your_route',
+                title: title,
+                body: message,
             },
         };
 
@@ -42,25 +35,46 @@ async function sendPushNotifications({ title, message, userId }) {
             priority: "high",
         };
 
-        // Send notification to each token using the send method
-        const response = await Promise.all(userTokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-            })
-        ));
+        // Send notifications using Promise.allSettled
+        const responses = await Promise.allSettled(
+            userTokens.map((token) =>
+                admin.messaging().send({
+                    token: token,
+                    notification: payload.notification,
+                    data: payload.data,
+                    android: {
+                        priority: options.priority,
+                    },
+                })
+            )
+        );
 
-        console.log('FCM Response:', response);
-        return response;
+        // Separate successful and failed notifications
+        const successfulNotifications = responses.filter((r) => r.status === 'fulfilled');
+        const failedNotifications = responses.filter((r) => r.status === 'rejected');
+
+        // console.log('Successful Notifications:', successfulNotifications.length);
+        // console.log('Failed Notifications:', failedNotifications.length);
+
+        // Optionally, log failed tokens for further processing or cleanup
+        if (failedNotifications.length > 0) {
+            const failedTokens = failedNotifications.map((r, index) => ({
+                token: userTokens[index],
+                reason: r.reason,
+            }));
+            // console.error('Failed Tokens:', failedTokens);
+        }
+
+        return {
+            successCount: successfulNotifications.length,
+            failureCount: failedNotifications.length,
+        };
     } catch (error) {
         console.error('Error sending push notification:', error);
         throw error;
     }
 }
+
 
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
