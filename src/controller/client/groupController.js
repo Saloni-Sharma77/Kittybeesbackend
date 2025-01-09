@@ -258,7 +258,16 @@ exports.getGroupHostedByMe = async (req, res) => {
     .populate('userIds.userId', '_id fullname');
     
     // Combine results
-    const allGroups = [...hostedGroups, ...joinedGroups];
+    let allGroups = [...hostedGroups, ...joinedGroups];
+   
+    allGroups = allGroups.map((group) => {
+      if (group?.userIds && Array.isArray(group?.userIds)) {
+        group.userIds = group.userIds.filter(user => user.userId != null);
+      }
+      return group;
+    });
+
+
     
     // Total count for pagination
     const totalGroups = allGroups.length;
