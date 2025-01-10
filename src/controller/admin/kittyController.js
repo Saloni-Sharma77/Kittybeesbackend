@@ -479,7 +479,7 @@ exports.getKittyAttendance = async (req, res) => {
 
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
-    const { type, page = 1, limit = 20 } = req.query; // Fetch type, page, and limit from query params
+    const { type, page = 1, limit = 20, userId } = req.query; // Fetch type, page, limit, and userId from query params
     const now = new Date(); // Current date and time in JavaScript
 
     // Function to combine date and time into a Date object
@@ -497,8 +497,16 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       return completeDate;
     };
 
-    // Fetch all kitties to manually filter in the app
-    const allKitties = await Kitty.find({})
+    // Build the query filter
+    const filter = {
+      $or: [
+        { userId }, // Match the userId directly
+        { 'members.userId': userId, 'members.status': 'approved' } // Match inside members array with approved status
+      ]
+    };
+
+    // Fetch all kitties with the filter
+    const allKitties = await Kitty.find(filter)
       .populate({
         path: "groupId",
         populate: {
@@ -516,9 +524,9 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
-      if (type == "past") {
+      if (type === "past") {
         return kittyDateTime < now;
-      } else if (type == "future") {
+      } else if (type === "future") {
         return kittyDateTime > now;
       }
     });
@@ -563,6 +571,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
