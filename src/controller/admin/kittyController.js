@@ -410,9 +410,76 @@ exports.getKittyAttendance = async (req, res) => {
   }
 };
 
+// exports.getAllPastAndFutureKitties = async (req, res) => {
+//   try {
+//     const { type } = req.query; // Fetch type parameter
+//     const now = new Date(); // Current date and time in JavaScript
+
+//     // Function to combine date and time into a Date object
+//     const combineDateAndTime = (dateStr, timeStr) => {
+//       const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+//       const [day, month, year] =
+//         dateParts.length === 3 ? dateParts : [null, null, null];
+//       const [time, modifier] = timeStr.split(" "); // Split time by space to get time and AM/PM
+
+//       // Convert time to 24-hour format
+//       const [hours, minutes] = time.split(":").map(Number);
+//       const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
+//       const completeDate = new Date(year, month - 1, day, hours24, minutes);
+
+//       return completeDate;
+//     };
+
+//     // Fetch all kitties to manually filter in the app
+//     const allKitties = await Kitty.find({})
+//       .populate({
+//         path: "groupId",
+//         populate: {
+//           path: "userId",
+//           model: "Users",
+//         },
+//       })
+//       .populate("userId")
+//       .populate("venueId")
+//       .populate("themeId")
+//       .populate("colorId")
+//       .populate("addressId");
+
+//     // Filter kitties based on combined date and time
+//     const filteredKitties = allKitties.filter((kitty) => {
+//       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+
+//       if (type == "past") {
+//         return kittyDateTime < now;
+//       } else if (type == "future") {
+//         return kittyDateTime > now;
+//       }
+//     });
+//     const sortedKitties = filteredKitties.sort((a, b) => {
+//       const dateTimeA = combineDateAndTime(a.date, a.time);
+//       const dateTimeB = combineDateAndTime(b.date, b.time);
+
+//       // For future kitties, sort ascending (nearest future date first)
+//       // For past kitties, sort descending (most recent past date first)
+//       if (type === "future") {
+//         return dateTimeA - dateTimeB; // Ascending order
+//       } else if (type === "past") {
+//         return dateTimeB - dateTimeA; // Descending order
+//       }
+//     });
+
+//     res
+//       .status(200)
+//       .json({ message: "Data fetched successfully", data: filteredKitties });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
-    const { type } = req.query; // Fetch type parameter
+    const { type, page = 1, limit = 20 } = req.query; // Fetch type, page, and limit from query params
     const now = new Date(); // Current date and time in JavaScript
 
     // Function to combine date and time into a Date object
@@ -455,6 +522,8 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
         return kittyDateTime > now;
       }
     });
+
+    // Sort the filtered kitties based on the date/time
     const sortedKitties = filteredKitties.sort((a, b) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
@@ -468,14 +537,33 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       }
     });
 
-    res
-      .status(200)
-      .json({ message: "Data fetched successfully", data: filteredKitties });
+    // Paginate combined results
+    const totalKitties = sortedKitties.length;
+    const totalPages = Math.ceil(totalKitties / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    // Slice the results to implement pagination
+    const paginatedKitties = sortedKitties.slice(startIndex, endIndex);
+
+    // Check if no kitties are found
+    if (paginatedKitties.length === 0) {
+      return res.status(404).json({ message: "No kitties found for the given filters." });
+    }
+
+    res.status(200).json({
+      message: "Data fetched successfully",
+      data: paginatedKitties,
+      totalKitties,
+      currentPage: page,
+      totalPages: totalPages,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
   try {
