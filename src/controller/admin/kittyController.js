@@ -498,12 +498,14 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     };
 
     // Build the query filter
-    const filter = {
-      $or: [
-        { userId }, // Match the userId directly
-        { 'members.userId': userId, 'members.status': 'approved' } // Match inside members array with approved status
-      ]
-    };
+    const filter = userId
+    ? {
+        $or: [
+          { userId }, // Match the userId directly
+          { "members.userId": userId, "members.status": "approved" }, // Match inside members array with approved status
+        ],
+      }
+    : {};
 
     // Fetch all kitties with the filter
     const allKitties = await Kitty.find(filter)
