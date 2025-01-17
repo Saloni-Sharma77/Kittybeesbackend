@@ -2,18 +2,21 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 dotenv.config();
 const User = require('../../schema/userSchema');
+const FcmTokenModel = require('../../schema/FcmSchema');
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 // Send OTP via SMS
 
 exports.sendotptest = async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { phoneNumber ,fcmToken} = req.body;
   
   // Validate if phoneNumber is provided
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
   }
+
   if (phoneNumber === '9999999999') {
     const userInfo = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
     
@@ -23,10 +26,15 @@ exports.sendotptest = async (req, res) => {
       userData: userInfo,
     });
   }
+  if (!fcmToken) {
+    return res.status(400).send({ error: 'fcmToken is required' });
+  }
+
   const checkUserAlreadyLoggedIn = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
-
-
-  if(checkUserAlreadyLoggedIn.verifiedBy == 'notyet'){
+  const checkFcmTokenSameOrNot = await FcmTokenModel.findOne({userId:checkUserAlreadyLoggedIn?._id})
+  
+  
+  if(checkUserAlreadyLoggedIn.verifiedBy == 'notyet' || !checkFcmTokenSameOrNot?.checkFcmTokenSameOrNot?.includes(fcmToken)){
     try {
       // Make the request to the external API (MessageCentral) for sending OTP
       const axiosResponse = await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`, 
