@@ -663,16 +663,18 @@ exports.getAllKittyForMe = async (req, res) => {
     let KittyData = await Kitty.find(query)
       .lean()
       .populate("venueId", "name")
-      .populate("groupId", "name contributionAmount")
+      .populate("groupId", "name contributionAmount groupType")
       .populate("themeId", "name");
 
     // Filter kitties by future date and time
     const filteredKitties = KittyData.filter((kitty) => {
+      const isPublicGroup = kitty.groupId.some(group => group.groupType === "public");
+
       const kittyDateTime = moment(
         kitty.date + " " + kitty.time,
         "DD/MM/YYYY hh:mm A"
       );
-      return kittyDateTime.isAfter(currentTime);
+      return isPublicGroup && kittyDateTime.isAfter(currentTime);
     });
 
     // Total records after filtering
