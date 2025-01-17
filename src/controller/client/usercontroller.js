@@ -57,33 +57,6 @@ exports.addOrUpdateFcmToken = async (req, res) => {
 };
 
 
-// exports.addOrUpdateFcmToken = async (req, res) => {
-//   const { userId, deviceType, fcmToken } = req.body;
-
-//   if (!userId || !deviceType || !fcmToken) {
-//     return res.status(400).json({ success: false, message: 'Missing required fields: userId, deviceType, or fcmToken' });
-//   }
-
-//   try {
-//     const result = await FcmToken.findOneAndUpdate(
-//       { userId, deviceType },
-//       { fcmToken, updatedAt: new Date() },
-//       { upsert: true, new: true }
-//     );
-
-//     return res.status(200).json({
-//       success: true,
-//       message: 'FCM Token added/updated successfully',
-//       data: result,
-//     });
-//   } catch (error) {
-//     console.error('Error adding/updating FCM token:', error);
-//     return res.status(500).json({ success: false, message: 'Failed to add/update FCM Token', error: error.message });
-//   }
-// };
-
-
-
 exports.checkGender = async (req, res) => {
   const base64Image = req.body.base64Image;
 

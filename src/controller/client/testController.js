@@ -10,81 +10,76 @@ const saltRounds = 10;
 // Send OTP via SMS
 
 exports.sendotptest = async (req, res) => {
-  const { phoneNumber ,fcmToken} = req.body;
-  
-  // Validate if phoneNumber is provided
+  const { phoneNumber, fcmToken } = req.body;
+
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
   }
 
-  if (phoneNumber === '9999999999') {
-    const userInfo = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
-    
-    return res.status(200).send({
-      success: true,
-      message: 'OTP sent successfully',
-      userData: userInfo,
-    });
-  }
   if (!fcmToken) {
-    return res.status(400).send({ error: 'fcmToken is required' });
+    return res.status(400).send({ error: 'FCM Token is required' });
   }
 
-  const checkUserAlreadyLoggedIn = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
-  const checkFcmTokenSameOrNot = await FcmTokenModel.findOne({userId:checkUserAlreadyLoggedIn?._id})
-  
-  
-  if(checkUserAlreadyLoggedIn.verifiedBy == 'notyet' || !checkFcmTokenSameOrNot?.checkFcmTokenSameOrNot?.includes(fcmToken)){
-    try {
-      // Make the request to the external API (MessageCentral) for sending OTP
-      const axiosResponse = await axios.post(`https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`, 
+  const deviceType = 'Android'; // Can be dynamic based on request
+
+  try {
+    const user = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
+    if (!user) throw new Error('Failed to retrieve or create user');
+
+    const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType });
+
+    if (fcmRecord) {
+      // Update existing record
+      if (!fcmRecord.fcmToken.includes(fcmToken)) {
+        fcmRecord.fcmToken.push(fcmToken);
+        fcmRecord.updatedAt = new Date();
+        await fcmRecord.save();
+      }
+    } else {
+      // Create a new FCM record
+      await FcmTokenModel.create({
+        userId: user._id,
+        deviceType,
+        fcmToken: [fcmToken],
+      });
+    }
+
+    if (user.verifiedBy === 'notyet' || !fcmRecord?.fcmToken.includes(fcmToken)) {
+      // Send OTP
+      const axiosResponse = await axios.post(
+        `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`,
         {},
-        {
-          headers: {
-            'authToken': process.env.MESSAGE_CENTRAL_AUTH_TOKEN
-          }
-        }
+        { headers: { authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN } }
       );
-  
-      // Log the response from the external API (for debugging if needed)
-      console.log('Response from MessageCentral:', axiosResponse.data);
-  
-      // Filter to update or create user with the phone number
-      const filter = { phoneNumber };
-  
-      // Update the user document with the phone number or insert if not found
-      const update = { $set: { phoneNumber } };
-      const options = { upsert: true, new: true };
-     const userInfo = await User.findOneAndUpdate(filter, update, options);
-      // Return the actual response from the external API to the client
-      res.status(200).send({
+
+      console.log('MessageCentral Response:', axiosResponse.data);
+
+      return res.status(200).send({
         success: true,
         message: 'OTP sent successfully',
-        data: axiosResponse.data , // Send the response data from the API
-        userData: userInfo,
+        data: axiosResponse.data,
+        userData: user,
       });
-    } catch (error) {
-      console.error('Error sending OTP:', error.response ? error.response.data : error.message);
-      res.status(500).send({ error: error.response ? error.response.data : 'Failed to send OTP' });
     }
-  }else{
-    const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
-    const userInfo = await User.find({phoneNumber});
-    res.status(200).send({
+
+    const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    return res.status(200).send({
       success: true,
       message: 'OTP verified successfully',
-      token: token,
-      // data :response.data,
-      userData: userInfo,
-
+      token,
+      userData: user,
     });
-    
+  } catch (error) {
+    console.error('Error in sendotptest:', error.message);
+    return res.status(500).send({
+      success: false,
+      message: 'An error occurred',
+      error: error.message,
+    });
   }
-
- 
 };
+
 
 
 // Verify OTP
