@@ -54,20 +54,23 @@ exports.sendotptest = async (req, res) => {
       );
 
       console.log('MessageCentral Response:', axiosResponse.data);
-      if (fcmRecord) {
-        // Update existing record
-        if (!fcmRecord.fcmToken.includes(fcmToken)) {
-          fcmRecord.fcmToken.push(fcmToken);
-          fcmRecord.updatedAt = new Date();
-          await fcmRecord.save();
+      if(axiosResponse.data?.responseCode == 200){
+
+        if (fcmRecord) {
+          // Update existing record
+          if (!fcmRecord.fcmToken.includes(fcmToken)) {
+            fcmRecord.fcmToken.push(fcmToken);
+            fcmRecord.updatedAt = new Date();
+            await fcmRecord.save();
+          }
+        } else {
+          // Create a new FCM record
+          await FcmTokenModel.create({
+            userId: user._id,
+            deviceType,
+            fcmToken: [fcmToken],
+          });
         }
-      } else {
-        // Create a new FCM record
-        await FcmTokenModel.create({
-          userId: user._id,
-          deviceType,
-          fcmToken: [fcmToken],
-        });
       }
 
       return res.status(200).send({
