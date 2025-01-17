@@ -32,21 +32,21 @@ exports.sendotptest = async (req, res) => {
     if ( !fcmRecord?.fcmToken.includes(fcmToken)  || user.verifiedBy === 'notyet' ) {
       // Send OTP
 
-      if (fcmRecord) {
-        // Update existing record
-        if (!fcmRecord.fcmToken.includes(fcmToken)) {
-          fcmRecord.fcmToken.push(fcmToken);
-          fcmRecord.updatedAt = new Date();
-          await fcmRecord.save();
-        }
-      } else {
-        // Create a new FCM record
-        await FcmTokenModel.create({
-          userId: user._id,
-          deviceType,
-          fcmToken: [fcmToken],
-        });
-      }
+      // if (fcmRecord) {
+      //   // Update existing record
+      //   if (!fcmRecord.fcmToken.includes(fcmToken)) {
+      //     fcmRecord.fcmToken.push(fcmToken);
+      //     fcmRecord.updatedAt = new Date();
+      //     await fcmRecord.save();
+      //   }
+      // } else {
+      //   // Create a new FCM record
+      //   await FcmTokenModel.create({
+      //     userId: user._id,
+      //     deviceType,
+      //     fcmToken: [fcmToken],
+      //   });
+      // }
       const axiosResponse = await axios.post(
         `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`,
         {},
