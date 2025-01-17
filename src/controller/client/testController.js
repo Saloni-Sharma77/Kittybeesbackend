@@ -54,6 +54,21 @@ exports.sendotptest = async (req, res) => {
       );
 
       console.log('MessageCentral Response:', axiosResponse.data);
+      if (fcmRecord) {
+        // Update existing record
+        if (!fcmRecord.fcmToken.includes(fcmToken)) {
+          fcmRecord.fcmToken.push(fcmToken);
+          fcmRecord.updatedAt = new Date();
+          await fcmRecord.save();
+        }
+      } else {
+        // Create a new FCM record
+        await FcmTokenModel.create({
+          userId: user._id,
+          deviceType,
+          fcmToken: [fcmToken],
+        });
+      }
 
       return res.status(200).send({
         success: true,
@@ -61,7 +76,9 @@ exports.sendotptest = async (req, res) => {
         data: axiosResponse.data,
         userData: user,
       });
+      
     }
+
 
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
