@@ -213,3 +213,36 @@ exports.sendotptestwhatsapp = async (req, res) => {
     res.status(500).send({ error: 'Failed to send OTP' });
   }
 };
+
+exports.deleteFcmToken = async (req, res) => {
+  try {
+    const { userId, fcmToken } = req.body;
+
+    if (!userId || !fcmToken) {
+      return res.status(400).json({ message: 'userId and fcmToken are required' });
+    }
+
+    // Find the user's FCM tokens
+    const userFcmTokens = await FcmTokenModel.findOne({ userId });
+
+    if (!userFcmTokens) {
+      return res.status(404).json({ message: 'No FCM tokens found for this user' });
+    }
+    const updatedTokens = userFcmTokens.fcmToken.filter(
+      (token) => token !== fcmToken
+    );
+
+    if (updatedTokens.length === userFcmTokens.fcmToken.length) {
+      return res.status(404).json({ message: 'FCM token not found for this user' });
+    }
+
+    // Update the user's FCM tokens in the database
+    userFcmTokens.fcmToken = updatedTokens;
+    await userFcmTokens.save();
+
+    return res.status(200).json({ message: 'FCM token deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -250,6 +250,7 @@ router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
  *         description: Invalid request data
  */
 router.post("/sendotptest", test_controller.sendotptest);
+router.put("/deleteFcmToken", test_controller.deleteFcmToken);
 
 /**
  * @swagger
