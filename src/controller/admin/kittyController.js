@@ -575,23 +575,95 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 };
 
 
+exports.getAllKittiesForUser = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, userId, type } = req.query;
+
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!type || (type !== "past" && type !== "future")) {
+      return res.status(400).json({ message: "Type must be 'past' or 'future'" });
+    }
+
+    const now = moment(); // Current date and time
+
+    // Fetch kitties where the user is either the host or an approved member
+    const userKitties = await Kitty.find({
+      $or: [
+        { userId }, // User is the host
+        { "members.userId": userId, "members.status": "approved" }, // User is an approved member
+      ],
+    })
+      .populate("userId")
+      .populate("venueId")
+      .populate("themeId")
+      .populate("colorId")
+      .populate("addressId")
+      .lean();
+
+    // Filter kitties based on the requested type (past or future)
+    const filteredKitties = userKitties.filter((kitty) => {
+      const kittyDateTime = moment(
+        `${kitty.date} ${kitty.time}`,
+        "DD/MM/YYYY hh:mm A"
+      );
+      return type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now);
+    });
+
+    // Sort kitties: 
+    // - Past kitties: Descending order (latest first)
+    // - Future kitties: Ascending order (earliest first)
+    const sortedKitties = filteredKitties.sort((a, b) => {
+      const dateTimeA = moment(a.date + " " + a.time, "DD/MM/YYYY hh:mm A");
+      const dateTimeB = moment(b.date + " " + b.time, "DD/MM/YYYY hh:mm A");
+      return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
+    });
+
+    // Pagination
+    const totalKitties = sortedKitties.length;
+    const totalPages = Math.ceil(totalKitties / limit);
+    const startIndex = (page - 1) * limit;
+    const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
+
+    // If no kitties found
+    if (paginatedKitties.length === 0) {
+      return res.status(404).json({ message: `No ${type} kitties found for this user.` });
+    }
+
+    // Response
+    return res.status(200).json({
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
+      data: paginatedKitties,
+      totalKitties,
+      currentPage: parseInt(page),
+      totalPages,
+    });
+
+  } catch (error) {
+    console.error(`Error fetching ${type} kitties:`, error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
 
 exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
   try {
-    const { type ,groupId} = req.query; // Fetch type parameter
-    const now = new Date(); // Current date and time in JavaScript
+    const { type ,groupId} = req.query; 
+    const now = new Date(); 
     if(!groupId){
       return res.status(400).json({error:'GroupId is required'})
     }
 
-    // Function to combine date and time into a Date object
+   
     const combineDateAndTime = (dateStr, timeStr) => {
-      const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+      const dateParts = dateStr.split(/[\/-]/).map(Number);
       const [day, month, year] =
         dateParts.length === 3 ? dateParts : [null, null, null];
-      const [time, modifier] = timeStr.split(" "); // Split time by space to get time and AM/PM
+      const [time, modifier] = timeStr.split(" "); 
 
-      // Convert time to 24-hour format
+     
       const [hours, minutes] = time.split(":").map(Number);
       const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
       const completeDate = new Date(year, month - 1, day, hours24, minutes);
@@ -599,7 +671,7 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       return completeDate;
     };
 
-    // Fetch all kitties to manually filter in the app
+   
     const allKitties = await Kitty.find({groupId:groupId})
       .populate({
         path: "groupId",
@@ -614,7 +686,7 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       .populate("colorId")
       .populate("addressId");
 
-    // Filter kitties based on combined date and time
+   
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
@@ -628,12 +700,11 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
 
-      // For future kitties, sort ascending (nearest future date first)
-      // For past kitties, sort descending (most recent past date first)
+      
       if (type === "future") {
-        return dateTimeA - dateTimeB; // Ascending order
+        return dateTimeA - dateTimeB; 
       } else if (type === "past") {
-        return dateTimeB - dateTimeA; // Descending order
+        return dateTimeB - dateTimeA; 
       }
     });
 
@@ -652,9 +723,8 @@ exports.getAllKittyForMe = async (req, res) => {
     const userId = req.params.userId;
     const { name, page = 1, limit = 0 } = req.query;
 
-    const currentTime = moment(); // Current date and time
+    const currentTime = moment(); 
 
-    // Fetch all kitties with optional name search
     const query = {};
     if (name) {
       query.name = { $regex: new RegExp(name, "i") };
@@ -666,7 +736,6 @@ exports.getAllKittyForMe = async (req, res) => {
       .populate("groupId", "name contributionAmount groupType")
       .populate("themeId", "name");
 
-    // Filter kitties by future date and time
     const filteredKitties = KittyData.filter((kitty) => {
       const isPublicGroup = kitty.groupId.some(group => group.groupType === "public");
 
@@ -677,23 +746,22 @@ exports.getAllKittyForMe = async (req, res) => {
       return isPublicGroup && kittyDateTime.isAfter(currentTime);
     });
 
-    // Total records after filtering
     const totalKitties = filteredKitties.length;
 
-    // Apply pagination
     const startIndex = (page - 1) * limit;
     const paginatedKitties = limit
       ? filteredKitties.slice(startIndex, startIndex + parseInt(limit))
       : filteredKitties;
 
-    // Modify response to add `kittymemberstatus` for each kitty
     const response = paginatedKitties.map((kitty) => {
-      const member = kitty.members.find(
-        (member) => member.userId.toString() === userId
+      const members = Array.isArray(kitty.members) ? kitty.members : [];
+      
+      const member = members.find(
+        (member) => member.userId?.toString() === userId
       );
-      let kittymemberstatus = "guest"; // Default if not in members array
-
-      // Set status based on membership or if the user is the host
+    
+      let kittymemberstatus = "guest"; 
+    
       if (member) {
         kittymemberstatus =
           member.status === "approved"
@@ -701,17 +769,18 @@ exports.getAllKittyForMe = async (req, res) => {
             : member.status === "rejected"
             ? "rejected"
             : "requested";
-      } else if (kitty.userId.toString() === userId) {
+      } else if (kitty.userId?.toString() === userId) {
         kittymemberstatus = "host";
       } else {
         kittymemberstatus = "notmember";
       }
-
+    
       return {
         ...kitty,
         kittymemberstatus,
       };
     });
+    
 
     // Response metadata
     const totalPages = limit ? Math.ceil(totalKitties / limit) : 1;

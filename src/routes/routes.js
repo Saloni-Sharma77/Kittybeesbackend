@@ -3576,6 +3576,7 @@ router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser
  *         description: Server error
  */
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
+router.get("/kitties", kitty_controller.getAllKittiesForUser);
 router.get("/getAllPastAndFutureKittiesOfGroups", kitty_controller.getAllPastAndFutureKittiesOfGroups);
 
 
