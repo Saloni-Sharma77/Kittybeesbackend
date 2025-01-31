@@ -2,6 +2,7 @@ const Group = require("../../schema/groupSchema");
 const KittySchema = require("../../schema/kittySchema");
 const GroupFrequencyModel = require("../../schema/groupFrequencySchema");
 const GroupInterestModel = require("../../schema/groupInterestSchema");
+const GroupInterest = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
@@ -141,75 +142,91 @@ exports.addGroup = async (req, res) => {
 
 
 
+
+
 exports.getAllGroups = async (req, res) => {
   try {
-    const { page = 1, limit = 20, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
+    const { page = 1, limit = 20, name = "", userId, interestName } = req.query;
 
-    // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    // Build the query object
     const query = {};
 
     if (name) {
-      query.name = { $regex: name, $options: "i" }; // Search by name if provided
+      query.name = { $regex: name, $options: "i" };
     }
 
-    // Exclude groups with the specified userId if provided
     if (userId) {
-
       const objectId = new mongoose.Types.ObjectId(userId);
-      
       query.$and = [
-        {groupType: {$eq : 'public'} },
-        { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
-        
-        { userIds: { $not: { $elemMatch: { userId: objectId, status: 'approved'} } } }, // Exclude groups where userIds contains the userId,
+        { groupType: { $eq: "public" } },
+        { userId: { $ne: objectId } },
+        { userIds: { $not: { $elemMatch: { userId: objectId, status: "approved" } } } },
       ];
     }
-    
 
+    let interestIds = [];
+    if (interestName) {
+      const interestNamesArray = Array.isArray(interestName) ? interestName : [interestName];
 
-    // Count total documents for pagination info
-    const totalGroups = await Group.countDocuments(query);
+      const matchingInterests = await GroupInterest.find({ name: { $in: interestNamesArray } }).select("_id");
+      interestIds = matchingInterests.map((interest) => interest._id);
+    }
 
-    // Fetch groups with pagination
-    const getAllGroup = await Group.find(query)
-      .populate('userIds.userId', '_id fullname')
-      .populate('userId')
-      .populate('groupFrequencyId')
-      .populate('groupInterestId')
+    const interestQuery = interestIds.length > 0 ? { groupInterestId: { $in: interestIds } } : {};
+
+    // 1️⃣ Count total interest-based groups
+    const totalInterestGroups = await Group.countDocuments({ ...query, ...interestQuery });
+
+    // 2️⃣ Fetch paginated interest-based groups
+    const matchedGroups = await Group.find({ ...query, ...interestQuery })
+      .populate("userIds.userId", "_id fullname")
+      .populate("userId")
+      .populate("groupFrequencyId")
+      .populate("groupInterestId")
       .sort({ createdAt: -1 })
-      .skip((pageNumber - 1) * pageSize)
+      .skip((pageNumber - 1) * pageSize) // Skip correctly based on page number
       .limit(pageSize);
 
-      // here we are adding the status of groupmembers
+    const matchedGroupIds = matchedGroups.map((group) => group._id);
+    const remainingSlots = pageSize - matchedGroups.length; // Remaining slots to fill
 
-  const groupsWithUserCount = getAllGroup.map(group => ({
-    ...group.toObject(),
-    userCount: group.userIds.length, // Add userCount to each group object
-    groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
+    let remainingGroups = [];
+    if (remainingSlots > 0) {
+      // 3️⃣ Fetch remaining groups if interest groups are fewer than pageSize
+      remainingGroups = await Group.find({
+        ...query,
+        _id: { $nin: matchedGroupIds },
+      })
+        .populate("userIds.userId", "_id fullname")
+        .populate("userId")
+        .populate("groupFrequencyId")
+        .populate("groupInterestId")
+        .sort({ createdAt: -1 })
+        .limit(remainingSlots); // Only fill remaining slots
+    }
 
-      const member = group.userIds.find(
-        // mem => console.log(mem?.userId?._id?.toString() , userId?.toString())
-        mem => mem?.userId?._id?.toString() == userId?.toString()
-        // mem =>mem?._id?.toString() == userId
+    // 4️⃣ Combine results with interest groups appearing first
+    const allGroups = [...matchedGroups, ...remainingGroups];
 
-      );
-  
-      if (member) {
-        return member.status === "approved"
-          ? "approved"
-          : member.status === "pending"
-          ? "pending"
-          : "rejected";
-      }
-      return "join"; // Default status if userId is not found
-    })(),
-  }));
-  
-      //end code
+    const groupsWithUserCount = allGroups.map((group) => ({
+      ...group.toObject(),
+      userCount: group.userIds.length,
+      groupMemberStatus: (() => {
+        const member = group.userIds.find((mem) => mem?.userId?._id?.toString() == userId?.toString());
+        if (member) {
+          return member.status === "approved"
+            ? "approved"
+            : member.status === "pending"
+            ? "pending"
+            : "rejected";
+        }
+        return "join";
+      })(),
+    }));
+
+    const totalGroups = totalInterestGroups + (await Group.countDocuments({ ...query, _id: { $nin: matchedGroupIds } }));
 
     res.status(200).json({
       message: "Group List fetched successfully",
@@ -228,7 +245,7 @@ exports.getAllGroups = async (req, res) => {
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit = 20, name = '' } = req.query; // Destructure query params
+    const { page = 1, limit = 1, name = '' } = req.query; // Destructure query params
     const userId = req.params.id;
 
     // Convert page and limit to numbers

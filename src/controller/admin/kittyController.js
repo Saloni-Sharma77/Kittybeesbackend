@@ -579,7 +579,6 @@ exports.getAllKittiesForUser = async (req, res) => {
   try {
     const { page = 1, limit = 20, userId, type } = req.query;
 
-    // Validate userId
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
@@ -588,13 +587,12 @@ exports.getAllKittiesForUser = async (req, res) => {
       return res.status(400).json({ message: "Type must be 'past' or 'future'" });
     }
 
-    const now = moment(); // Current date and time
+    const now = moment(); 
 
-    // Fetch kitties where the user is either the host or an approved member
     const userKitties = await Kitty.find({
       $or: [
-        { userId }, // User is the host
-        { "members.userId": userId, "members.status": "approved" }, // User is an approved member
+        { userId },
+        { "members.userId": userId, "members.status": "approved" },
       ],
     })
       .populate("userId")
@@ -602,9 +600,10 @@ exports.getAllKittiesForUser = async (req, res) => {
       .populate("themeId")
       .populate("colorId")
       .populate("addressId")
+      .populate("activityId") 
+
       .lean();
 
-    // Filter kitties based on the requested type (past or future)
     const filteredKitties = userKitties.filter((kitty) => {
       const kittyDateTime = moment(
         `${kitty.date} ${kitty.time}`,
