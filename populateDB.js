@@ -22,7 +22,7 @@ const professions = [
     'Other'
   ];
   
-  // Iterate through the professions and send them one by one
+
   professions.forEach(profession => {
     fetch('http://localhost:4049/createProfession', {
       method: 'POST',
