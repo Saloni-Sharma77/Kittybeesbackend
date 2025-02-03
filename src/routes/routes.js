@@ -21,6 +21,8 @@ const pages_controller = require("../controller/admin/pageController");
 
 const venueCategory_controller = require("../controller/admin/venueCategoryController"); // Import the controller for venueCategory
 
+const {createProfession,getAllProfessions,getProfessionById, deleteProfession, updateProfession} = require('../controller/admin/professionController')//Import professionController
+
 // Client controllers
 const user_controller = require("../controller/client/usercontroller");
 const otp_controller = require("../controller/client/otpcontroller");
@@ -65,6 +67,18 @@ const {
   const pollController = require('../controller/client/pollcontrollers');
 
   const messageController = require('../controller/client/postshareControllers');
+
+
+//route for crud operation on profession
+
+//create new profession
+router.post('/createProfession',createProfession)
+router.get('/getAllProfessions',getAllProfessions).get('/getProfessionById/:id',getProfessionById)
+router.delete('/deleteProfession/:id',deleteProfession)
+router.put('/updateProfession/:id',updateProfession)
+
+
+
 
 
 // S3bucket image upload route
