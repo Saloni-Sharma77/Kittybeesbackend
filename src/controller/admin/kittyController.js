@@ -592,6 +592,7 @@ exports.getAllKittiesForUser = async (req, res) => {
       $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
     })
       .populate("userId")
+      .populate("groupId")
       .populate("venueId")
       .populate("themeId")
       .populate("colorId")
@@ -667,6 +668,7 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
           model: "Users",
         },
       })
+      .populate("userId")
       .populate("userId")
       .populate("venueId")
       .populate("themeId")
