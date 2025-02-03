@@ -586,37 +586,28 @@ exports.getAllKittiesForUser = async (req, res) => {
       return res.status(400).json({ message: "Type must be 'past' or 'future'" });
     }
 
-    const now = moment(); 
+    const now = moment();
 
     const userKitties = await Kitty.find({
-      $or: [
-        { userId },
-        { "members.userId": userId, "members.status": "approved" },
-      ],
+      $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
     })
       .populate("userId")
       .populate("venueId")
       .populate("themeId")
       .populate("colorId")
       .populate("addressId")
-      .populate("activityId") 
-
+      .populate("activityId")
       .lean();
 
     const filteredKitties = userKitties.filter((kitty) => {
-      const kittyDateTime = moment(
-        `${kitty.date} ${kitty.time}`,
-        "DD/MM/YYYY hh:mm A"
-      );
+      const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
       return type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now);
     });
 
-    // Sort kitties: 
-    // - Past kitties: Descending order (latest first)
-    // - Future kitties: Ascending order (earliest first)
+    // Sort kitties:
     const sortedKitties = filteredKitties.sort((a, b) => {
-      const dateTimeA = moment(a.date + " " + a.time, "DD/MM/YYYY hh:mm A");
-      const dateTimeB = moment(b.date + " " + b.time, "DD/MM/YYYY hh:mm A");
+      const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
+      const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
       return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
     });
 
@@ -626,12 +617,10 @@ exports.getAllKittiesForUser = async (req, res) => {
     const startIndex = (page - 1) * limit;
     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
 
-    // If no kitties found
     if (paginatedKitties.length === 0) {
       return res.status(404).json({ message: `No ${type} kitties found for this user.` });
     }
 
-    // Response
     return res.status(200).json({
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
       data: paginatedKitties,
@@ -641,7 +630,7 @@ exports.getAllKittiesForUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(`Error fetching ${type} kitties:`, error);
+    console.error(`Error fetching ${req.query.type || "unknown"} kitties:`, error);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
