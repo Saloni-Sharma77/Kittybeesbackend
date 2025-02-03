@@ -71,7 +71,6 @@ const {
 
 //route for crud operation on profession
 
-//create new profession
 router.post('/createProfession',createProfession)
 router.get('/getAllProfessions',getAllProfessions).get('/getProfessionById/:id',getProfessionById)
 router.delete('/deleteProfession/:id',deleteProfession)
