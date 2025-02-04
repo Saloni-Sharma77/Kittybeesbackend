@@ -21,7 +21,7 @@ const pages_controller = require("../controller/admin/pageController");
 
 const venueCategory_controller = require("../controller/admin/venueCategoryController"); // Import the controller for venueCategory
 
-const {createProfession,getAllProfessions,getProfessionById, deleteProfession, updateProfession} = require('../controller/admin/professionController')//Import professionController
+const {createProfession,getAllProfessions,getProfessionById, deleteProfession, updateProfession} = require('../controller/admin/professionController')
 
 // Client controllers
 const user_controller = require("../controller/client/usercontroller");
@@ -68,14 +68,18 @@ const {
 
   const messageController = require('../controller/client/postshareControllers');
 
-
+  const {getGroupHostedByMe } = require('../controller/client/groupController')
 //route for crud operation on profession
 
 router.post('/createProfession',createProfession)
-router.get('/getAllProfessions',getAllProfessions).get('/getProfessionById/:id',getProfessionById)
+router.get('/getAllProfessions',getAllProfessions)
+router.get('/getProfessionById/:id',getProfessionById)
 router.delete('/deleteProfession/:id',deleteProfession)
 router.put('/updateProfession/:id',updateProfession)
 
+
+// groupController route
+router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
 
 
 

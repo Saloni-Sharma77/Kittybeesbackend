@@ -10,7 +10,7 @@ const professions = [
     'CEO',
     'Dietitians and Nutritionists',
     'Education',
-    'Marketing Manager',
+    'Marketing Manager',  
     'Registered Nurse',
     'Surgeon',
     'Veterinarian',
