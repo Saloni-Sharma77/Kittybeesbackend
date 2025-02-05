@@ -26,7 +26,13 @@ exports.sendotptest = async (req, res) => {
     const user = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
     if (!user) throw new Error('Failed to retrieve or create user');
 
-  
+     // **Check if the user is deactivated**
+     if (user.isActive === false) {
+      return res.status(403).send({
+        success: false,
+        message: 'User is deactivated',
+      });
+    }
 
     const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType });
     if ( !fcmRecord?.fcmToken.includes(fcmToken)  || user.verifiedBy === 'notyet' ) {
