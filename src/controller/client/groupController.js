@@ -242,10 +242,30 @@ exports.getAllGroups = async (req, res) => {
 };
 
 
+ //get user via groupId
+ exports.getUsersByGroupId = async (req, res) => {
+  try {
+    const { id } = req.params; 
+  const group = await Group.findOne({ _id: id }).select("userIds.userId").lean().populate('userIds.userId');
+
+    if (!group) {
+      return res.status(404).json({ msg: "Group not found" });
+    }
+
+   
+    const userIds = group.userIds.map(member => member.userId);
+
+    res.status(200).json({ userIds });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit = 1, name = '' } = req.query; // Destructure query params
+    const { page = 1, limit=10 , name = '' } = req.query; // Destructure query params
     const userId = req.params.id;
 
     // Convert page and limit to numbers
@@ -283,7 +303,9 @@ exports.getGroupHostedByMe = async (req, res) => {
       }
       return group;
     });
+   
 
+   
 
     
     // Total count for pagination

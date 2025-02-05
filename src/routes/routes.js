@@ -68,7 +68,7 @@ const {
 
   const messageController = require('../controller/client/postshareControllers');
 
-  const {getGroupHostedByMe } = require('../controller/client/groupController')
+  const {getGroupHostedByMe,getUsersByGroupId} = require('../controller/client/groupController')
 //route for crud operation on profession
 
 router.post('/createProfession',createProfession)
@@ -81,7 +81,8 @@ router.put('/updateProfession/:id',updateProfession)
 // groupController route
 router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
 
-
+// get list of users via group name 
+router.get('/getUsersByGroupId/:id',getUsersByGroupId)
 
 
 // S3bucket image upload route
@@ -3562,7 +3563,6 @@ router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
 router.put("/quitKittyByUser/:id", kitty_controller.quitKittyByUser);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser);
-
 
 
 
