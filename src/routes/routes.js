@@ -66,9 +66,11 @@ const {
 
   const pollController = require('../controller/client/pollcontrollers');
 
-  const messageController = require('../controller/client/postshareControllers');
+const messageController = require('../controller/client/postshareControllers');
 
-  const {getGroupHostedByMe,getUsersByGroupId} = require('../controller/client/groupController')
+
+const {getGroupHostedByMe,getUsersByGroupId} = require('../controller/client/groupController')
+
 //route for crud operation on profession
 
 router.post('/createProfession',createProfession)

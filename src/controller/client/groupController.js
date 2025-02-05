@@ -439,75 +439,37 @@ exports.getGroupById = async (req, res) => {
 
 
 exports.updateGroup = async (req, res) => {
+
   try {
-    const {
-      name,
-      userId,
-      userIds,
-      groupType,
-      description,
-      groupInterestId,
-      groupFrequencyId,
-      rulesAndRegulation,
-      groupCityArea,
-      contributionAmount,
-      image,
-    } = req.body;
 
-    // Validate required fields
-    const requiredFields = [
-      { name: 'name', value: name },
-      { name: 'userId', value: userId },
-      { name: 'groupIcon', value: groupIcon },
-      { name: 'groupType', value: groupType },
-      { name: 'description', value: description },
-      { name: 'rulesAndRegulation', value: rulesAndRegulation },
-      { name: 'groupFrequencyId', value: groupFrequencyId },
-      { name: 'groupCityArea', value: groupCityArea },
-      { name: 'contributionAmount', value: contributionAmount },
-      { name: 'image', value: image }
-    ];
+   const updateData = {}; 
+   Object.keys(req.body).forEach((key) => {
+    if (req.body[key] !== undefined && req.body[key] !== null) {
+      updateData[key] = req.body[key];
+  }
+});
+//Validating fields 
+if (Object.keys(updateData).length === 0) {
+  return res.status(400).json({ error: "No valid fields provided for update" });
+}
 
-    for (const field of requiredFields) {
-      if (!field.value) {
-        return res.status(400).json({ error: `${field.name} is required` });
-      }
-    }
 
-    // Find the group by ID and update its fields
-    const updatedGroup = await Group.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        userId,
-        userIds,
-        groupIcon,
-        groupType,
-        description,
-        groupInterestId,
-        groupFrequencyId,
-        rulesAndRegulation,
-        groupCityArea,
-        contributionAmount,
-        image,
-      },
-      { new: true }
-    );
+const updatedGroup = await Group.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
-    // Handle the case where the group is not found
-    if (!updatedGroup) {
-      return res.status(404).json({ error: "Group not found" });
-    }
+if (!updatedGroup) {
+  return res.status(404).json({ error: "Group not found" });
+}
 
-    // Return the updated group
-    res.status(200).json({ message: "Group updated successfully", group: updatedGroup });
+res.status(200).json({ message: "Group updated successfully", group: updatedGroup });
+
+
   } catch (err) {
     console.error("Error updating group:", err);
     res.status(500).json({ error: "Failed to update group" });
   }
-};
+}; 
 
-
+  
 exports.deleteGroup = async (req, res) => {
   try {
     const deletedgroup = await Group.findByIdAndDelete(req.params.id);
