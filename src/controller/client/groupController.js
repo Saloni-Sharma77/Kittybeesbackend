@@ -6,7 +6,7 @@ const GroupInterest = require("../../schema/groupInterestSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
-
+const Users = require('../../schema/userSchema')
 
 const mongoose = require("mongoose");
 
@@ -138,6 +138,123 @@ exports.addGroup = async (req, res) => {
 };
 
 
+// exports.getAllGroups = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 20, name = "", userId, interestName } = req.query;
+
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     const query = {};
+
+//     if (name) {
+//       query.name = { $regex: name, $options: "i" };
+//     }
+
+//     if (userId) {
+//       const objectId = new mongoose.Types.ObjectId(userId);
+//       query.$and = [
+//         { groupType: { $eq: "public" } },
+//         { userId: { $ne: objectId } },
+//         { userIds: { $not: { $elemMatch: { userId: objectId, status: "approved" } } } },
+//       ];
+//     }
+
+//     let interestIds = [];
+//     if (interestName) {
+//       const interestNamesArray = Array.isArray(interestName) ? interestName : [interestName];
+//       const matchingInterests = await GroupInterest.find({ name: { $in: interestNamesArray } }).select("_id");
+//       interestIds = matchingInterests.map((interest) => interest._id);
+//     }
+
+//     const interestQuery = interestIds.length > 0 ? { groupInterestId: { $in: interestIds } } : {};
+
+//     // Count total interest-based groups
+//     const totalInterestGroups = await Group.countDocuments({ ...query, ...interestQuery });
+
+//     // Fetch paginated interest-based groups
+//     const matchedGroups = await Group.find({ ...query, ...interestQuery })
+//       .populate("userIds.userId", "_id fullname")
+//       .populate("groupFrequencyId")
+//       .populate("groupInterestId")
+//       .populate({
+//         path: "userId",
+//         match: { isActive: true },
+//       })
+//       .sort({ createdAt: -1 })
+//       .skip((pageNumber - 1) * pageSize)
+//       .limit(pageSize);
+
+//     //  Get the matched group IDs
+//     const matchedGroupIds = matchedGroups.map((group) => group._id);
+
+//     // Log to check matched group IDs
+//     console.log("Matched Group IDs:", matchedGroupIds);
+
+//     //Fetch remaining groups if needed
+//     const remainingSlots = pageSize - matchedGroups.length;
+//     let remainingGroups = [];
+//     if (remainingSlots > 0) {
+//       remainingGroups = await Group.find({
+//         ...query,
+//         _id: { $nin: matchedGroupIds }, // Exclude matched groups
+//       })
+//         .populate("userIds.userId", "_id fullname")
+//         .populate("groupFrequencyId")
+//         .populate("groupInterestId")
+//         .populate({
+//           path: "userId",
+//           match: { isActive: true },
+//         })
+//         .sort({ createdAt: -1 })
+//         .limit(remainingSlots);
+
+//       // Log remaining groups
+//       console.log("Remaining Groups Count:", remainingGroups.length);
+//     }
+
+//     // Combine results and deduplicate
+//     const allGroups = [...matchedGroups, ...remainingGroups];
+
+//     // Deduplicate based on _id
+//     const uniqueGroups = Array.from(new Set(allGroups.map(group => group._id)))
+//       .map(id => allGroups.find(group => group._id === id));
+
+//     // Log total groups after deduplication
+//     console.log("Total Groups After Deduplication:", uniqueGroups.length);
+
+//     const groupsWithUserCount = uniqueGroups.map((group) => ({
+//       ...group.toObject(),
+//       userCount: group.userIds.length,
+//       groupMemberStatus: (() => {
+//         const member = group.userIds.find((mem) => mem?.userId?._id?.toString() == userId?.toString());
+//         if (member) {
+//           return member.status === "approved"
+//             ? "approved"
+//             : member.status === "pending"
+//             ? "pending"
+//             : "rejected";
+//         }
+//         return "join";
+//       })(),
+//     }));
+
+//     const totalGroups = totalInterestGroups + remainingGroups.length;
+
+//     res.status(200).json({
+//       message: "Group List fetched successfully",
+//       data: groupsWithUserCount,
+//       totalGroups,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalGroups / pageSize),
+//       matchedGroups: matchedGroups.length,
+//       remainingGroups: remainingGroups.length,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 
 
@@ -176,41 +293,62 @@ exports.getAllGroups = async (req, res) => {
 
     const interestQuery = interestIds.length > 0 ? { groupInterestId: { $in: interestIds } } : {};
 
-    // 1️⃣ Count total interest-based groups
+    // Count total interest-based groups
     const totalInterestGroups = await Group.countDocuments({ ...query, ...interestQuery });
 
-    // 2️⃣ Fetch paginated interest-based groups
-    const matchedGroups = await Group.find({ ...query, ...interestQuery })
+    // Fetch paginated interest-based groups
+    const matchedGroup = await Group.find({ ...query, ...interestQuery })
       .populate("userIds.userId", "_id fullname")
-      .populate("userId")
+      // .populate("userId")
       .populate("groupFrequencyId")
       .populate("groupInterestId")
+       .populate("userId", "userId.isActive")
       .sort({ createdAt: -1 })
       .skip((pageNumber - 1) * pageSize) // Skip correctly based on page number
       .limit(pageSize);
 
-    const matchedGroupIds = matchedGroups.map((group) => group._id);
+    // const matchedGroupIds = matchedGroups.map((group) => group._id);
+  //  const  matchedGroupIds = matchedGroups.filter(group => group.userId && group.userId.isActive);
+  //   //   const matchedGroupIds = matchedGroups
+  //   // .filter(group => group.userId !== null && group.userId.isActive)
+  //   // .map(group => group._id);
+
+  const matchedGroups = matchedGroup.filter(group => group.userId && group.userId.isActive);
+
+  const matchedGroupIds = matchedGroups.map(group => group._id);
+
+   
     const remainingSlots = pageSize - matchedGroups.length; // Remaining slots to fill
 
     let remainingGroups = [];
     if (remainingSlots > 0) {
-      // 3️⃣ Fetch remaining groups if interest groups are fewer than pageSize
+      // Fetch remaining groups if interest groups are fewer than pageSize
       remainingGroups = await Group.find({
         ...query,
         _id: { $nin: matchedGroupIds },
       })
         .populate("userIds.userId", "_id fullname")
         .populate("userId")
+        // .populate({
+        //   path: "userId",
+        //   match: { isActive: true},
+        //   select: "_id  isActive"
+
+        // })
         .populate("groupFrequencyId")
         .populate("groupInterestId")
         .sort({ createdAt: -1 })
-        .limit(remainingSlots); // Only fill remaining slots
+        .limit(remainingSlots); 
     }
 
-    // 4️⃣ Combine results with interest groups appearing first
     const allGroups = [...matchedGroups, ...remainingGroups];
 
-    const groupsWithUserCount = allGroups.map((group) => ({
+
+    const uniqueGroups = Array.from(new Set(allGroups.map(group => group._id))).map(id => allGroups.find(group => group._id === id));
+
+
+
+    const groupsWithUserCount = uniqueGroups.map((group) => ({
       ...group.toObject(),
       userCount: group.userIds.length,
       groupMemberStatus: (() => {
@@ -226,7 +364,7 @@ exports.getAllGroups = async (req, res) => {
       })(),
     }));
 
-    const totalGroups = totalInterestGroups + (await Group.countDocuments({ ...query, _id: { $nin: matchedGroupIds } }));
+    const totalGroups = totalInterestGroups + remainingGroups.length;
 
     res.status(200).json({
       message: "Group List fetched successfully",
@@ -235,6 +373,9 @@ exports.getAllGroups = async (req, res) => {
       currentPage: pageNumber,
       totalPages: Math.ceil(totalGroups / pageSize),
     });
+    
+
+ 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -392,9 +533,9 @@ exports.addGroupMemories = async (req, res) => {
 
 exports.getGroupById = async (req, res) => {
   const groupId = req.params.id;
-  const { page = 0, limit = 10, userId } = req.query; // Get userId from query parameters
+  const { page = 0, limit = 10, userId, searchNumber } = req.query; // Get userId from query parameters
   const filter = userId ? { 'groupMemories.userId': userId } : {}; // Filter based on userId if provided
-
+   
   try {
     const group = await Group.findById(groupId)
       .populate('userIds.userId')
@@ -402,6 +543,8 @@ exports.getGroupById = async (req, res) => {
       .populate('groupFrequencyId')
       .populate('groupInterestId')
       .populate('groupMemories.userId');
+
+
     
     if (!group) {
       return res.status(404).json({ error: "Request not found" });
@@ -410,6 +553,18 @@ exports.getGroupById = async (req, res) => {
       group.userIds = group.userIds.filter((us) => us.userId !== null);
     }
 
+    const users = await Users.find({ phoneNumber: { $in: group.userNumbers } }); 
+    users.forEach(user => {
+      const isUserAlreadyInGroup = group.userIds.some(member => String(member.userId._id) === String(user._id));
+      if (!isUserAlreadyInGroup) {
+        group.userIds.push({ userId: user, status: 'approved' });
+        group.userNumbers = group.userNumbers.filter(num => num !== user.phoneNumber); 
+      }
+    });
+    
+
+
+    
     // Apply filter to groupMemories if userId is passed
     let filteredGroupMemories = group.groupMemories.filter(mem => 
       !userId || String(mem.userId._id) === String(userId) // Compare userIds to filter groupMemories
@@ -438,6 +593,7 @@ exports.getGroupById = async (req, res) => {
 
 
 
+
 exports.updateGroup = async (req, res) => {
 
   try {
@@ -451,16 +607,41 @@ exports.updateGroup = async (req, res) => {
 //Validating fields 
 if (Object.keys(updateData).length === 0) {
   return res.status(400).json({ error: "No valid fields provided for update" });
-}
+} 
 
 
-const updatedGroup = await Group.findByIdAndUpdate(req.params.id, updateData, { new: true });
-
-if (!updatedGroup) {
+// add new member to group 
+const group = await Group.findById(req.params.id);
+if (!group) {
   return res.status(404).json({ error: "Group not found" });
 }
 
-res.status(200).json({ message: "Group updated successfully", group: updatedGroup });
+
+if (!Array.isArray(group.userNumbers)) {
+  group.userNumbers = [];
+}
+
+// Check and add new userNumbers
+if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
+  const newNumbers = req.body.userNumbers.filter(num => !group.userNumbers.includes(num));
+
+  if (newNumbers.length > 0) {
+    group.userNumbers.push(...newNumbers);
+    group.markModified("userNumbers"); 
+  }
+}
+
+delete updateData.userNumbers
+
+
+// Update other fields
+Object.assign(group, updateData);
+
+// Save the updated group
+await group.save();
+
+
+res.status(200).json({ message: "Group updated successfully", group });
 
 
   } catch (err) {
@@ -532,7 +713,7 @@ exports.getAllGroupsFrequencyOfUser = async (req, res) => {
 
 exports.getAllGroupsFrequency = async (req, res) => {
   try {
-    const getAllGroupCat = await GroupFrequencyModel.find().sort({ createdAt: -1 }) ;
+    const getAllGroupCat = await GroupFrequencyModel.find().sort({ name: 1 }) ;
    
     res
       .status(200)
