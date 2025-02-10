@@ -36,11 +36,11 @@ exports.addGroup = async (req, res) => {
       { name: 'userId', value: userId },
       { name: 'groupType', value: groupType },
       { name: 'description', value: description },
-      { name: 'rulesAndRegulation', value: rulesAndRegulation },
+      // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'contributionAmount', value: contributionAmount },
-      { name: 'image', value: image },
+      // { name: 'image', value: image },
       { name: 'referralCode', value: referralCode }
     ];
 
