@@ -648,7 +648,7 @@ res.status(200).json({ message: "Group updated successfully", group });
     console.error("Error updating group:", err);
     res.status(500).json({ error: "Failed to update group" });
   }
-}; 
+};    
 
   
 exports.deleteGroup = async (req, res) => {
