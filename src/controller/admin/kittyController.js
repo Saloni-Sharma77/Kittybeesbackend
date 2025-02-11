@@ -252,11 +252,11 @@ exports.updateKitty = async (req, res) => {
     // if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
     //   return res.status(400).json({ error: "Invalid groupId" });
     // }
-    if (groupId) {
-      if (mongoose.Types.ObjectId.isValid(groupId)) {
-        groupId = [groupId]; // Ensure it's an array with a valid ObjectId
-      }
+    let updatedGroupId = groupId;
+    if (groupId && mongoose.Types.ObjectId.isValid(groupId)) {
+      updatedGroupId = [groupId]; // Ensure it's an array with a valid ObjectId
     }
+
     if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: "Invalid userId" });
     }
@@ -302,7 +302,7 @@ exports.updateKitty = async (req, res) => {
     // Prepare the update object
     const updatedData = {
       ...(name && { name }),
-      ...(groupId && { groupId }),
+      ...(groupId && { groupId: updatedGroupId }),
       ...(userId && { userId }),
       ...(date && { date }),
       ...(time && { time }),
