@@ -116,13 +116,28 @@ exports.addGroup = async (req, res) => {
 
     if (tokens?.length > 0) {
       // Send notification to all the tokens
-      await sendPushNotifications({
-        title: 'Group Notification', // Customize the title as needed
-        message: userId === newGroup.userId.toString()
-        ? `You have created the group: ${newGroup.name}`
-        : `You have been added to the group: ${newGroup.name}`,
-        userId: userId,
+      const notifications = approvedUserIds.map(memberId => ({
+        title: 'Group Notification',
+        message: memberId.toString() === newGroup.userId.toString()
+          ? `You have created the group: ${newGroup.name}`
+          : `You have been added to the group: ${newGroup.name}`,
+        userId: memberId,
+      }));
+      
+      // Add notification for the creator separately
+      notifications.push({
+        title: 'Group Notification',
+        message: `You have created the group: ${newGroup.name}`,
+        userId: newGroup.userId.toString(),
       });
+      
+      // Send notifications to all users (creator + added members)
+      for (const notification of notifications) {
+        await sendPushNotifications(notification);
+      }
+      
+      console.log('Notifications sent to creator & members');
+      
 
       console.log('Notification sent');
     } else {
