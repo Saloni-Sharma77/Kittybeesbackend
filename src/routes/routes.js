@@ -5,6 +5,7 @@ const router = express.Router();
 // Upload images to S3 bucket
 const uploadImage = require("../controller/admin/s3UploadController")
 const detectGender = require("../controller/admin/detectGenderController")
+const walletController = require('../controller/client/groupWalletControllers');
 
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
@@ -6509,6 +6510,12 @@ router.get('/getNotificationsOfUser/:userId', notification_Controller.getNotific
 router.delete('/deleteNotificationById/:notificationId', notification_Controller.deleteNotificationById);
 
 
+// group wallet 
+// router.get('/group/:groupId/total-amount', walletController.getTotalAmountOfGroup);
+// router.get('/group/:groupId/total-expenses', walletController.getTotalExpensesOnGroup);
+// router.get('/group/:groupId/total-spent-on-kitties', walletController.getTotalSpentOnKitties);
+// router.get('/group/:groupId/user-transactions', walletController.getTotalAmountByGroupUsers);
+router.get('/group/:groupId/summary', walletController.getGroupFinancialSummary);
 
 
 

@@ -18,6 +18,7 @@ exports.addGroup = async (req, res) => {
     const {
       name,
       userId, 
+      userNumbers,
       userIds,
       groupInterestId,
       groupFrequencyId,
@@ -36,7 +37,7 @@ exports.addGroup = async (req, res) => {
       { name: 'userId', value: userId },
       { name: 'groupType', value: groupType },
       { name: 'description', value: description },
-      { name: 'rulesAndRegulation', value: rulesAndRegulation },
+      // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'contributionAmount', value: contributionAmount },
@@ -55,6 +56,7 @@ exports.addGroup = async (req, res) => {
       name,
       userId,
       userIds,
+      userNumbers,
       groupInterestId,
       groupFrequencyId,
       groupType,
@@ -648,7 +650,7 @@ res.status(200).json({ message: "Group updated successfully", group });
     console.error("Error updating group:", err);
     res.status(500).json({ error: "Failed to update group" });
   }
-}; 
+};    
 
   
 exports.deleteGroup = async (req, res) => {
