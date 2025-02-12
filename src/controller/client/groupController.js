@@ -619,19 +619,19 @@ if (!group) {
 }
 
 
-if (!Array.isArray(group.userNumbers)) {
-  group.userNumbers = [];
-}
-
-// Check and add new userNumbers
 if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
-  const newNumbers = req.body.userNumbers.filter(num => !group.userNumbers.includes(num));
+  const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+
+  const newNumbers = uniqueNewNumbers.filter(num => 
+    !group.userNumbers.map(String).includes(num)
+  );
 
   if (newNumbers.length > 0) {
     group.userNumbers.push(...newNumbers);
     group.markModified("userNumbers"); 
   }
 }
+
 
 delete updateData.userNumbers
 
