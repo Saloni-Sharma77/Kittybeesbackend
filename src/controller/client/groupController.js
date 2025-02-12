@@ -82,6 +82,7 @@ exports.addGroup = async (req, res) => {
       message: `You have created the group: ${newGroup.name}`,
       type: 'group',
     };
+    console.log(userId == newGroup?.userId,userId, newGroup?.userId,'ksdjkdsjksdjkjksd')
 
     // Save notifications for users with status 'approved'
     const approvedUserIds = newGroup.userIds
@@ -92,7 +93,7 @@ exports.addGroup = async (req, res) => {
       userId,
       groupId: newGroup._id,
       type: 'group',
-      message: `You have been added to the group: ${newGroup.name}`,
+      message:userId?.toString() == newGroup?.userId?.toString() ? `You have created the group: ${newGroup.name}` : `You have been added to the group: ${newGroup.name}`,
     }));
 
     // Combine notifications for the creator and the users
@@ -105,10 +106,7 @@ exports.addGroup = async (req, res) => {
     const fcmTokens = await FcmToken.find({ userId: { $in: approvedUserIds } });
     console.log(fcmTokens, 'ffffff');
 
-    // Ensure all tokens are valid, non-empty strings
-    // const tokens = fcmTokens
-    //   .map(tokenDoc => tokenDoc?.fcmToken)
-    //   .filter(token => token && token.trim() !== ''); // Skip empty or invalid tokens
+
     const tokens = fcmTokens
   .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of fcmTokens
   .filter((token) => token && token.trim() !== ''); // Ensure tokens are valid and non-empty
@@ -119,8 +117,10 @@ exports.addGroup = async (req, res) => {
     if (tokens?.length > 0) {
       // Send notification to all the tokens
       await sendPushNotifications({
-        title: 'Group Added', // Customize the title as needed
-        message: `You have been added to the group: ${newGroup.name}`,
+        title: 'Group Notification', // Customize the title as needed
+        message: userId === newGroup.userId.toString()
+        ? `You have created the group: ${newGroup.name}`
+        : `You have been added to the group: ${newGroup.name}`,
         userId: userId,
       });
 
