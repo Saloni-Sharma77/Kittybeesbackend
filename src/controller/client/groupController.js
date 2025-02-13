@@ -1179,3 +1179,56 @@ exports.performSpin = async (req, res) => {
 };
 
 
+
+// delete user from group 
+// exports.removeUserFromGroup = async (req, res) => {
+//   try {
+//     const { groupId, userId } = req.body; 
+
+//     if (!groupId || !userId) {
+//       return res.status(400).json({ message: "groupId and userId are required" });
+//     }
+
+//     const updatedGroup = await Group.findByIdAndUpdate(
+//       groupId,
+//       { $pull: { userIds: { userId } } },
+//       { new: true }
+//     );
+
+//     if (!updatedGroup) {
+//       return res.status(404).json({ message: "Group not found" });
+//     }
+
+//     res.json({ message: "User removed successfully", data: updatedGroup });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+
+
+exports.removeUserFromGroup = async (req, res) => {
+  try {
+    const { groupId, userId } = req.query;
+
+    if (!groupId || !userId) {
+      return res.status(400).json({ message: "groupId and userId are required" });
+    }
+
+    const updatedGroup = await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { userIds: { userId } } }, 
+      { new: true }
+    );
+
+    if (!updatedGroup) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    res.json({ message: "User removed successfully", data: updatedGroup });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
