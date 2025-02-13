@@ -634,19 +634,19 @@ if (!group) {
 }
 
 
-if (!Array.isArray(group.userNumbers)) {
-  group.userNumbers = [];
-}
-
-// Check and add new userNumbers
 if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
-  const newNumbers = req.body.userNumbers.filter(num => !group.userNumbers.includes(num));
+  const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+
+  const newNumbers = uniqueNewNumbers.filter(num => 
+    !group.userNumbers.map(String).includes(num)
+  );
 
   if (newNumbers.length > 0) {
     group.userNumbers.push(...newNumbers);
     group.markModified("userNumbers"); 
   }
 }
+
 
 delete updateData.userNumbers
 
@@ -1194,3 +1194,28 @@ exports.performSpin = async (req, res) => {
 };
 
 
+
+exports.removeUserFromGroup = async (req, res) => {
+  try {
+    const { groupId, userId } = req.query;
+
+    if (!groupId || !userId) {
+      return res.status(400).json({ message: "groupId and userId are required" });
+    }
+
+    const updatedGroup = await Group.findByIdAndUpdate(
+      groupId,
+      { $pull: { userIds: { userId } } }, 
+      { new: true }
+    );
+
+    if (!updatedGroup) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    res.json({ message: "User removed successfully", data: updatedGroup });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
