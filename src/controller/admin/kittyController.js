@@ -1295,52 +1295,66 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   return distance;
 }
 
-exports.getNearByKitty = async (req, res) => {
+ exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
 
-    if (!lat || !long) {
-      return res.status(400).json({ error: 'Latitude and longitude are required.' });
-    }
+     if (!lat || !long) {
+     return res.status(400).json({ error: 'Latitude and longitude are required.' });
+  }
 
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(long);
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(long);
+       
+    //Getting today's date 
+       const today = new Date();
+       today.setUTCHours(0, 0, 0, 0);
 
-    // Find all venues (since we don’t have a geospatial index in this schema)
-    const venues = await Venue.find().select('_id lat long');
+  //Find all venues (since we don’t have a geospatial index in this schema)
+   const venues = await Venue.find().select('_id lat long');
 
-    // Filter venues within 5 km radius
-    const nearbyVenueIds = venues
-      .filter(venue => {
-        const venueLat = parseFloat(venue.lat);
-        const venueLong = parseFloat(venue.long);
-        const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
-        return distance <= 5;
-      })
-      .map(venue => venue._id);
+  // Filter venues within 5 km radius
+ const nearbyVenueIds = venues
+       .filter(venue => {
+         const venueLat = parseFloat(venue.lat);
+      const venueLong = parseFloat(venue.long);
+     const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
+     return distance <= 5;
+   })
+   .map(venue => venue._id);
 
-    // Find kitties associated with the nearby venues
-    const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds } })
-      .populate({
-        path: 'venueId',
-        select: 'name location lat long pricing',  // Include venue name, location, lat, and long
-      }).populate('themeId','name')
-      .exec();
+  // Find kitties associated with the nearby venues
+  const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds }, })
+    .populate({
+     path: 'venueId',
+      select: 'name location lat long pricing',  // Include venue name, location, lat, and long
+   }).populate('themeId','name')
+   .exec();
 
-      const  kitties= kittiesWithApprovedCount.map(kitty => {
-        const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
-        return {
-          ...kitty.toObject(),
-          approvedMembersCount: approvedCount
-        };
+   
+   // filtering upcoming kitties only (by date)
+   const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
+    const [day, month, year] = kitty.date.split('/').map(Number);  
+    const kittyDate = new Date(year, month - 1, day); 
+    return kittyDate >= today; 
+  });
+
+   const  kitties= filteredKitties.map(kitty => {
+       const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
+       return {
+      ...kitty.toObject(),
+         approvedMembersCount: approvedCount
+         };
       });
 
-    return res.status(200).json({ success: true,kitties });
+     return res.status(200).json({ success: true,kitties });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
+     return res.status(500).json({ error: 'Internal Server Error' });
+ }
 };
+
+
 
 
 exports.submitKittyReview = async (req, res) => {

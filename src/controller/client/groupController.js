@@ -49,7 +49,8 @@ exports.addGroup = async (req, res) => {
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
       }
-    }
+    } 
+
 
     // Create a new group instance
     const newGroup = new Group({
