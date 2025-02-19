@@ -1319,7 +1319,7 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
          const venueLat = parseFloat(venue.lat);
       const venueLong = parseFloat(venue.long);
      const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
-     return distance <= 5;
+     return distance <= 10;
    })
    .map(venue => venue._id);
 
