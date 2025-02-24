@@ -73,7 +73,6 @@ const addUserToGroup = async (req, res) => {
 
 
 
-// Update the status of a user in a group
 const updateUserStatus = async (req, res) => {
   try {
     const { groupId, userId, status, notificationId } = req.body;
@@ -87,8 +86,8 @@ const updateUserStatus = async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
-    let groupcopy = JSON.parse(JSON.stringify(group))
 
+    let groupcopy = JSON.parse(JSON.stringify(group));
 
     // Find the user in the group
     const user = group.userIds.find(u => u.userId.toString() === userId.toString());
@@ -97,7 +96,7 @@ const updateUserStatus = async (req, res) => {
       return res.status(404).json({ message: 'User not found in the group' });
     }
 
-    // Update user status
+    // Update user status in the group
     user.status = status;
     await group.save();
 
@@ -110,33 +109,35 @@ const updateUserStatus = async (req, res) => {
       ? `You have accepted the invitation for group: ${groupcopy.name}.`
       : `You have rejected the invitation for group: ${groupcopy.name}.`;
 
-    // Log the messages for debugging
     console.log(notificationMessage, hostNotificationMessage);
 
-    // Update or create the notification for the host
+    // Update the notification for the host, including the status update
+    const notificationStatus = status === 'approved' ? 'accepted' : 'rejected';
+
     await NotificationSchema.findByIdAndUpdate(
       notificationId,
-      { message: hostNotificationMessage, type: 'group' },
-      { new: true, upsert: true }  // upsert ensures creation if the notification doesn't exist
+      { message: hostNotificationMessage, type: 'group', status: notificationStatus },
+      { new: true, upsert: true }
     );
 
     // Send a new notification to the user
     const userNotification = new NotificationSchema({
-      userId, // Notification for the user
-      groupId: groupId,
+      userId, 
+      groupId,
       message: notificationMessage,
-      type: 'group'
+      type: 'group',
+      status: notificationStatus // Update the status field here
     });
 
     await userNotification.save();
 
-    // Return success response
-    res.status(200).json({ message: 'User status updated successfully', group });
+    res.status(200).json({ message: 'User status and notification updated successfully', group });
   } catch (error) {
     console.error('Error updating user status:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
