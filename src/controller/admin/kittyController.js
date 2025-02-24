@@ -2,6 +2,7 @@ require('dotenv').config();
 const Kitty = require("../../schema/kittySchema");
 const Venue = require("../../schema/venueSchema");
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
+const admin = require("firebase-admin");
 
 const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
@@ -946,6 +947,7 @@ exports.joinKitty = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong" });
   }
 };
+
 exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
@@ -972,69 +974,69 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       return res.status(404).json({ message: "Member not found in the Kitty" });
     }
 
-    // Check if the member's status is already approved
-    if (findWhichKitty.members[memberIndex].status === 'approved') {
+    // Fetch the Notification document
+    const existingNotification = await NotificationSchema.findById(notificationId);
+    if (!existingNotification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    // Convert "approved" to "accepted" for Notification Schema
+    const notificationStatus = status === 'approved' ? 'accepted' : status;
+
+    // Check if both are already approved/accepted
+    if (
+      findWhichKitty.members[memberIndex].status === 'approved' &&
+      existingNotification.status === 'accepted'
+    ) {
       return res.status(400).json({ message: "Request has already been approved" });
     }
 
-    // Update the member's status
+    // Update the member's status in the Kitty document
     findWhichKitty.members[memberIndex].status = status;
-
-    // Save the updated Kitty document
     await findWhichKitty.save();
 
-    // Prepare notification messages based on the status
-    const notificationMessage =
-      status === "approved"
-        ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
-        : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
-
-    const hostNotificationMessage =
-      status === "approved"
-        ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
-        : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
-
-    // Log the messages for debugging
-    console.log(notificationMessage, hostNotificationMessage);
-
-    // Update the existing notification with the new status
-    const updatedNotification = await NotificationSchema.findByIdAndUpdate(
+    // Update the notification's status
+    await NotificationSchema.findByIdAndUpdate(
       notificationId,
       { 
-        message: hostNotificationMessage, 
+        message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
         type: "kitty",
-        status: status === "approved" ? "accepted" : "rejected" // Update status field
+        status: notificationStatus // Update status field in NotificationSchema
       },
       { new: true }
     );
 
-    if (!updatedNotification) {
-      return res.status(404).json({ message: "Notification not found" });
-    }
+    // Prepare notification messages
+    const notificationMessage = status === "approved"
+      ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
+      : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
+
+    const hostNotificationMessage = status === "approved"
+      ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
+      : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
+
+    console.log(notificationMessage, hostNotificationMessage);
 
     // Send a new notification to the user
     const userNotification = new NotificationSchema({
-      userId, // Notification for the user
-      kittyId: kittyId,
+      userId,
+      kittyId,
       message: notificationMessage,
       type: "kitty",
-      status: status === "approved" ? "accepted" : "rejected" // Update status
+      status: notificationStatus // Ensure the status update in new notification
     });
 
     await userNotification.save();
 
-    // Fetch FCM tokens for notification
+    // Send FCM notifications
     const fcmTokens = await FcmToken.find({ userId: userId, deviceType: 'Android' });
-
-    const tokens = fcmTokens
-      .flatMap((tokenDoc) => tokenDoc?.fcmToken)
-      .filter((token) => token && token.trim() !== '');
+    const tokens = fcmTokens.flatMap((tokenDoc) => tokenDoc?.fcmToken).filter((token) => token && token.trim() !== '');
 
     const payload = {
       notification: {
         title: findWhichKitty.name,
         body: notificationMessage,
-        image: 'your_image_url', // Optional image URL if needed
+        image: 'your_image_url', // Optional
       },
       data: {
         route: 'your_route',
@@ -1047,25 +1049,34 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       priority: "high",
     };
 
-    // Send notification to each token using the send method
-    if (tokens?.length > 0) {
-      await Promise.all(tokens.map(token =>
-        admin.messaging().send({
-          token: token,
-          notification: payload.notification,
-          data: payload.data,
-          android: {
-            priority: options.priority,
-          },
+    if (tokens.length > 0) {
+      await Promise.all(
+        tokens.map(async (token) => {
+          try {
+            await admin.messaging().send({
+              token: token,
+              notification: payload.notification,
+              data: payload.data,
+              android: {
+                priority: options.priority,
+              },
+            });
+          } catch (error) {
+            console.error(`FCM error for token ${token}:`, error);
+    
+            // If token is invalid, remove it from the database
+            if (error.code === "messaging/registration-token-not-registered") {
+              await FcmToken.findOneAndDelete({ fcmToken: token });
+              console.log(`Removed invalid FCM token: ${token}`);
+            }
+          }
         })
-      ));
+      );
     }
-
-    // Respond with success message
-    res.status(200).json({ message: `Request ${status}`, notification: updatedNotification });
+    
+    res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
-    // Handle errors
-    console.error(error);
+    console.error("Error in acceptOrRejectRequestOfKitty:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
