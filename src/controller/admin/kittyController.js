@@ -997,12 +997,20 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     // Log the messages for debugging
     console.log(notificationMessage, hostNotificationMessage);
 
-    // Update or create the notification for the host
-    await NotificationSchema.findByIdAndUpdate(
+    // Update the existing notification with the new status
+    const updatedNotification = await NotificationSchema.findByIdAndUpdate(
       notificationId,
-      { message: hostNotificationMessage, type: "kitty" },
-      { new: true, upsert: true } // upsert ensures creation if the notification doesn't exist
+      { 
+        message: hostNotificationMessage, 
+        type: "kitty",
+        status: status === "approved" ? "accepted" : "rejected" // Update status field
+      },
+      { new: true }
     );
+
+    if (!updatedNotification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
 
     // Send a new notification to the user
     const userNotification = new NotificationSchema({
@@ -1010,55 +1018,54 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       kittyId: kittyId,
       message: notificationMessage,
       type: "kitty",
+      status: status === "approved" ? "accepted" : "rejected" // Update status
     });
 
     await userNotification.save();
-    const fcmTokens = await FcmToken.find({ userId: userId,deviceType: 'Android',});
-    // const tokens = fcmTokens
-    // .map(tokenDoc => tokenDoc.fcmToken)
-  
+
+    // Fetch FCM tokens for notification
+    const fcmTokens = await FcmToken.find({ userId: userId, deviceType: 'Android' });
+
     const tokens = fcmTokens
-  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
-  .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
+      .flatMap((tokenDoc) => tokenDoc?.fcmToken)
+      .filter((token) => token && token.trim() !== '');
 
+    const payload = {
+      notification: {
+        title: findWhichKitty.name,
+        body: notificationMessage,
+        image: 'your_image_url', // Optional image URL if needed
+      },
+      data: {
+        route: 'your_route',
+        title: findWhichKitty.name,
+        body: notificationMessage,
+      },
+    };
 
-        const payload = {
-          notification: {
-              title: findWhichKitty.name,
-              body: notificationMessage,
-              image: 'your_image_url', // Optional image URL if needed
+    const options = {
+      priority: "high",
+    };
+
+    // Send notification to each token using the send method
+    if (tokens?.length > 0) {
+      await Promise.all(tokens.map(token =>
+        admin.messaging().send({
+          token: token,
+          notification: payload.notification,
+          data: payload.data,
+          android: {
+            priority: options.priority,
           },
-          data: {
-              route: 'your_route', 
-              title: findWhichKitty.name,
-              body: notificationMessage,
-          },
-      };
-    
-      const options = {
-          priority: "high",
-      };
-    
-      // Send notification to each token using the send method
-      if(tokens?.length > 0){
-
-        const response = await Promise.all(tokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-            })
-        ));
-      }
+        })
+      ));
+    }
 
     // Respond with success message
-    res.status(200).json({ message: `Request ${status}` });
+    res.status(200).json({ message: `Request ${status}`, notification: updatedNotification });
   } catch (error) {
     // Handle errors
-    console.error(error); // Log the error for debugging
+    console.error(error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
