@@ -9,6 +9,7 @@ const GroupSchema = new mongoose.Schema({
   lat: { type: String },
   long: { type: String },
   image: { type: String },
+  menu: { type: String },
   pricing: { type: String },
   contactNo: { type: String },
   isActive: { type: Boolean, default: true },
