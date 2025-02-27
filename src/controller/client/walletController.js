@@ -1,7 +1,8 @@
 const WalletModel = require("../../schema/walletSchema");
 const WalletCategeorymodel = require("../../schema/WalletCategorySchema");
 const Kitty = require("../../schema/kittySchema");
-
+const Message = require("../../schema/messageSchema"); // Assuming this is your Message model
+const User = require("../../schema/userSchema"); // As
 const moment = require("moment"); // Add moment.js to handle date formatting
 const mongoose = require("mongoose");
 
@@ -180,6 +181,60 @@ exports.getAllWalletTransactionsForUser = async (req, res) => {
   }
 };
 
+// exports.addExpenseAndContributionForKitty = async (req, res) => {
+//   try {
+//     const {
+//       userId,
+//       receiverId,
+//       invoice,
+//       walletCategoryId,
+//       groupId,
+//       kittyId,
+//       amount,
+//       transactionType,
+//       date,
+//       description,
+//     } = req.body;
+
+//     // Validate the required fields
+//     if (!userId || !groupId || !kittyId || !amount || !transactionType) {
+//       return res.status(400).json({ error: "Missing required fields" });
+//     }
+
+//     // Check if transactionType is valid
+//     const validTransactionTypes = ["Contribution", "Expense"];
+//     if (!validTransactionTypes.includes(transactionType)) {
+//       return res.status(400).json({ error: "Invalid transactionType" });
+//     }
+
+//     // Create a new wallet entry
+//     const newExpense = new WalletModel({
+//       userId,
+//       groupId,
+//       receiverId,
+//       walletCategoryId,
+//       invoice,
+//       kittyId,
+//       amount,
+//       transactionType,
+//       date: date || Date.now(),
+//       description, // Optional field
+//     });
+
+//     // Save to the database
+//     const savedExpense = await newExpense.save();
+
+//     // Send a success response
+//     res
+//       .status(201)
+//       .json({ message: "Expense added successfully", data: savedExpense });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ error: "An error occurred while adding the expense" });
+//   }
+// };
+
 exports.addExpenseAndContributionForKitty = async (req, res) => {
   try {
     const {
@@ -206,6 +261,12 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       return res.status(400).json({ error: "Invalid transactionType" });
     }
 
+    // Fetch the user's full name
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     // Create a new wallet entry
     const newExpense = new WalletModel({
       userId,
@@ -223,16 +284,43 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
     // Save to the database
     const savedExpense = await newExpense.save();
 
+    // Create a new message entry
+    const newMessage = {
+      senderId: userId,
+      amount,
+      amountType: transactionType,
+      name: user.fullName, // Assuming `fullName` is the field storing user's name
+      timestamp: Date.now(),
+    };
+
+    // Find the message document for the group, or create one if it doesn't exist
+    let messageDoc = await Message.findOne({ groupId });
+
+    if (!messageDoc) {
+      messageDoc = new Message({
+        groupId,
+        messages: [newMessage],
+      });
+    } else {
+      messageDoc.messages.push(newMessage);
+    }
+
+    // Save the message document
+    await messageDoc.save();
+
     // Send a success response
-    res
-      .status(201)
-      .json({ message: "Expense added successfully", data: savedExpense });
+    res.status(201).json({
+      message: "Expense added successfully",
+      data: savedExpense,
+      messageData: newMessage,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while adding the expense" });
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while adding the expense" });
   }
 };
+
+
 
 exports.getAllWalletTransactionsForKitty = async (req, res) => {
   try {
