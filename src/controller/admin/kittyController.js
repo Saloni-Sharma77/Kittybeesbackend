@@ -1491,3 +1491,51 @@ exports.sendKittyReminderToUser = async (req, res) => {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+exports.getKittySummary = async (req, res) => {
+  try {
+    const { kittyId } = req.params;
+
+    if (!kittyId) {
+      return res.status(400).json({ error: "Kitty ID is required" });
+    }
+
+    // Aggregation to calculate total contribution and expense
+    const result = await WalletSchema.aggregate([
+      { $match: { kittyId: new mongoose.Types.ObjectId(kittyId) } }, // Filter by kittyId
+      {
+        $group: {
+          _id: "$kittyId",
+          totalContribution: {
+            $sum: {
+              $cond: [{ $eq: ["$transactionType", "Contribution"] }, "$amount", 0],
+            },
+          },
+          totalExpense: {
+            $sum: {
+              $cond: [{ $eq: ["$transactionType", "Expense"] }, "$amount", 0],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalContribution: 1,
+          totalExpense: 1,
+          savedAmount: { $subtract: ["$totalContribution", "$totalExpense"] }, // Calculate saved amount
+          TotalAmount: { $add: ["$totalContribution", "$totalExpense"] }, // Calculate saved amount
+        },
+      },
+    ]);
+
+    if (!result.length) {
+      return res.status(404).json({ message: "No transactions found for this kitty" });
+    }
+
+    res.status(200).json({ success: true, data: result[0] });
+  } catch (error) {
+    console.error("Error fetching kitty summary:", error);
+    res.status(500).json({ error: "An error occurred while fetching kitty summary" });
+  }
+};

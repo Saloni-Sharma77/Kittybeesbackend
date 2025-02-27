@@ -623,6 +623,7 @@ router.get("/getAllUsersList", user_admin_controller.getAllUsersList);
  */
 router.get("/getUserKittyVenueGroupCount", user_admin_controller.getUserKittyVenueGroupCount);
 
+
 /**
  * @swagger
  * /getuserById/{id}:
@@ -3568,6 +3569,7 @@ router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
 router.put("/quitKittyByUser/:id", kitty_controller.quitKittyByUser);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser);
+router.get("/kittysummary/:kittyId",kitty_controller.getKittySummary);
 
 
 
