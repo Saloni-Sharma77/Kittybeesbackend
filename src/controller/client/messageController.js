@@ -1,5 +1,6 @@
 const Message = require('../../schema/messageSchema');
 const User = require('../../schema/userSchema');
+const Wallet = require('../../schema/walletSchema');
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const { sendPushNotificationsCreateMessage } = require('../../PushNotification/pushNotification');
 
@@ -148,40 +149,79 @@ exports.createMessage = async (req, res) => {
 //   }
 // };
 
+// exports.getMessages = async (req, res) => {
+//   try {
+//     const { search } = req.query; // Extract the optional `search` query parameter
+
+//     // Find the document for the given groupId
+//     const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate(
+//       'messages.senderId',
+//       'fullname profileImage'
+//     ).populate(
+//       'messages.pollOptions.options.voters',
+//       'fullname profileImage'
+      
+//     )
+
+//     if (!messageDoc) {
+//       return res.status(404).json({ error: 'Messages not found' });
+//     }
+
+//     // Filter messages based on the search query, if provided
+//     let filteredMessages = messageDoc.messages;
+
+//     if (search) {
+//       const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+//       filteredMessages = filteredMessages.filter((message) => searchRegex.test(message.content));
+//     }
+
+//     // Return the filtered messages array (or the original array if no search)
+//     res.status(200).json(filteredMessages);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// };
+
 exports.getMessages = async (req, res) => {
   try {
     const { search } = req.query; // Extract the optional `search` query parameter
+    const { groupId } = req.params; // Extract groupId from request params
 
-    // Find the document for the given groupId
-    const messageDoc = await Message.findOne({ groupId: req.params.groupId }).populate(
-      'messages.senderId',
-      'fullname profileImage'
-    ).populate(
-      'messages.pollOptions.options.voters',
-      'fullname profileImage'
-      
-    )
+    // Fetch messages for the given groupId
+    const messageDoc = await Message.findOne({ groupId })
+      .populate('messages.senderId', 'fullname profileImage')
+      .populate('messages.pollOptions.options.voters', 'fullname profileImage');
 
+    // Fetch wallet transactions for the same groupId
+    const walletTransactions = await Wallet.find({ groupId })
+      .populate('userId', 'fullname profileImage')
+      .select('amount transactionType userId'); // Select only required fields
+
+    // If no messages are found
     if (!messageDoc) {
       return res.status(404).json({ error: 'Messages not found' });
     }
 
-    // Filter messages based on the search query, if provided
+    // Filter messages based on search query (if provided)
     let filteredMessages = messageDoc.messages;
-
     if (search) {
       const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
-      filteredMessages = filteredMessages.filter((message) => searchRegex.test(message.content));
+      filteredMessages = filteredMessages.filter((message) =>
+        searchRegex.test(message.content)
+      );
     }
 
-    // Return the filtered messages array (or the original array if no search)
-    res.status(200).json(filteredMessages);
+    // Return both messages and wallet transactions
+    res.status(200).json({
+      messages: filteredMessages,
+      transactions: walletTransactions
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
 
 
 //voting starts here
