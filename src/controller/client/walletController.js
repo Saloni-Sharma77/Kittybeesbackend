@@ -250,22 +250,28 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       description,
     } = req.body;
 
-    // Validate the required fields
+    // Validate required fields
     if (!userId || !groupId || !kittyId || !amount || !transactionType) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if transactionType is valid
+    // Validate transactionType
     const validTransactionTypes = ["Contribution", "Expense"];
     if (!validTransactionTypes.includes(transactionType)) {
       return res.status(400).json({ error: "Invalid transactionType" });
     }
 
     // Fetch the user's full name
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("fullname");
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    console.log("Fetched user:", user); // Debugging log
+
+    // Ensure fullName exists
+    const userName = user.fullname || "Unknown User";
 
     // Create a new wallet entry
     const newExpense = new WalletModel({
@@ -289,7 +295,8 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       senderId: userId,
       amount,
       amountType: transactionType,
-      name: user.fullName, // Assuming `fullName` is the field storing user's name
+      name: userName,
+      message: `${userName} added ${amount} ${transactionType}`,
       timestamp: Date.now(),
     };
 
@@ -315,7 +322,7 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       messageData: newMessage,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
     res.status(500).json({ error: "An error occurred while adding the expense" });
   }
 };
