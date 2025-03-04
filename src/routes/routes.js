@@ -3574,6 +3574,7 @@ router.get("/kittysummary/:kittyId",kitty_controller.getKittySummary);
 
 
 
+
 /**
  * @swagger
  * /getAllPastAndFutureKitties:

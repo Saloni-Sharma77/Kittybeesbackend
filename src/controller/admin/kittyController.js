@@ -1549,3 +1549,4 @@ exports.getKittySummary = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching kitty summary" });
   }
 };
+

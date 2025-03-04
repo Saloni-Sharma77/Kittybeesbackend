@@ -329,22 +329,45 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
 
 
 
+
 exports.getAllWalletTransactionsForKitty = async (req, res) => {
   try {
     const { kittyId } = req.params;
+    const { search, type } = req.query; // Get search and type filter from query params
 
     // Validate kittyId
     if (!kittyId) {
       return res.status(400).json({ error: "kittyId is required" });
     }
 
+    // Build the filter query
+    let filter = { kittyId };
+
+    // Apply type filter if provided
+    if (type) {
+      filter.transactionType = type; // Filters for 'Expense' or 'Contribution'
+    }
+
     // Fetch all transactions related to the given kittyId
-    const transactions = await WalletModel.find({ kittyId })
-      .populate("userId")
-      .populate("receiverId","fullname profileImage")
+    let transactions = await WalletModel.find(filter)
+      .populate("userId", "fullname")
+      .populate("receiverId", "fullname profileImage")
       .populate("kittyId", "name image")
       .populate("groupId", "name");
 
+    // Apply search filter (if provided)
+    if (search) {
+      const lowerCaseSearch = search.toLowerCase();
+      transactions = transactions.filter((transaction) => {
+        const senderName = transaction?.userId?.fullname?.toLowerCase() || "";
+        const receiverName =
+          transaction?.receiverId?.fullname?.toLowerCase() || "";
+        return (
+          senderName.includes(lowerCaseSearch) ||
+          receiverName.includes(lowerCaseSearch)
+        );
+      });
+    }
 
     // Check if transactions exist
     if (!transactions.length) {
@@ -353,51 +376,50 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
         .json({ message: "No transactions found for this kittyId" });
     }
 
-    // Group transactions by date
+    // Group transactions by date and calculate totals
     let expenseTotal = 0;
     let contributionTotal = 0;
 
-
     const groupedByDate = transactions.reduce((result, transaction) => {
-      if(transaction?.transactionType == 'Expense'){
-        expenseTotal +=  transaction?.amount;
-        console.log(transaction.expenseTotal,'transactionExpense')
+      if (transaction.transactionType === "Expense") {
+        expenseTotal += transaction.amount;
+      }
+      if (transaction.transactionType === "Contribution") {
+        contributionTotal += transaction.amount;
+      }
 
-      }
-      if(transaction?.transactionType == 'Contribution'){
-        contributionTotal +=  transaction?.amount;
-        
-      }
-      // Format the date to 'YYYY-MM-DD' format to ignore time part
+      // Format the date to 'YYYY-MM-DD'
       const date = moment(transaction.date).format("YYYY-MM-DD");
+
       // Initialize array if date key does not exist
       if (!result[date]) {
         result[date] = [];
       }
+
       // Push the transaction into the date's array
       result[date].push(transaction);
       return result;
     }, {});
-    console.log(groupedByDate,'groupedByDate',expenseTotal,contributionTotal)
 
-    // Convert grouped object to an array format if preferred
+    // Convert grouped object to an array format
     const groupedArray = Object.entries(groupedByDate).map(
       ([date, transactions]) => ({
         date,
         transactions,
       })
     );
-    total={
-      expenseTotal:expenseTotal,
-      contributionTotal:contributionTotal
-      
-    }
 
-    // Send a success response with grouped transactions
+    // Total calculations
+    const total = {
+      expenseTotal,
+      contributionTotal,
+    };
+
+    // Send success response
     res.status(200).json({
       message: "Transactions retrieved successfully",
       data: groupedArray,
-      total:total
+      total,
     });
   } catch (error) {
     console.error(error);
@@ -406,6 +428,7 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
       .json({ error: "An error occurred while fetching transactions" });
   }
 };
+
 
 exports.getUserWalletForGroup = async (req, res) => {
   const { userId, groupId } = req.params; // Assuming you get these from the request params
