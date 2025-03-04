@@ -330,10 +330,112 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
 
 
 
+// exports.getAllWalletTransactionsForKitty = async (req, res) => {
+//   try {
+//     const { kittyId } = req.params;
+//     const { search, type } = req.query; // Get search and type filter from query params
+
+//     // Validate kittyId
+//     if (!kittyId) {
+//       return res.status(400).json({ error: "kittyId is required" });
+//     }
+
+//     // Build the filter query
+//     let filter = { kittyId };
+
+//     // Apply type filter if provided
+//     if (type) {
+//       filter.transactionType = type; // Filters for 'Expense' or 'Contribution'
+//     }
+
+//     // Fetch all transactions related to the given kittyId
+//     let transactions = await WalletModel.find(filter)
+//       .populate("userId", "fullname")
+//       .populate("receiverId", "fullname profileImage")
+//       .populate("kittyId", "name image")
+//       .populate("groupId", "name");
+
+//     // Apply search filter (if provided)
+//     if (search) {
+//       const lowerCaseSearch = search.toLowerCase();
+//       transactions = transactions.filter((transaction) => {
+//         const senderName = transaction?.userId?.fullname?.toLowerCase() || "";
+//         const receiverName =
+//           transaction?.receiverId?.fullname?.toLowerCase() || "";
+//         return (
+//           senderName.includes(lowerCaseSearch) ||
+//           receiverName.includes(lowerCaseSearch)
+//         );
+//       });
+//     }
+
+//     // Check if transactions exist
+//     if (!transactions.length) {
+//       return res
+//         .status(404)
+//         .json({ message: "No transactions found for this kittyId" });
+//     }
+
+//     // Group transactions by date and calculate totals
+//     let expenseTotal = 0;
+//     let contributionTotal = 0;
+
+//     const groupedByDate = transactions.reduce((result, transaction) => {
+//       if (transaction.transactionType === "Expense") {
+//         expenseTotal += transaction.amount;
+//       }
+//       if (transaction.transactionType === "Contribution") {
+//         contributionTotal += transaction.amount;
+//       }
+
+//       // Format the date to 'YYYY-MM-DD'
+//       const date = moment(transaction.date).format("YYYY-MM-DD");
+
+//       // Initialize array if date key does not exist
+//       if (!result[date]) {
+//         result[date] = [];
+//       }
+
+//       // Push the transaction into the date's array
+//       result[date].push(transaction);
+//       return result;
+//     }, {});
+
+//     // Convert grouped object to an array format
+//     const groupedArray = Object.entries(groupedByDate).map(
+//       ([date, transactions]) => ({
+//         date,
+//         transactions,
+//       })
+//     );
+
+//     // Total calculations
+//     const total = {
+//       expenseTotal,
+//       contributionTotal,
+//     };
+
+//     // Send success response
+//     res.status(200).json({
+//       message: "Transactions retrieved successfully",
+//       data: groupedArray,
+//       total,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .json({ error: "An error occurred while fetching transactions" });
+//   }
+// };
+
+
+
+
 exports.getAllWalletTransactionsForKitty = async (req, res) => {
   try {
     const { kittyId } = req.params;
-    const { search, type } = req.query; // Get search and type filter from query params
+    const { search, type } = req.query; // Removed walletCategoryId since we will search by name
 
     // Validate kittyId
     if (!kittyId) {
@@ -353,27 +455,28 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
       .populate("userId", "fullname")
       .populate("receiverId", "fullname profileImage")
       .populate("kittyId", "name image")
-      .populate("groupId", "name");
+      .populate("groupId", "name")
+      .populate("walletCategoryId", "name"); // ✅ Populate category name
 
     // Apply search filter (if provided)
     if (search) {
       const lowerCaseSearch = search.toLowerCase();
       transactions = transactions.filter((transaction) => {
         const senderName = transaction?.userId?.fullname?.toLowerCase() || "";
-        const receiverName =
-          transaction?.receiverId?.fullname?.toLowerCase() || "";
+        const receiverName = transaction?.receiverId?.fullname?.toLowerCase() || "";
+        const categoryName = transaction?.walletCategoryId?.name?.toLowerCase() || ""; // ✅ Extract category name
+
         return (
           senderName.includes(lowerCaseSearch) ||
-          receiverName.includes(lowerCaseSearch)
+          receiverName.includes(lowerCaseSearch) ||
+          categoryName.includes(lowerCaseSearch) // ✅ Search by category name
         );
       });
     }
 
     // Check if transactions exist
     if (!transactions.length) {
-      return res
-        .status(404)
-        .json({ message: "No transactions found for this kittyId" });
+      return res.status(404).json({ message: "No transactions found for this kittyId" });
     }
 
     // Group transactions by date and calculate totals
@@ -402,12 +505,10 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
     }, {});
 
     // Convert grouped object to an array format
-    const groupedArray = Object.entries(groupedByDate).map(
-      ([date, transactions]) => ({
-        date,
-        transactions,
-      })
-    );
+    const groupedArray = Object.entries(groupedByDate).map(([date, transactions]) => ({
+      date,
+      transactions,
+    }));
 
     // Total calculations
     const total = {
@@ -423,9 +524,7 @@ exports.getAllWalletTransactionsForKitty = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching transactions" });
+    res.status(500).json({ error: "An error occurred while fetching transactions" });
   }
 };
 
