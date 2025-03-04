@@ -1492,6 +1492,7 @@ exports.sendKittyReminderToUser = async (req, res) => {
   }
 };
 
+
 exports.getKittySummary = async (req, res) => {
   try {
     const { kittyId } = req.params;
@@ -1500,7 +1501,7 @@ exports.getKittySummary = async (req, res) => {
       return res.status(400).json({ error: "Kitty ID is required" });
     }
 
-    // Aggregation to calculate total contribution and expense
+    // Aggregation to calculate total contribution, expense, and their counts
     const result = await WalletSchema.aggregate([
       { $match: { kittyId: new mongoose.Types.ObjectId(kittyId) } }, // Filter by kittyId
       {
@@ -1516,6 +1517,12 @@ exports.getKittySummary = async (req, res) => {
               $cond: [{ $eq: ["$transactionType", "Expense"] }, "$amount", 0],
             },
           },
+          contributionCount: {
+            $sum: { $cond: [{ $eq: ["$transactionType", "Contribution"] }, 1, 0] },
+          },
+          expenseCount: {
+            $sum: { $cond: [{ $eq: ["$transactionType", "Expense"] }, 1, 0] },
+          },
         },
       },
       {
@@ -1523,8 +1530,11 @@ exports.getKittySummary = async (req, res) => {
           _id: 0,
           totalContribution: 1,
           totalExpense: 1,
+          contributionCount: 1,
+          expenseCount: 1,
           savedAmount: { $subtract: ["$totalContribution", "$totalExpense"] }, // Calculate saved amount
-          TotalAmount: { $add: ["$totalContribution", "$totalExpense"] }, // Calculate saved amount
+          totalAmount: { $add: ["$totalContribution", "$totalExpense"] }, // Calculate total transaction amount
+          totalTransactions: { $add: ["$contributionCount", "$expenseCount"] }, // Total transaction count
         },
       },
     ]);
