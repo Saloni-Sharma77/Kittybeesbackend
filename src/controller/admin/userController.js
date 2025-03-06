@@ -115,9 +115,11 @@ exports.signup = async (req, res) => {
   
       // Get the count of groups the user is involved in (with status 'approved')
       const joinedGroupsCount = await GroupModel.countDocuments({
-        'userIds.userId': userId,
-        'userIds.status': 'approved',
+        userIds: {
+          $elemMatch: { userId: userId, status: 'approved' },
+        },
       });
+      
   
       // Calculate total count
       const totalCount = groupCount + joinedGroupsCount;
@@ -126,6 +128,7 @@ exports.signup = async (req, res) => {
       res.status(200).json({
         success: true,
         count: totalCount,
+ 
       });
     } catch (error) {
       res.status(500).json({
