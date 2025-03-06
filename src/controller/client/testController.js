@@ -28,32 +28,30 @@ exports.sendotptest = async (req, res) => {
         message: 'User is deactivated',
       });
     }
-    // save fcm token
-    const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType:'Android'});
-      // Send OTP
+     // save fcm token
+     const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType:'Android'});
+     // Send OTP
 
-      if (fcmRecord) {
-        // Update existing record
-        if (!fcmRecord.fcmToken.includes(fcmToken)) {
-          fcmRecord.fcmToken.push(fcmToken);
-          fcmRecord.updatedAt = new Date();
-          await fcmRecord.save();
-        }
-      } else {
-        // Create a new FCM record
-        await FcmTokenModel.create({
-          userId: user._id,
-          deviceType,
-          fcmToken: [fcmToken],
-        });
-      }
-    //exit
+     if (fcmRecord) {
+       // Update existing record
+       if (!fcmRecord.fcmToken.includes(fcmToken)) {
+         fcmRecord.fcmToken.push(fcmToken);
+         fcmRecord.updatedAt = new Date();
+         await fcmRecord.save();
+       }
+     } else {
+       // Create a new FCM record
+       await FcmTokenModel.create({
+         userId: user._id,
+         deviceType,
+         fcmToken: [fcmToken],
+       });
+     }
+   //exit
 
-    console.log("phoneNumber ", phoneNumber, process.env.MESSAGE_CENTRAL_AUTH_TOKEN)
 
       const axiosResponse = await axios.post(
-        `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}&type=SMS&message=%3CYour%20
-Message%20Template%3E&messageType=OTP`,
+        `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`,
         {},
         { headers: { authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN } }
       );
