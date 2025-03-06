@@ -278,99 +278,59 @@ exports.addGroup = async (req, res) => {
 
 
 
-
 exports.getAllGroups = async (req, res) => {
   try {
-    const { page = 1, limit = 20, name = "", userId, interestName } = req.query;
+    const { page = 1, limit = 20, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
 
+    // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
+    console.log('Page:', pageNumber, 'Limit:', pageSize); // Log page and limit values to debug
+
+    // Build the query object
     const query = {};
 
     if (name) {
-      query.name = { $regex: name, $options: "i" };
+      query.name = { $regex: name, $options: "i" }; // Search by name if provided
     }
 
+    // Exclude groups with the specified userId if provided
     if (userId) {
       const objectId = new mongoose.Types.ObjectId(userId);
+
       query.$and = [
-        { groupType: { $eq: "public" } },
-        { userId: { $ne: objectId } },
-        { userIds: { $not: { $elemMatch: { userId: objectId, status: "approved" } } } },
+        { groupType: { $eq: 'public' } },
+        { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
+        {
+          userIds: {
+            $not: { $elemMatch: { userId: objectId, status: 'approved' } },
+          }, // Exclude groups where userIds contains the userId
+        },
       ];
     }
 
-    let interestIds = [];
-    if (interestName) {
-      const interestNamesArray = Array.isArray(interestName) ? interestName : [interestName];
+    // Count total documents for pagination info
+    const totalGroups = await Group.countDocuments(query);
 
-      const matchingInterests = await GroupInterest.find({ name: { $in: interestNamesArray } }).select("_id");
-      interestIds = matchingInterests.map((interest) => interest._id);
-    }
-
-    const interestQuery = interestIds.length > 0 ? { groupInterestId: { $in: interestIds } } : {};
-
-    // Count total interest-based groups
-    const totalInterestGroups = await Group.countDocuments({ ...query, ...interestQuery });
-
-    // Fetch paginated interest-based groups
-    const matchedGroup = await Group.find({ ...query, ...interestQuery })
-      .populate("userIds.userId", "_id fullname")
-      // .populate("userId")
-      .populate("groupFrequencyId")
-      .populate("groupInterestId")
-       .populate("userId", "userId.isActive")
+    // Fetch groups with pagination
+    const getAllGroup = await Group.find(query)
+      .populate('userIds.userId', '_id fullname')
+      .populate('userId')
+      .populate('groupFrequencyId')
+      .populate('groupInterestId')
       .sort({ createdAt: -1 })
-      .skip((pageNumber - 1) * pageSize) // Skip correctly based on page number
+      .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
-    // const matchedGroupIds = matchedGroups.map((group) => group._id);
-  //  const  matchedGroupIds = matchedGroups.filter(group => group.userId && group.userId.isActive);
-  //   //   const matchedGroupIds = matchedGroups
-  //   // .filter(group => group.userId !== null && group.userId.isActive)
-  //   // .map(group => group._id);
-
-  const matchedGroups = matchedGroup.filter(group => group.userId && group.userId.isActive);
-
-  const matchedGroupIds = matchedGroups.map(group => group._id);
-
-   
-    const remainingSlots = pageSize - matchedGroups.length; // Remaining slots to fill
-
-    let remainingGroups = [];
-    if (remainingSlots > 0) {
-      // Fetch remaining groups if interest groups are fewer than pageSize
-      remainingGroups = await Group.find({
-        ...query,
-        _id: { $nin: matchedGroupIds },
-      })
-        .populate("userIds.userId", "_id fullname")
-        .populate("userId")
-        // .populate({
-        //   path: "userId",
-        //   match: { isActive: true},
-        //   select: "_id  isActive"
-
-        // })
-        .populate("groupFrequencyId")
-        .populate("groupInterestId")
-        .sort({ createdAt: -1 })
-        .limit(remainingSlots); 
-    }
-
-    const allGroups = [...matchedGroups, ...remainingGroups];
-
-
-    const uniqueGroups = Array.from(new Set(allGroups.map(group => group._id))).map(id => allGroups.find(group => group._id === id));
-
-
-
-    const groupsWithUserCount = uniqueGroups.map((group) => ({
+    const groupsWithUserCount = getAllGroup.map(group => ({
       ...group.toObject(),
-      userCount: group.userIds.length,
-      groupMemberStatus: (() => {
-        const member = group.userIds.find((mem) => mem?.userId?._id?.toString() == userId?.toString());
+      userCount: group.userIds.length, // Add userCount to each group object
+      groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
+        const member = group.userIds.find(
+          mem => mem?.userId?._id?.toString() == userId?.toString()
+        );
+
         if (member) {
           return member.status === "approved"
             ? "approved"
@@ -378,11 +338,9 @@ exports.getAllGroups = async (req, res) => {
             ? "pending"
             : "rejected";
         }
-        return "join";
+        return "join"; // Default status if userId is not found
       })(),
     }));
-
-    const totalGroups = totalInterestGroups + remainingGroups.length;
 
     res.status(200).json({
       message: "Group List fetched successfully",
@@ -391,9 +349,6 @@ exports.getAllGroups = async (req, res) => {
       currentPage: pageNumber,
       totalPages: Math.ceil(totalGroups / pageSize),
     });
-    
-
- 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
