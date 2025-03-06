@@ -149,6 +149,8 @@ exports.getAllGroups = async (req, res) => {
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
+    console.log('Page:', pageNumber, 'Limit:', pageSize); // Log page and limit values to debug
+
     // Build the query object
     const query = {};
 
@@ -158,18 +160,18 @@ exports.getAllGroups = async (req, res) => {
 
     // Exclude groups with the specified userId if provided
     if (userId) {
-
       const objectId = new mongoose.Types.ObjectId(userId);
-      
+
       query.$and = [
-        {groupType: {$eq : 'public'} },
+        { groupType: { $eq: 'public' } },
         { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
-        
-        { userIds: { $not: { $elemMatch: { userId: objectId, status: 'approved'} } } }, // Exclude groups where userIds contains the userId,
+        {
+          userIds: {
+            $not: { $elemMatch: { userId: objectId, status: 'approved' } },
+          }, // Exclude groups where userIds contains the userId
+        },
       ];
     }
-    
-
 
     // Count total documents for pagination info
     const totalGroups = await Group.countDocuments(query);
@@ -184,32 +186,24 @@ exports.getAllGroups = async (req, res) => {
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
-      // here we are adding the status of groupmembers
+    const groupsWithUserCount = getAllGroup.map(group => ({
+      ...group.toObject(),
+      userCount: group.userIds.length, // Add userCount to each group object
+      groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
+        const member = group.userIds.find(
+          mem => mem?.userId?._id?.toString() == userId?.toString()
+        );
 
-  const groupsWithUserCount = getAllGroup.map(group => ({
-    ...group.toObject(),
-    userCount: group.userIds.length, // Add userCount to each group object
-    groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
-
-      const member = group.userIds.find(
-        // mem => console.log(mem?.userId?._id?.toString() , userId?.toString())
-        mem => mem?.userId?._id?.toString() == userId?.toString()
-        // mem =>mem?._id?.toString() == userId
-
-      );
-  
-      if (member) {
-        return member.status === "approved"
-          ? "approved"
-          : member.status === "pending"
-          ? "pending"
-          : "rejected";
-      }
-      return "join"; // Default status if userId is not found
-    })(),
-  }));
-  
-      //end code
+        if (member) {
+          return member.status === "approved"
+            ? "approved"
+            : member.status === "pending"
+            ? "pending"
+            : "rejected";
+        }
+        return "join"; // Default status if userId is not found
+      })(),
+    }));
 
     res.status(200).json({
       message: "Group List fetched successfully",
@@ -223,6 +217,7 @@ exports.getAllGroups = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
