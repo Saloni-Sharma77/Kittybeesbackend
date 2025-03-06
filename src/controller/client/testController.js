@@ -29,7 +29,7 @@ exports.sendotptest = async (req, res) => {
       });
     }
     // save fcm token
-    const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType });
+    const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType:'Android'});
       // Send OTP
 
       if (fcmRecord) {
