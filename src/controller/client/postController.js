@@ -2,6 +2,8 @@ const PostModel = require("../../schema/postSchema");
 const UserModel = require("../../schema/userSchema");
 const NotificationSchema = require("../../schema/notificationSchema"); // Import Notification model
 const { sendPostCreatedNotifications } = require('../../PushNotification/pushNotification');
+const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
+const { sendPushNotifications } = require('../../PushNotification/pushNotification');
 
 // Add a new post
 exports.addPost = async (req, res) => {
@@ -193,15 +195,48 @@ exports.voteForPost = async (req, res) => {
 
 
 // Add a comment to a post
+// exports.addComment = async (req, res) => {
+//   try {
+//     const { postId, userId, text } = req.body;
+
+//     // Find the post by ID
+//     const post = await PostModel.findById(postId);
+
+//     if (!post) {
+//       return res.status(404).json({ message: 'Post not found' });
+//     }
+
+//     // Add the new comment to the post
+//     post.comments.push({ userId, text });
+
+//     // Save the updated post
+//     await post.save();
+
+//     res.status(200).json({ message: 'Comment added successfully', post });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
 exports.addComment = async (req, res) => {
   try {
     const { postId, userId, text } = req.body;
 
-    // Find the post by ID
-    const post = await PostModel.findById(postId);
+    // Find the post by ID and populate the creator's details
+    const post = await PostModel.findById(postId).populate("userId", "name");
 
     if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Fetch the commenter's details
+    const commentingUser = await UserModel.findById(userId).select("fullname phoneNumber profileImage");
+
+    console.log("Commenting User:", commentingUser); // Debugging
+    
+    if (!commentingUser || !commentingUser.fullname) {
+      return res.status(404).json({ message: "Commenting user not found or missing name" });
     }
 
     // Add the new comment to the post
@@ -210,13 +245,74 @@ exports.addComment = async (req, res) => {
     // Save the updated post
     await post.save();
 
-    res.status(200).json({ message: 'Comment added successfully', post });
+    // Notification messages
+    const userNotificationMessage = `You have added a comment on the post: ${post.name}`;
+    const postOwnerNotificationMessage = `${commentingUser.fullname} commented: "${text}" on your post "${post.name}"`;
+
+    // Save notifications to the database
+    const notifications = [
+      { userId, postId, message: userNotificationMessage, type: "comment" }, // Notification for commenter
+      { userId: post.userId._id, postId, message: postOwnerNotificationMessage, type: "comment" } // Notification for post owner
+    ];
+
+    try {
+      await NotificationSchema.insertMany(notifications);
+    } catch (validationError) {
+      if (validationError.name === "ValidationError") {
+        return res.status(400).json({
+          message: "Invalid notification type. Please check the schema.",
+          error: validationError.message,
+        });
+      }
+      throw validationError;
+    }
+
+    // Fetch FCM tokens for both users
+    const commenterFcmTokenDoc = await FcmToken.findOne({ userId });
+    const commenterFcmToken = commenterFcmTokenDoc?.fcmToken;
+
+    const postOwnerFcmTokenDoc = await FcmToken.findOne({ userId: post.userId._id });
+    const postOwnerFcmToken = postOwnerFcmTokenDoc?.fcmToken;
+
+    // Send push notification to the user who commented
+    if (commenterFcmToken) {
+      await sendPushNotifications({
+        title: "Comment Notification",
+        message: userNotificationMessage,
+        userId,
+      });
+      console.log("Notification sent to user who commented");
+    } else {
+      console.log("No FCM token found for the commenting user");
+    }
+
+    // Send push notification to the post owner
+    if (postOwnerFcmToken && post.userId._id.toString() !== userId) { // Avoid self-notifications
+      await sendPushNotifications({
+        title: "New Comment on Your Post",
+        message: postOwnerNotificationMessage,
+        userId: post.userId._id,
+      });
+      console.log("Notification sent to post owner");
+    } else {
+      console.log("No FCM token found for the post owner");
+    }
+
+    res.status(200).json({ message: "Comment added successfully", post });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Internal server error' });
+    
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Invalid data provided",
+        error: err.message,
+      });
+    }
+
+    res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 exports.getAllComments = async (req, res) => {
   try {

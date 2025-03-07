@@ -1169,6 +1169,32 @@ exports.performSpin = async (req, res) => {
 
 
 
+// exports.removeUserFromGroup = async (req, res) => {
+//   try {
+//     const { groupId, userId } = req.query;
+
+//     if (!groupId || !userId) {
+//       return res.status(400).json({ message: "groupId and userId are required" });
+//     }
+
+//     const updatedGroup = await Group.findByIdAndUpdate(
+//       groupId,
+//       { $pull: { userIds: { userId } } }, 
+//       { new: true }
+//     );
+
+//     if (!updatedGroup) {
+//       return res.status(404).json({ message: "Group not found" });
+//     }
+
+//     res.json({ message: "User removed successfully", data: updatedGroup });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+
 exports.removeUserFromGroup = async (req, res) => {
   try {
     const { groupId, userId } = req.query;
@@ -1177,6 +1203,19 @@ exports.removeUserFromGroup = async (req, res) => {
       return res.status(400).json({ message: "groupId and userId are required" });
     }
 
+    // Find the group before updating
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if the user is in the group
+    const userInGroup = group.userIds.some(member => member.userId.toString() === userId);
+    if (!userInGroup) {
+      return res.status(400).json({ message: "User is not in this group" });
+    }
+
+    // Remove the user from the group
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
       { $pull: { userIds: { userId } } }, 
@@ -1184,10 +1223,40 @@ exports.removeUserFromGroup = async (req, res) => {
     );
 
     if (!updatedGroup) {
-      return res.status(404).json({ message: "Group not found" });
+      return res.status(404).json({ message: "Group not found after update" });
+    }
+
+    // Notification work ------------------------->>>>
+    const notification = {
+      userId,
+      groupId,
+      message: `You have been removed from the group: ${group.name}`,
+      type: "group",
+    };
+
+    // Save notification in the database
+    await NotificationSchema.create(notification);
+
+    // Fetch FCM token for the removed user
+    const fcmTokenDoc = await FcmToken.findOne({ userId });
+    const fcmToken = fcmTokenDoc?.fcmToken;
+
+    if (fcmToken) {
+      // Send push notification to the removed user
+      const pushNotification = {
+        title: "Group Notification",
+        message: `You have been removed from the group: ${group.name}`,
+        userId,
+      };
+      
+      await sendPushNotifications(pushNotification);
+      console.log("Notification sent to removed user");
+    } else {
+      console.log("No FCM token found for removed user");
     }
 
     res.json({ message: "User removed successfully", data: updatedGroup });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
