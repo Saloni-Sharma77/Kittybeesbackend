@@ -525,15 +525,33 @@ exports.getGroupById = async (req, res) => {
     if (group.userIds) {
       group.userIds = group.userIds.filter((us) => us.userId !== null);
     }
-
-    const users = await Users.find({ phoneNumber: { $in: group.userNumbers } }); 
+    
+    const users = await Users.find({ 
+      phoneNumber: { 
+        $in: group.userNumbers.map(num => num.replace(/\s+/g, '')) // Remove spaces 
+      } 
+    });
+    
     users.forEach(user => {
-      const isUserAlreadyInGroup = group.userIds.some(member => String(member.userId._id) === String(user._id));
+      const normalizedPhoneNumber = user.phoneNumber.replace(/\s+/g, ''); // Remove spaces from user phone number
+    
+      const isUserAlreadyInGroup = group.userIds.some(
+        member => String(member.userId._id) === String(user._id)
+      );
+    
       if (!isUserAlreadyInGroup) {
         group.userIds.push({ userId: user, status: 'approved' });
-        group.userNumbers = group.userNumbers.filter(num => num !== user.phoneNumber); 
+    
+        // Remove the matched number from group.userNumbers after normalizing both formats
+        group.userNumbers = group.userNumbers.filter(
+          num => num.replace(/\s+/g, '') !== normalizedPhoneNumber
+        );
       }
     });
+    
+    
+    await group.save(); // Save the updated group
+    
     
 
 
