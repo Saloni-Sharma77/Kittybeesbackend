@@ -8,7 +8,7 @@ const { sendPushNotifications } = require('../../PushNotification/pushNotificati
 // Add a new post
 exports.addPost = async (req, res) => {
   try {
-    const { name, userId, description, image, isActive, poll,postTagId ,anonymous} = req.body;
+    const { name, userId, description, image, isActive, poll, postTagId, anonymous } = req.body;
 
     // Create a new post
     const newPost = new PostModel({
@@ -25,9 +25,11 @@ exports.addPost = async (req, res) => {
     // Save the post to the database
     await newPost.save();
     //notification work starts here
-    const allActiveUsers = await UserModel.find({ isActive: true,
+    const allActiveUsers = await UserModel.find({
+      isActive: true,
       communityReminder: true,
-      _id: { $ne: userId } });
+      _id: { $ne: userId }
+    });
 
     // Create notifications for all active users
     const notifications = allActiveUsers.map(user => ({
@@ -93,7 +95,7 @@ exports.toggleLike = async (req, res) => {
 
     // Save the updated post
     await post.save();
- // Determine if the user is liking or unliking
+    // Determine if the user is liking or unliking
     const isLiked = likeIndex === -1;
 
     // Notification message based on the action
@@ -234,20 +236,36 @@ exports.addComment = async (req, res) => {
     const commentingUser = await UserModel.findById(userId).select("fullname phoneNumber profileImage");
 
     console.log("Commenting User:", commentingUser); // Debugging
-    
-    if (!commentingUser || !commentingUser.fullname) {
-      return res.status(404).json({ message: "Commenting user not found or missing name" });
-    }
+
+    // if (!commentingUser || !commentingUser.fullname) {
+    //   return res.status(404).json({ message: "Commenting user not found or missing name" });
+    // }
 
     // Add the new comment to the post
     post.comments.push({ userId, text });
 
     // Save the updated post
     await post.save();
+    console.log(post, "postpost");
 
-    // Notification messages
-    const userNotificationMessage = `You have added a comment on the post: ${post.name}`;
-    const postOwnerNotificationMessage = `${commentingUser.fullname} commented: "${text}" on your post "${post.name}"`;
+    // Fetch the post owner's full name
+    const postOwner = await UserModel.findById(post.userId._id).select("fullname");
+
+    if (!postOwner || !postOwner.fullname) {
+      return res.status(404).json({ message: "Post owner not found or missing name" });
+    }
+    const getShortDescription = (description, wordLimit = 3) => {
+      const words = description.split(" ");
+      return words.length > wordLimit
+        ? words.slice(0, wordLimit).join(" ") + "..."
+        : description;
+    };
+    const shortDescription = getShortDescription(post.description);
+
+    // Updated notification messages
+    const userNotificationMessage = `You have added a comment on ${postOwner.fullname}'s post: ${shortDescription}`;
+    const postOwnerNotificationMessage = `${commentingUser.fullname} commented: "${text}" on your post "${shortDescription}"`;
+
 
     // Save notifications to the database
     const notifications = [
@@ -302,7 +320,7 @@ exports.addComment = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    
+
     if (err.name === "ValidationError") {
       return res.status(400).json({
         message: "Invalid data provided",
@@ -314,47 +332,89 @@ exports.addComment = async (req, res) => {
   }
 };
 
+// exports.getAllComments = async (req, res) => {
+//   try {
+//     const { postId } = req.body;
+
+//     // Validate postId
+//     if (!postId) {
+//       return res.status(400).json({ message: 'Post ID is required' });
+//     }
+
+//     // Fetch the post and populate the userId field
+//     const post = await PostModel.findById(postId)
+//       .populate('userId', 'name profileImage') // Populate user who created the post
+//       .populate({
+//         path: 'comments.userId', // Populate userId in comments
+//         select: 'fullname profileImage', // Select specific fields to return
+//       })
+//       .populate({
+//         path: 'comments.replies.userId', // Populate userId in replies
+//         select: 'fullname profileImage',
+//       });
+
+//     // Check if the post exists
+//     if (!post) {
+//       return res.status(404).json({ message: 'Post not found' });
+//     }
+
+//     // Fetch comments
+//     const comments = post.comments;
+
+//     res.status(200).json({
+//       message: 'All comments fetched successfully',
+//       data: comments,
+//     });
+//   } catch (error) {
+//     console.error(error); // Correct error logging
+//     res.status(500).json({ message: 'Error fetching comments', error: error.message });
+//   }
+// };
+
+
+// Delete a comment from a post
+
+
 exports.getAllComments = async (req, res) => {
   try {
     const { postId } = req.body;
 
     // Validate postId
     if (!postId) {
-      return res.status(400).json({ message: 'Post ID is required' });
+      return res.status(400).json({ message: "Post ID is required" });
     }
 
-    // Fetch the post and populate the userId field
+    // Fetch the post and populate required fields
     const post = await PostModel.findById(postId)
-    .populate('userId', 'name profileImage') // Populate user who created the post
-    .populate({
-      path: 'comments.userId', // Populate userId in comments
-      select: 'fullname profileImage', // Select specific fields to return
-    })
-    .populate({
-      path: 'comments.replies.userId', // Populate userId in replies
-      select: 'fullname profileImage',
-    });
-      
+      .populate("userId", "name profileImage") // Populate user who created the post
+      .populate({
+        path: "comments.userId", // Populate userId in comments
+        select: "fullname profileImage", // Select specific fields to return
+      })
+      .populate({
+        path: "comments.replies.userId", // Populate userId in replies
+        select: "fullname profileImage",
+      });
+
     // Check if the post exists
     if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+      return res.status(404).json({ message: "Post not found" });
     }
 
-    // Fetch comments
-    const comments = post.comments;
+    // Sort comments by createdAt in descending order
+    const sortedComments = post.comments.sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json({
-      message: 'All comments fetched successfully',
-      data: comments,
+      message: "All comments fetched successfully",
+      data: sortedComments,
     });
   } catch (error) {
-    console.error(error); // Correct error logging
-    res.status(500).json({ message: 'Error fetching comments', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Error fetching comments", error: error.message });
   }
 };
 
 
-// Delete a comment from a post
 exports.deleteComment = async (req, res) => {
   try {
     const { postId, commentId, userId } = req.body;
@@ -387,92 +447,92 @@ exports.deleteComment = async (req, res) => {
 };
 
 
-  // // Get all posts
-  // exports.getAllPost = async (req, res) => {
-  //   try {
-  //     const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
-  
-  //     const matchStage = fullname
-  //       ? { 'userId.fullname': { $regex: fullname, $options: 'i' } }
-  //       : {};
-  
-  //     const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
-  
-  //     const posts = await PostModel.aggregate([
-  //       {
-  //         $lookup: {
-  //           from: 'users', // The collection name of the User model
-  //           localField: 'userId',
-  //           foreignField: '_id',
-  //           as: 'userId',
-  //         },
-  //       },
-  //       {
-  //         $unwind: '$userId', // Unwind the userId array to work with the object
-  //       },
-  //       {
-  //         $match: matchStage, // Apply the search filter on the populated fullname field
-  //       },
-  //       {
-  //         $sort: { createdAt: -1 }, // Sort by creation date
-  //       },
-  //       {
-  //         $skip: skip, // Skip documents based on the current page
-  //       },
-  //       {
-  //         $limit: parseInt(limit), // Limit the number of documents per page
-  //       },
-  //     ]);
-  
-  //     const totalPosts = await PostModel.aggregate([
-  //       {
-  //         $lookup: {
-  //           from: 'users',
-  //           localField: 'userId',
-  //           foreignField: '_id',
-  //           as: 'userId',
-  //         },
-  //       },
-  //       {
-  //         $unwind: '$userId',
-  //       },
-  //       {
-  //         $match: matchStage,
-  //       },
-  //       {
-  //         $count: 'totalCount', // Count the total number of matching posts
-  //       },
-  //     ]);
-  
-  //     const totalCount = totalPosts[0]?.totalCount || 0; // Handle cases where no posts match
-  
-  //     res.status(200).json({
-  //       message: 'All posts fetched successfully',
-  //       data: posts,
-  //       pagination: {
-  //         currentPage: parseInt(page),
-  //         totalPages: Math.ceil(totalCount / parseInt(limit)),
-  //         totalItems: totalCount,
-  //       },
-  //     });
-  //   } catch (err) {
-  //     console.error(err);
-  //     res.status(500).json({ message: 'Internal server error' });
-  //   }
-  // };
-  // Get all posts
+// // Get all posts
+// exports.getAllPost = async (req, res) => {
+//   try {
+//     const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
+
+//     const matchStage = fullname
+//       ? { 'userId.fullname': { $regex: fullname, $options: 'i' } }
+//       : {};
+
+//     const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
+
+//     const posts = await PostModel.aggregate([
+//       {
+//         $lookup: {
+//           from: 'users', // The collection name of the User model
+//           localField: 'userId',
+//           foreignField: '_id',
+//           as: 'userId',
+//         },
+//       },
+//       {
+//         $unwind: '$userId', // Unwind the userId array to work with the object
+//       },
+//       {
+//         $match: matchStage, // Apply the search filter on the populated fullname field
+//       },
+//       {
+//         $sort: { createdAt: -1 }, // Sort by creation date
+//       },
+//       {
+//         $skip: skip, // Skip documents based on the current page
+//       },
+//       {
+//         $limit: parseInt(limit), // Limit the number of documents per page
+//       },
+//     ]);
+
+//     const totalPosts = await PostModel.aggregate([
+//       {
+//         $lookup: {
+//           from: 'users',
+//           localField: 'userId',
+//           foreignField: '_id',
+//           as: 'userId',
+//         },
+//       },
+//       {
+//         $unwind: '$userId',
+//       },
+//       {
+//         $match: matchStage,
+//       },
+//       {
+//         $count: 'totalCount', // Count the total number of matching posts
+//       },
+//     ]);
+
+//     const totalCount = totalPosts[0]?.totalCount || 0; // Handle cases where no posts match
+
+//     res.status(200).json({
+//       message: 'All posts fetched successfully',
+//       data: posts,
+//       pagination: {
+//         currentPage: parseInt(page),
+//         totalPages: Math.ceil(totalCount / parseInt(limit)),
+//         totalItems: totalCount,
+//       },
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+// Get all posts
 exports.getAllPost = async (req, res) => {
   try {
     const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
 
     const matchStage = fullname
       ? {
-          $or: [
-            { 'userId.fullname': { $regex: fullname, $options: 'i' } },
-            { name: { $regex: fullname, $options: 'i' } },
-            { description: { $regex: fullname, $options: 'i' } }
-          ],
-        }
+        $or: [
+          { 'userId.fullname': { $regex: fullname, $options: 'i' } },
+          { name: { $regex: fullname, $options: 'i' } },
+          { description: { $regex: fullname, $options: 'i' } }
+        ],
+      }
       : {};
 
     const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
@@ -541,148 +601,148 @@ exports.getAllPost = async (req, res) => {
 };
 
 
-  exports.getPostByTag = async (req, res) => {
-    try {
-      const { postTagId } = req.query; // Extract postTagId from query parameters
-  
- 
-  
-      // Find posts matching the provided postTagId
-      const posts = await PostModel.find({ postTagId }).populate("userId")
+exports.getPostByTag = async (req, res) => {
+  try {
+    const { postTagId } = req.query; // Extract postTagId from query parameters
+
+
+
+    // Find posts matching the provided postTagId
+    const posts = await PostModel.find({ postTagId }).populate("userId")
       .sort({ createdAt: -1 });
-      ;
-  
-      if (!posts || posts.length === 0) {
-        return res.status(404).json({ message: "No posts found for the given tag" });
-      }
-  
-      res.status(200).json({
-        message: "Posts retrieved successfully",
-        data: posts,
-      });
-    } catch (error) {
-      res.status(500).json({
-        message: "Failed to retrieve posts",
-        error: error.message,
-      });
+    ;
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({ message: "No posts found for the given tag" });
     }
-  };
-  
-  
-  // Get all posts by user ID
+
+    res.status(200).json({
+      message: "Posts retrieved successfully",
+      data: posts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to retrieve posts",
+      error: error.message,
+    });
+  }
+};
+
+
+// Get all posts by user ID
 exports.getAllPostByme = async (req, res) => {
-    try {
-      const userId = req.params.id;
-  
-      // Fetch posts by userId
-      const posts = await PostModel.find({ userId }).populate('userId').populate('postTagId');
-  
-      res.status(200).json({ message: 'Posts by user fetched successfully', data: posts });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
+  try {
+    const userId = req.params.id;
 
-  // Get a single post by post ID
+    // Fetch posts by userId
+    const posts = await PostModel.find({ userId }).populate('userId').populate('postTagId');
+
+    res.status(200).json({ message: 'Posts by user fetched successfully', data: posts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get a single post by post ID
 exports.getPostById = async (req, res) => {
-    try {
-      const postId = req.params.id;
-  
-      // Find post by ID
-      let post = await PostModel.findById(postId).populate('userId');
-      let postObj = post?.toObject();
+  try {
+    const postId = req.params.id;
 
-     delete postObj.postTagId
-  
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-  
-      res.status(200).json({ message: 'Post fetched successfully', data: postObj });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
+    // Find post by ID
+    let post = await PostModel.findById(postId).populate('userId');
+    let postObj = post?.toObject();
+
+    delete postObj.postTagId
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
-  };
 
-  // Update a post by post ID
+    res.status(200).json({ message: 'Post fetched successfully', data: postObj });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Update a post by post ID
 exports.updatePostById = async (req, res) => {
-    try {
-      const postId = req.params.id;
-      const updateData = req.body;
-  
-      // Find post by ID and update it
-      const updatedPost = await PostModel.findByIdAndUpdate(postId, updateData, {
-        new: true, // return the updated document
-        runValidators: true, // run schema validation
-      });
-  
-      if (!updatedPost) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-  
-      res.status(200).json({ message: 'Post updated successfully', data: updatedPost });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
+  try {
+    const postId = req.params.id;
+    const updateData = req.body;
 
-  // Delete a post by post ID
+    // Find post by ID and update it
+    const updatedPost = await PostModel.findByIdAndUpdate(postId, updateData, {
+      new: true, // return the updated document
+      runValidators: true, // run schema validation
+    });
+
+    if (!updatedPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.status(200).json({ message: 'Post updated successfully', data: updatedPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Delete a post by post ID
 exports.deletePostById = async (req, res) => {
-    try {
-      const postId = req.params.id;
-  
-      // Find post by ID and delete it
-      const deletedPost = await PostModel.findByIdAndDelete(postId);
-  
-      if (!deletedPost) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-  
-      res.status(200).json({ message: 'Post deleted successfully', data: deletedPost });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
-  
+  try {
+    const postId = req.params.id;
 
-  exports.addReply = async (req, res) => {
-    try {
-      const { postId, commentId, userId, text } = req.body;
-  
-      if (!postId || !commentId || !userId || !text) {
-        return res.status(400).json({ message: 'Missing required fields' });
-      }
-  
-      const post = await PostModel.findById(postId);
-  
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-  
-      const comment = post.comments.id(commentId);
-  
-      if (!comment) {
-        return res.status(404).json({ message: 'Comment not found' });
-      }
-  
-      comment.replies.push({
-        userId: userId,
-        text: text,
-        createdAt: new Date()
-      });
-  
-      await post.save();
-  
-      res.status(200).json({
-        message: 'Reply added successfully',
-        post
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
+    // Find post by ID and delete it
+    const deletedPost = await PostModel.findByIdAndDelete(postId);
+
+    if (!deletedPost) {
+      return res.status(404).json({ message: 'Post not found' });
     }
-  };
+
+    res.status(200).json({ message: 'Post deleted successfully', data: deletedPost });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+exports.addReply = async (req, res) => {
+  try {
+    const { postId, commentId, userId, text } = req.body;
+
+    if (!postId || !commentId || !userId || !text) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const comment = post.comments.id(commentId);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    comment.replies.push({
+      userId: userId,
+      text: text,
+      createdAt: new Date()
+    });
+
+    await post.save();
+
+    res.status(200).json({
+      message: 'Reply added successfully',
+      post
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
