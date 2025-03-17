@@ -70,7 +70,7 @@ const {
 const messageController = require('../controller/client/postshareControllers');
 
 
-const {getGroupHostedByMe,getUsersByGroupId,removeUserFromGroup} = require('../controller/client/groupController')
+const {getUsersByGroupId,removeUserFromGroup} = require('../controller/client/groupController')
 
 //route for crud operation on profession
 
@@ -82,7 +82,7 @@ router.put('/updateProfession/:id',updateProfession)
 
 
 // groupController route
-router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
+// router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
 
 
 // get list of users via group name 

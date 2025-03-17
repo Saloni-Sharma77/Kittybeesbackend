@@ -377,75 +377,142 @@ exports.getAllGroups = async (req, res) => {
 
 
 
+// exports.getGroupHostedByMe = async (req, res) => {
+//   try {
+//     const { page = 1, limit=10 , name = '' } = req.query; // Destructure query params
+//     const userId = req.params.id;
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     // Build search filter for group name
+//     const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
+
+//     // Fetch hosted groups
+//     const hostedGroups = await Group.find({ userId, ...nameFilter })
+//       .sort({ createdAt: -1 })
+//       .populate('groupInterestId') // Populate groupInterestId
+//       .populate('groupFrequencyId') // Populate groupFrequencyId
+//       .populate('userIds.userId', '_id fullname');
+
+//     // Fetch joined groups
+//     const joinedGroups = await Group.find({
+//       ...nameFilter,
+//       userIds: {
+//         $elemMatch: { userId, status: 'approved' },
+//       },
+//     })
+//     .sort({ createdAt: -1 })
+//     .populate('groupInterestId') // Populate groupInterestId
+//     .populate('groupFrequencyId') // Populate groupFrequencyId
+//     .populate('userIds.userId', '_id fullname');
+    
+//     // Combine results
+//     let allGroups = [...hostedGroups, ...joinedGroups];
+   
+//     allGroups = allGroups.map((group) => {
+//       if (group?.userIds && Array.isArray(group?.userIds)) {
+//         group.userIds = group.userIds.filter(user => user.userId != null);
+//       }
+//       return group;
+//     });
+   
+
+   
+
+    
+//     // Total count for pagination
+//     const totalGroups = allGroups.length;
+    
+//     // Paginate combined results
+//     const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+
+//     // Check if no groups are found
+//     if (paginatedGroups.length === 0) {
+//       return res.status(404).json({ message: "No groups found hosted or joined by this user." });
+//     }
+
+//     res.status(200).json({
+//       message: "Groups fetched successfully",
+//       data: paginatedGroups,
+//       totalGroups,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalGroups / pageSize),
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit=10 , name = '' } = req.query; // Destructure query params
+    const { name = '' } = req.query;
     const userId = req.params.id;
-
-    // Convert page and limit to numbers
-    const pageNumber = parseInt(page, 10);
-    const pageSize = parseInt(limit, 10);
 
     // Build search filter for group name
     const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
 
-    // Fetch hosted groups
-    const hostedGroups = await Group.find({ userId, ...nameFilter })
+    // Fetch both hosted and joined groups in a single query
+    const groups = await Group.find({
+      $or: [
+        { userId }, // Hosted groups
+        { 'userIds.userId': userId, 'userIds.status': 'approved' }, // Joined groups
+      ],
+      ...nameFilter,
+    })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId') // Populate groupInterestId
-      .populate('groupFrequencyId') // Populate groupFrequencyId
+      .populate('groupInterestId')
+      .populate('groupFrequencyId')
       .populate('userIds.userId', '_id fullname');
 
-    // Fetch joined groups
-    const joinedGroups = await Group.find({
-      ...nameFilter,
-      userIds: {
-        $elemMatch: { userId, status: 'approved' },
-      },
-    })
-    .sort({ createdAt: -1 })
-    .populate('groupInterestId') // Populate groupInterestId
-    .populate('groupFrequencyId') // Populate groupFrequencyId
-    .populate('userIds.userId', '_id fullname');
-    
-    // Combine results
-    let allGroups = [...hostedGroups, ...joinedGroups];
-   
-    allGroups = allGroups.map((group) => {
-      if (group?.userIds && Array.isArray(group?.userIds)) {
+    // Initialize counts
+    let hostedCount = 0;
+    let joinedCount = 0;
+
+    // Process the groups and remove duplicate entries
+    const groupMap = new Map();
+
+    groups.forEach(group => {
+      const groupId = group._id.toString();
+      
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, { ...group.toObject(), isHosted: false, isJoined: false });
+      }
+
+      if (group.userId.toString() === userId) {
+        groupMap.get(groupId).isHosted = true;
+        hostedCount++;
+      }
+
+      if (group.userIds.some(user => user.userId && user.userId._id.toString() === userId)) {
+        groupMap.get(groupId).isJoined = true;
+        joinedCount++;
+      }
+    });
+
+    // Convert map values to an array
+    const allGroups = Array.from(groupMap.values());
+
+    // Filter out null userIds
+    allGroups.forEach(group => {
+      if (group.userIds && Array.isArray(group.userIds)) {
         group.userIds = group.userIds.filter(user => user.userId != null);
       }
-      return group;
     });
-   
-
-   
-
-    
-    // Total count for pagination
-    const totalGroups = allGroups.length;
-    
-    // Paginate combined results
-    const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-
-    // Check if no groups are found
-    if (paginatedGroups.length === 0) {
-      return res.status(404).json({ message: "No groups found hosted or joined by this user." });
-    }
 
     res.status(200).json({
       message: "Groups fetched successfully",
-      data: paginatedGroups,
-      totalGroups,
-      currentPage: pageNumber,
-      totalPages: Math.ceil(totalGroups / pageSize),
+      data: allGroups,
+      hostedCount,
+      joinedCount,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 
 
