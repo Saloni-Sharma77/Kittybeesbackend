@@ -5987,6 +5987,7 @@ router.post('/uploadWalletInvoice', uploadImageController.uploadWalletInvoice);
  *         description: Server error
  */
 router.post('/addtodraft', draftController.addToDraft);
+router.delete("/deleteDraft/:id", draftController.deleteDraft);
 
 /**
  * @swagger

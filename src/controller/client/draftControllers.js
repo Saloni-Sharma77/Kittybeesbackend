@@ -84,3 +84,21 @@ exports.getAllDrafts = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.deleteDraft = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the draft by ID and delete it
+    const deletedDraft = await Draft.findByIdAndDelete(id);
+
+    if (!deletedDraft) {
+      return res.status(404).json({ message: "Draft not found" });
+    }
+
+    return res.status(200).json({ message: "Draft deleted successfully", deletedDraft });
+  } catch (error) {
+    console.error("Error deleting draft:", error);
+    return res.status(500).json({ message: "Something went wrong", error });
+  }
+};
