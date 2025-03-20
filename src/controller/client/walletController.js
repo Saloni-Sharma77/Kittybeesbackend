@@ -6,10 +6,83 @@ const User = require("../../schema/userSchema"); // As
 const moment = require("moment"); // Add moment.js to handle date formatting
 const mongoose = require("mongoose");
 
+// exports.getAllWalletTransactionHistory = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const { type, categoryType } = req.query;
+//     // Validate userId
+//     let userObjectId;
+//     try {
+//       userObjectId = new mongoose.Types.ObjectId(userId);
+//     } catch (err) {
+//       return res.status(400).json({ error: "Invalid userId format" });
+//     }
+
+//     // Define the query condition based on type and categoryType
+//     const queryCondition = { userId: userObjectId };
+//     if (type) {
+//       queryCondition.transactionType = type; // Match with `type` directly
+//     }
+
+//     // console.log("Query Condition before categoryType:", queryCondition);
+
+//     // Fetch transactions
+//     let transactions = await WalletModel.find(queryCondition)
+//       .populate("userId")
+//       .populate("kittyId", "name image")
+//       .populate("groupId", "name")
+//       .populate("walletCategoryId", "name")
+//       .sort({ date: -1 }); // Sort by date in descending order (latest first)
+
+//     // Filter by categoryType if provided
+//     if (categoryType) {
+//       transactions = transactions.filter(
+//         (transaction) =>
+//           transaction.walletCategoryId &&
+//           transaction.walletCategoryId.name === categoryType
+//       );
+//     }
+
+//     if (!transactions.length) {
+//       return res
+//         .status(404)
+//         .json({ message: "No transactions found for this query" });
+//     }
+
+//     const groupedByDate = transactions.reduce((result, transaction) => {
+//       const date = moment(transaction.date).format("YYYY-MM-DD");
+//       if (!result[date]) {
+//         result[date] = [];
+//       }
+//       result[date].push(transaction);
+//       return result;
+//     }, {});
+
+//     // Convert grouped transactions to array
+//     const groupedArray = Object.entries(groupedByDate).map(
+//       ([date, transactions]) => ({
+//         date,
+//         transactions,
+//       })
+//     );
+
+//     // Send response
+//     res.status(200).json({
+//       message: "Transactions fetched successfully",
+//       data: groupedArray,
+//     });
+//   } catch (error) {
+//     console.error("Error:", error); // Log the actual error
+//     res.status(500).json({
+//       error: "An error occurred while fetching transaction history",
+//     });
+//   }
+// };
 exports.getAllWalletTransactionHistory = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { type, categoryType } = req.query;
+    const { type, categoryType, amount } = req.query; // Add `amount` to query parameters
+
     // Validate userId
     let userObjectId;
     try {
@@ -18,13 +91,16 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
       return res.status(400).json({ error: "Invalid userId format" });
     }
 
-    // Define the query condition based on type and categoryType
+    // Define the query condition based on type, categoryType, and amount
     const queryCondition = { userId: userObjectId };
+    
     if (type) {
       queryCondition.transactionType = type; // Match with `type` directly
     }
 
-    // console.log("Query Condition before categoryType:", queryCondition);
+    if (amount) {
+      queryCondition.amount = Number(amount); // Ensure `amount` is treated as a number
+    }
 
     // Fetch transactions
     let transactions = await WalletModel.find(queryCondition)
@@ -49,6 +125,7 @@ exports.getAllWalletTransactionHistory = async (req, res) => {
         .json({ message: "No transactions found for this query" });
     }
 
+    // Group transactions by date
     const groupedByDate = transactions.reduce((result, transaction) => {
       const date = moment(transaction.date).format("YYYY-MM-DD");
       if (!result[date]) {
@@ -630,7 +707,7 @@ exports.getKittiesFundsForUser = async (req, res) => {
         { "members": { $elemMatch: { userId: userId, status: "approved" } } },
       ],
     })
-      .select("name image members userId date time") // Include only name and image fields
+      .select("name image members userId date time createdAt") // Include only name and image fields
       .populate("members.userId", "profileImage fullname"); // Populate members.userId with profileImage and fullname
 
     if (kitties.length === 0) {
