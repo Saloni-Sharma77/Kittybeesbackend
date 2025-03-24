@@ -102,3 +102,29 @@ exports.deleteDraft = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong", error });
   }
 };
+
+
+
+// Update a draft by ID
+exports.updateDraft = async (req, res) => {
+  try {
+    const { draftId } = req.params; // Get draft ID from URL params
+    const updateData = req.body; // Get updated data from request body
+
+    // Find draft by ID and update it
+    const updatedDraft = await Draft.findByIdAndUpdate(
+      draftId,
+      updateData,
+      { new: true, runValidators: true } // Return updated document & validate
+    );
+
+    if (!updatedDraft) {
+      return res.status(404).json({ message: "Draft not found" });
+    }
+
+    res.status(200).json({ message: "Draft updated successfully", data: updatedDraft });
+  } catch (error) {
+    console.error("Error updating draft:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

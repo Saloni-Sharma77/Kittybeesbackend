@@ -5988,6 +5988,7 @@ router.post('/uploadWalletInvoice', uploadImageController.uploadWalletInvoice);
  */
 router.post('/addtodraft', draftController.addToDraft);
 router.delete("/deleteDraft/:id", draftController.deleteDraft);
+router.put("/update/:draftId",draftController.updateDraft);
 
 /**
  * @swagger
