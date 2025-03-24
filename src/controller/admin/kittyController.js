@@ -1114,6 +1114,7 @@ exports.addKittyMemories = async (req, res) => {
 
 exports.getKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
+  const userId = req.query.userId; // Capture userId from query params
 
   try {
     const getKitty = await Kitty.findById(kittyId)
@@ -1139,6 +1140,24 @@ exports.getKittyById = async (req, res) => {
     if (getKitty.members) {
       getKitty.members = getKitty.members.filter((member) => member.userId !== null);
     }
+    let isJoin = false;
+
+    if (userId) {
+      // Check if userId matches getKitty.userId
+      if (getKitty.userId && getKitty.userId._id.toString() === userId) {
+        isJoin = true;
+      }
+
+      // Check if userId exists in members array with status 'approved'
+      if (
+        getKitty.members &&
+        getKitty.members.some(
+          (member) => member.userId._id.toString() === userId && member.status === "approved"
+        )
+      ) {
+        isJoin = true;
+      }
+    }
 
     let venueRev = await VenueReviewSchema.find({ venueId: getKitty?.venueId });
     res
@@ -1147,6 +1166,8 @@ exports.getKittyById = async (req, res) => {
         message: "Kitty fetched successfully",
         data: getKitty,
         Venuereviews: venueRev?.length || 0,
+        isJoin, // Pass the isJoin flag
+
       });
   } catch (err) {
     console.error(err);
