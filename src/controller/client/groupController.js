@@ -458,7 +458,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     const groups = await Group.find({
       $or: [
         { userId }, // Hosted groups
-        { 'userIds.userId': userId, 'userIds.status': 'approved' }, // Joined groups
+        { userIds: { $elemMatch: { userId: userId, status: "approved" } } }, // Only approved members
       ],
       ...nameFilter,
     })
@@ -470,6 +470,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Initialize counts
     let hostedCount = 0;
     let joinedCount = 0;
+console.log(groups,"groupsgroupsgroups");
 
     // Process the groups and remove duplicate entries
     const groupMap = new Map();
