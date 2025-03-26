@@ -190,7 +190,7 @@ exports.addKitty = async (req, res) => {
       groupId: groupId,
       kittyId: newKitty._id,
       message: `A new kitty has been created in your group: ${newKitty.name}`,
-      type: "kitty",
+      type: "kitty-join-request",
     }));
     
 
