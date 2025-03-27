@@ -182,6 +182,12 @@ exports.addKitty = async (req, res) => {
       message: `You have created a kitty: ${newKitty.name}`,
       type: "kitty",
     };
+    const adminnotify = {
+      userId: group.userId, // The creator's userId
+      kittyId: newKitty._id,
+      message: `You have created a kitty: ${newKitty.name}`,
+      type: "kitty",
+    };
 
 
     // Create notifications for all users in the group
@@ -196,7 +202,7 @@ exports.addKitty = async (req, res) => {
 
 
     // Combine notifications for the creator and the group users
-    const allNotifications = [creatorNotification, ...userNotifications];
+    const allNotifications = [creatorNotification, ...userNotifications ,adminnotify];
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
