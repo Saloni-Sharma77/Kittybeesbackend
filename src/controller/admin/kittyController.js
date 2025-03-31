@@ -169,7 +169,7 @@ exports.addKitty = async (req, res) => {
 
     //notification work------------>>>
     // Fetch group details to get userIds
-    const group = await GroupSchema.findById(groupId).select("userIds name contributionAmount");
+    const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
@@ -177,16 +177,16 @@ exports.addKitty = async (req, res) => {
 
     // Create notifications for the userId (kitty creator)
     const creatorNotification = {
-      userId, // The creator's userId
+      userId, 
       kittyId: newKitty._id,
       message: `You have created a kitty: ${newKitty.name}`,
       type: "kitty",
     };
     const adminnotify = {
-      userId: group.userId, // The creator's userId
+      userId: group.userId, 
       kittyId: newKitty._id,
-      message: `You have created a kitty: ${newKitty.name}`,
-      type: "kitty",
+      message: `A New Kitty Is Created In Your Group : ${newKitty.name}`,
+      type: "kitty-join-request",
     };
 
 
@@ -1339,65 +1339,84 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const distance = R * c; // Distance in km
   return distance;
 }
-
- exports.getNearByKitty = async (req, res) => {
+exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
 
-     if (!lat || !long) {
-     return res.status(400).json({ error: 'Latitude and longitude are required.' });
-  }
+    if (!lat || !long) {
+      return res.status(400).json({ error: 'Latitude and longitude are required.' });
+    }
 
-  const latitude = parseFloat(lat);
-  const longitude = parseFloat(long);
-       
-    //Getting today's date 
-       const today = new Date();
-       today.setUTCHours(0, 0, 0, 0);
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(long);
 
-  //Find all venues (since we don’t have a geospatial index in this schema)
-   const venues = await Venue.find().select('_id lat long');
+    // Getting today's date
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
-  // Filter venues within 5 km radius
- const nearbyVenueIds = venues
-       .filter(venue => {
-         const venueLat = parseFloat(venue.lat);
-      const venueLong = parseFloat(venue.long);
-     const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
-     return distance <= 10;
-   })
-   .map(venue => venue._id);
+    // Find all venues
+    const venues = await Venue.find().select('_id lat long');
 
-  // Find kitties associated with the nearby venues
-  const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds }, })
-    .populate({
-     path: 'venueId',
-      select: 'name location lat long pricing',  // Include venue name, location, lat, and long
-   }).populate('themeId','name')
-   .exec();
+    // Filter venues within 10 km radius
+    const nearbyVenueIds = venues
+      .filter(venue => {
+        const venueLat = parseFloat(venue.lat);
+        const venueLong = parseFloat(venue.long);
+        const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
+        return distance <= 10;
+      })
+      .map(venue => venue._id);
 
-   
-   // filtering upcoming kitties only (by date)
-   const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
-    const [day, month, year] = kitty.date.split('/').map(Number);  
-    const kittyDate = new Date(year, month - 1, day); 
-    return kittyDate >= today; 
-  });
+    // Find kitties associated with nearby venues and populate groupId to check if it's public
+    const kittiesWithApprovedCount = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
+      .populate({
+        path: 'venueId',
+        select: 'name location lat long pricing',
+      })
+      .populate({
+        path: 'themeId',
+        select: 'name',
+      })
+      .populate({
+        path: 'groupId', // Make sure it supports arrays
+        select: '_id groupType',
+      })
+      .exec();
 
-   const  kitties= filteredKitties.map(kitty => {
-       const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
-       return {
-      ...kitty.toObject(),
-         approvedMembersCount: approvedCount
-         };
-      });
+    console.log("Kitties Found:", kittiesWithApprovedCount);
 
-     return res.status(200).json({ success: true,kitties });
+    // Filtering upcoming kitties only (by date) and checking if the group is public
+    const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
+      const [day, month, year] = kitty.date.split('/').map(Number);
+      const kittyDate = new Date(year, month - 1, day);
+
+      console.log(`Kitty: ${kitty.name}, GroupId:`, kitty.groupId);
+
+      const isFutureKitty = kittyDate >= today;
+      const isPublicGroup =
+        kitty.groupId &&
+        Array.isArray(kitty.groupId) &&
+        kitty.groupId.some(group => group.groupType === 'public');
+
+      return isFutureKitty && isPublicGroup;
+    });
+
+    // Adding approved members count
+    const kitties = filteredKitties.map(kitty => {
+      const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
+      return {
+        ...kitty.toObject(),
+        approvedMembersCount: approvedCount,
+      };
+    });
+
+    return res.status(200).json({ success: true, kitties });
   } catch (error) {
     console.error(error);
-     return res.status(500).json({ error: 'Internal Server Error' });
- }
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
 };
+
 
 
 
