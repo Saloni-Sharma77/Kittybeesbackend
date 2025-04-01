@@ -950,7 +950,7 @@ exports.joinKitty = async (req, res) => {
       userId: kitty.userId, // Notification to the group admin
       kittyId: kittyId,
       requestUserId: requestUserId,
-      message: `${user.fullname} has ${status} to join your Kitty: ${kitty.name}`,
+      message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
       type: "kitty-join-request",
     });
 
