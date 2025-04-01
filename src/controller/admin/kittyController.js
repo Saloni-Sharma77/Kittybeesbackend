@@ -13,30 +13,30 @@ const moment = require("moment"); // For date and time parsing
 
 const mongoose = require("mongoose");
 
-exports.checkLatestVersion = async(req, res)=>{
+exports.checkLatestVersion = async (req, res) => {
   const { currentVersion } = req.body;
 
   if (!currentVersion) {
-      return res.status(400).json({
-          success: false,
-          message: 'Current version is required.',
-      });
+    return res.status(400).json({
+      success: false,
+      message: 'Current version is required.',
+    });
   }
 
   const latestVersion = process.env.LATEST_VERSION;
 
   if (currentVersion === latestVersion) {
-      return res.status(200).json({
-          success: true,
-          message: 'Your app is up to date.',
-      });
+    return res.status(200).json({
+      success: true,
+      message: 'Your app is up to date.',
+    });
   } else {
-      return res.status(400).json({
-          success: false,
-          message: `A new version (${latestVersion}) is available. Please update your app.`,
-          latestVersion: latestVersion
+    return res.status(400).json({
+      success: false,
+      message: `A new version (${latestVersion}) is available. Please update your app.`,
+      latestVersion: latestVersion
 
-      });
+    });
   }
 }
 
@@ -90,57 +90,57 @@ exports.addKitty = async (req, res) => {
     // Validate and structure the poll data
     const theamePollData = theamepoll
       ? {
-          question: theamepoll.question,
-          options: theamepoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0, // Default to 0 if not provided
-          })),
-          type: "theampolls",
-        }
+        question: theamepoll.question,
+        options: theamepoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0, // Default to 0 if not provided
+        })),
+        type: "theampolls",
+      }
       : null;
 
     const locationPollData = locationpoll
       ? {
-          question: locationpoll.question,
-          options: locationpoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "locationpolls",
-        }
+        question: locationpoll.question,
+        options: locationpoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "locationpolls",
+      }
       : null;
 
     const venuePollData = venuepoll
       ? {
-          question: venuepoll.question,
-          options: venuepoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "venuepolls",
-        }
+        question: venuepoll.question,
+        options: venuepoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "venuepolls",
+      }
       : null;
 
-      const planKittyPollData = planKittypoll
+    const planKittyPollData = planKittypoll
       ? {
-          question: planKittypoll.question,
-          options: planKittypoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "planKittypolls",
-        }
+        question: planKittypoll.question,
+        options: planKittypoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "planKittypolls",
+      }
       : null;
 
-      const activityKittyPollData = activityKittypoll
+    const activityKittyPollData = activityKittypoll
       ? {
-          question: activityKittypoll.question,
-          options: activityKittypoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "activityKittypolls",
-        }
+        question: activityKittypoll.question,
+        options: activityKittypoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "activityKittypolls",
+      }
       : null;
 
     // Create new Kitty with poll data
@@ -179,32 +179,36 @@ exports.addKitty = async (req, res) => {
 
     // Create notifications for the userId (kitty creator)
     const creatorNotification = {
-      userId, 
+      userId,
       kittyId: newKitty._id,
       message: `You have created a kitty: ${newKitty.name}`,
       type: "kitty",
     };
     const adminnotify = {
-      userId: group.userId, 
+      userId: group.userId,
       kittyId: newKitty._id,
       message: `A New Kitty Is Created In Your Group : ${newKitty.name}`,
       type: "kitty-join-request",
     };
 
 
-    // Create notifications for all users in the group
-    const userNotifications = group.userIds.map((user) => ({
-      userId: user.userId, // assuming userIds is an array of objects with userId field
-      groupId: groupId,
-      kittyId: newKitty._id,
-      message: `A new kitty has been created in your group: ${newKitty.name}`,
-      type: "kitty-join-request",
-    }));
-    
+    // Create notifications for all users in the group, excluding the creator
+    const userNotifications = group.userIds
+      .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+      .map((user) => ({
+        userId: user.userId,
+        groupId: groupId,
+        kittyId: newKitty._id,
+        message: `A new kitty has been created in your group: ${newKitty.name}`,
+        type: "kitty-join-request",
+      }));
 
-
-    // Combine notifications for the creator and the group users
-    const allNotifications = [creatorNotification, ...userNotifications ,adminnotify];
+    // Combine notifications for the creator and the group users (exclude the creator from the join request notification)
+    const allNotifications = [
+      creatorNotification,
+      ...userNotifications,
+      adminnotify
+    ];
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
@@ -277,35 +281,35 @@ exports.updateKitty = async (req, res) => {
     // Validate and structure the poll data
     const theamePollData = theamepoll
       ? {
-          question: theamepoll.question,
-          options: theamepoll.options.map((option) => ({
-            optionText: option.optionText.optionText, // Access optionText correctly
-            votes: option.votes || 0, // Default to 0 if not provided
-          })),
-          type: "theampolls",
-        }
+        question: theamepoll.question,
+        options: theamepoll.options.map((option) => ({
+          optionText: option.optionText.optionText, // Access optionText correctly
+          votes: option.votes || 0, // Default to 0 if not provided
+        })),
+        type: "theampolls",
+      }
       : undefined;
 
     const locationPollData = locationpoll
       ? {
-          question: locationpoll.question,
-          options: locationpoll.options.map((option) => ({
-            optionText: option.optionText.optionText, // Access optionText correctly
-            votes: option.votes || 0,
-          })),
-          type: "locationpolls",
-        }
+        question: locationpoll.question,
+        options: locationpoll.options.map((option) => ({
+          optionText: option.optionText.optionText, // Access optionText correctly
+          votes: option.votes || 0,
+        })),
+        type: "locationpolls",
+      }
       : undefined;
 
     const venuePollData = venuepoll
       ? {
-          question: venuepoll.question,
-          options: venuepoll.options.map((option) => ({
-            optionText: option.optionText.optionText, // Access optionText correctly
-            votes: option.votes || 0,
-          })),
-          type: "venuepolls",
-        }
+        question: venuepoll.question,
+        options: venuepoll.options.map((option) => ({
+          optionText: option.optionText.optionText, // Access optionText correctly
+          votes: option.votes || 0,
+        })),
+        type: "venuepolls",
+      }
       : undefined;
 
     // Prepare the update object
@@ -508,7 +512,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
     // Build the query filter
     const filter = userId
-    ? {
+      ? {
         $and: [
           {
             $or: [
@@ -523,8 +527,8 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
           }
         ]
       }
-    : {};
-  
+      : {};
+
 
     // Fetch all kitties with the filter
     const allKitties = await Kitty.find(filter)
@@ -657,20 +661,20 @@ exports.getAllKittiesForUser = async (req, res) => {
 
 exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
   try {
-    const { type ,groupId} = req.query; 
-    const now = new Date(); 
-    if(!groupId){
-      return res.status(400).json({error:'GroupId is required'})
+    const { type, groupId } = req.query;
+    const now = new Date();
+    if (!groupId) {
+      return res.status(400).json({ error: 'GroupId is required' })
     }
 
-   
+
     const combineDateAndTime = (dateStr, timeStr) => {
       const dateParts = dateStr.split(/[\/-]/).map(Number);
       const [day, month, year] =
         dateParts.length === 3 ? dateParts : [null, null, null];
-      const [time, modifier] = timeStr.split(" "); 
+      const [time, modifier] = timeStr.split(" ");
 
-     
+
       const [hours, minutes] = time.split(":").map(Number);
       const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
       const completeDate = new Date(year, month - 1, day, hours24, minutes);
@@ -678,8 +682,8 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       return completeDate;
     };
 
-   
-    const allKitties = await Kitty.find({groupId:groupId})
+
+    const allKitties = await Kitty.find({ groupId: groupId })
       .populate({
         path: "groupId",
         populate: {
@@ -694,7 +698,7 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       .populate("colorId")
       .populate("addressId");
 
-   
+
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
@@ -708,11 +712,11 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
 
-      
+
       if (type === "future") {
-        return dateTimeA - dateTimeB; 
+        return dateTimeA - dateTimeB;
       } else if (type === "past") {
-        return dateTimeB - dateTimeA; 
+        return dateTimeB - dateTimeA;
       }
     });
 
@@ -731,7 +735,7 @@ exports.getAllKittyForMe = async (req, res) => {
     const userId = req.params.userId;
     const { name, page = 1, limit = 0 } = req.query;
 
-    const currentTime = moment(); 
+    const currentTime = moment();
 
     const query = {};
     if (name) {
@@ -763,32 +767,32 @@ exports.getAllKittyForMe = async (req, res) => {
 
     const response = paginatedKitties.map((kitty) => {
       const members = Array.isArray(kitty.members) ? kitty.members : [];
-      
+
       const member = members.find(
         (member) => member.userId?.toString() === userId
       );
-    
-      let kittymemberstatus = "guest"; 
-    
+
+      let kittymemberstatus = "guest";
+
       if (member) {
         kittymemberstatus =
           member.status === "approved"
             ? "member"
             : member.status === "rejected"
-            ? "rejected"
-            : "requested";
+              ? "rejected"
+              : "requested";
       } else if (kitty.userId?.toString() === userId) {
         kittymemberstatus = "host";
       } else {
         kittymemberstatus = "notmember";
       }
-    
+
       return {
         ...kitty,
         kittymemberstatus,
       };
     });
-    
+
 
     // Response metadata
     const totalPages = limit ? Math.ceil(totalKitties / limit) : 1;
@@ -872,7 +876,7 @@ exports.getAllKittyForMe = async (req, res) => {
 
 exports.joinKitty = async (req, res) => {
   try {
-    const { notificationId,kittyId, requestUserId, status } = req.body;
+    const { notificationId, kittyId, requestUserId, status } = req.body;
 
     // Find the kitty by ID
     const kitty = await Kitty.findById(kittyId);
@@ -906,19 +910,19 @@ exports.joinKitty = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     let notId = new mongoose.Types.ObjectId(notificationId)
-  let updatednotification =  await NotificationSchema.findOneAndUpdate(
-      { _id: notId},
+    let updatednotification = await NotificationSchema.findOneAndUpdate(
+      { _id: notId },
       {
         $set: {
           message: `You approved the join request for ${kitty?.name || "unknown"}`,
           status: status,
           isRead: true,
-           type: "kitty" 
+          type: "kitty"
         },
       },
       { new: true }
     );
-  
+
     // Send a notification to the kitty admin
     const adminNotification = new NotificationSchema({
       userId: kitty.userId, // Notification to the group admin
@@ -927,52 +931,52 @@ exports.joinKitty = async (req, res) => {
       message: `${user.fullname} has ${status} to join your Kitty: ${kitty.name}`,
       type: "kitty",
     });
-   
+
     // Save the notification
     await adminNotification.save();
-    const fcmTokens = await FcmToken.find({ userId: kitty.userId,deviceType: 'Android',});
+    const fcmTokens = await FcmToken.find({ userId: kitty.userId, deviceType: 'Android', });
     // const tokens = fcmTokens
     // .map(tokenDoc => tokenDoc.fcmToken)
     const tokens = fcmTokens
-    .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
-    .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
-  
-        const payload = {
-          notification: {
-              title: kitty.name,
-              body: adminNotification?.message,
-              image: 'your_image_url', // Optional image URL if needed
+      .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
+      .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
+
+    const payload = {
+      notification: {
+        title: kitty.name,
+        body: adminNotification?.message,
+        image: 'your_image_url', // Optional image URL if needed
+      },
+      data: {
+        route: 'your_route',
+        title: kitty.name,
+        body: adminNotification?.message,
+      },
+    };
+
+    const options = {
+      priority: "high",
+    };
+
+
+    // Send notification to each token using the send method
+    if (tokens?.length > 0) {
+
+      console.log(tokens, "tokenstokens");
+      const response = await Promise.allSettled(tokens.map(token =>
+        admin.messaging().send({
+          token: token,
+          notification: payload.notification,
+          data: payload.data,
+          android: {
+            priority: options.priority,
           },
-          data: {
-              route: 'your_route', 
-              title: kitty.name,
-              body: adminNotification?.message,
-          },
-      };
-    
-      const options = {
-          priority: "high",
-      };
-      
-      
-      // Send notification to each token using the send method
-      if(tokens?.length > 0){
-        
-        console.log(tokens,"tokenstokens");
-        const response = await Promise.allSettled(tokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-            })
-        ));
-      console.log(response,"responseresponse");
-      
-      }
-    
+        })
+      ));
+      console.log(response, "responseresponse");
+
+    }
+
 
     return res
       .status(200)
@@ -1033,7 +1037,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     // Update the notification's status
     await NotificationSchema.findByIdAndUpdate(
       notificationId,
-      { 
+      {
         message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
         type: "kitty",
         status: notificationStatus // Update status field in NotificationSchema
@@ -1098,7 +1102,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
             });
           } catch (error) {
             console.error(`FCM error for token ${token}:`, error);
-    
+
             // If token is invalid, remove it from the database
             if (error.code === "messaging/registration-token-not-registered") {
               await FcmToken.findOneAndDelete({ fcmToken: token });
@@ -1108,7 +1112,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         })
       );
     }
-    
+
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
     console.error("Error in acceptOrRejectRequestOfKitty:", error);
@@ -1267,7 +1271,7 @@ exports.getKittyMemoriesById = async (req, res) => {
 
 //   const page = parseInt(req.query.page) || 0; // Default to page 1
 //   const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
-  
+
 //   const skip = page * limit; // Calculate the number of items to skip based on the page
 
 //   try {
@@ -1458,21 +1462,21 @@ exports.submitKittyReview = async (req, res) => {
     if (!kittyId) {
       return res.status(400).json({ error: 'KittyId is required' });
     }
-    if(!req.body.rating || !req.body.userId){
+    if (!req.body.rating || !req.body.userId) {
       return res.status(400).json({ error: 'Rating and userId is required' });
 
     }
 
 
     // Update the Kitty with the new review
-   let kittyData =  await Kitty.findByIdAndUpdate(
+    let kittyData = await Kitty.findByIdAndUpdate(
       kittyId,
       { $push: { kittyReviews: reviewData } },
       { new: true, runValidators: true }
     );
-    console.log(kittyData,'kkkkkkk')
+    console.log(kittyData, 'kkkkkkk')
 
-    return res.status(200).json({kittyData, success: true, message: 'Review Submitted Successfully' });
+    return res.status(200).json({ kittyData, success: true, message: 'Review Submitted Successfully' });
   } catch (error) {
     console.error('Error adding review:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -1523,7 +1527,7 @@ exports.quitKittyByUser = async (req, res) => {
 
 exports.sendKittyReminderToUser = async (req, res) => {
   try {
-    const { userId, kittyId,requestUserId } = req.body;
+    const { userId, kittyId, requestUserId } = req.body;
 
     // Validate required fields
     if (!userId || !kittyId || !requestUserId) {
