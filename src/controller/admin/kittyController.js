@@ -951,7 +951,7 @@ exports.joinKitty = async (req, res) => {
       kittyId: kittyId,
       requestUserId: requestUserId,
       message: `${user.fullname} has ${status} to join your Kitty: ${kitty.name}`,
-      type: "kitty",
+      type: "kitty-join-request",
     });
 
     // Save the notification
