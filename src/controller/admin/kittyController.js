@@ -1434,7 +1434,7 @@ exports.getNearByKitty = async (req, res) => {
       })
       .populate({
         path: 'groupId', // Make sure it supports arrays
-        select: '_id groupType',
+        select: '_id groupType name',
       })
       .exec();
 
