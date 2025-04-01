@@ -12,6 +12,7 @@ const WalletSchema = require("../../schema/walletSchema");
 const moment = require("moment"); // For date and time parsing
 
 const mongoose = require("mongoose");
+const { sendPushNotifications } = require('../../PushNotification/pushNotification');
 
 exports.checkLatestVersion = async (req, res) => {
   const { currentVersion } = req.body;
@@ -62,6 +63,7 @@ exports.addKitty = async (req, res) => {
       venuepoll,
       planKittypoll,
       activityKittypoll,
+      tampimage,
 
 
     } = req.body;
@@ -164,6 +166,7 @@ exports.addKitty = async (req, res) => {
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
       members,
+      tampimage
 
     });
 
@@ -183,12 +186,14 @@ exports.addKitty = async (req, res) => {
       kittyId: newKitty._id,
       message: `You have created a kitty: ${newKitty.name}`,
       type: "kitty",
+      image:tampimage
     };
     const adminnotify = {
       userId: group.userId,
       kittyId: newKitty._id,
       message: `A New Kitty Is Created In Your Group : ${newKitty.name}`,
       type: "kitty-join-request",
+      image:tampimage
     };
 
 
@@ -201,6 +206,7 @@ exports.addKitty = async (req, res) => {
         kittyId: newKitty._id,
         message: `A new kitty has been created in your group: ${newKitty.name}`,
         type: "kitty-join-request",
+        image:tampimage
       }));
 
     // Combine notifications for the creator and the group users (exclude the creator from the join request notification)
@@ -212,7 +218,23 @@ exports.addKitty = async (req, res) => {
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
+    const notificationsWithPush = [
+      { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
+      { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId },
+      ...group.userIds
+        .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+        .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId }))
+    ];
 
+    // Send push notifications to all users
+    for (const notification of notificationsWithPush) {
+      await sendPushNotifications({
+        title: notification.title,
+        message: notification.message,
+        userId: notification.userId,
+        image: tampimage // Include the image for the notification
+      });
+    }
     const wallet = new WalletSchema({
       userId: userId,
       kittyId: newKitty._id,

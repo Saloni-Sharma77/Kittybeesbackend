@@ -5,7 +5,7 @@ const FcmModel = require("../../src/schema/FcmSchema");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-async function sendPushNotifications({ title, message, userId }) {
+async function sendPushNotifications({ title, message, userId,image  }) {
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
@@ -13,7 +13,10 @@ async function sendPushNotifications({ title, message, userId }) {
         });
 
         // console.log(userTokensDoc, 'Tokens for the user');
+        const defaultImageUrl = 'https://example.com/default-image.jpg';
 
+        // Use the provided image if available, otherwise fallback to the default image
+        const imageUrl = image ? image : defaultImageUrl;
         const userTokens = userTokensDoc
             .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
             .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
@@ -22,7 +25,7 @@ async function sendPushNotifications({ title, message, userId }) {
             notification: {
                 title: title,
                 body: message,
-                image: 'your_image_url', // Optional image URL if needed
+                image: imageUrl, // Optional image URL if needed
             },
             data: {
                 route: 'your_route',

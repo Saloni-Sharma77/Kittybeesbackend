@@ -9,6 +9,7 @@ const NotificationSchema = new mongoose.Schema(
     kittyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Kitty' },
     requestUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     message: { type: String},
+    image: { type: String},
     type: {type:String,
       enum: ['group', 'kitty', 'message','comment','group-join-request','kitty-join-request','post'], 
     },
