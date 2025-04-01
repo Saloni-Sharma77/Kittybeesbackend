@@ -84,6 +84,8 @@ exports.addKitty = async (req, res) => {
         .status(400)
         .json({ error: "Time is required and must be a string" });
     }
+    const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
+    const members = group.userIds.map(user => ({ userId: user.userId, status: "pending" }));
 
     // Validate and structure the poll data
     const theamePollData = theamepoll
@@ -161,6 +163,7 @@ exports.addKitty = async (req, res) => {
       venuepoll: venuePollData,
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
+      members,
 
     });
 
@@ -169,7 +172,6 @@ exports.addKitty = async (req, res) => {
 
     //notification work------------>>>
     // Fetch group details to get userIds
-    const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
@@ -870,7 +872,7 @@ exports.getAllKittyForMe = async (req, res) => {
 
 exports.joinKitty = async (req, res) => {
   try {
-    const { kittyId, requestUserId, status } = req.body;
+    const { notificationId,kittyId, requestUserId, status } = req.body;
 
     // Find the kitty by ID
     const kitty = await Kitty.findById(kittyId);
@@ -903,7 +905,20 @@ exports.joinKitty = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    let notId = new mongoose.Types.ObjectId(notificationId)
+  let updatednotification =  await NotificationSchema.findOneAndUpdate(
+      { _id: notId},
+      {
+        $set: {
+          message: `You approved the join request for ${kitty?.name || "unknown"}`,
+          status: status,
+          isRead: true,
+           type: "kitty" 
+        },
+      },
+      { new: true }
+    );
+  
     // Send a notification to the kitty admin
     const adminNotification = new NotificationSchema({
       userId: kitty.userId, // Notification to the group admin
@@ -938,11 +953,13 @@ exports.joinKitty = async (req, res) => {
       const options = {
           priority: "high",
       };
-    
+      
+      
       // Send notification to each token using the send method
       if(tokens?.length > 0){
-
-        const response = await Promise.all(tokens.map(token =>
+        
+        console.log(tokens,"tokenstokens");
+        const response = await Promise.allSettled(tokens.map(token =>
             admin.messaging().send({
                 token: token,
                 notification: payload.notification,
@@ -952,6 +969,8 @@ exports.joinKitty = async (req, res) => {
                 },
             })
         ));
+      console.log(response,"responseresponse");
+      
       }
     
 
