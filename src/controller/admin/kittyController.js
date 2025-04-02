@@ -180,44 +180,44 @@ exports.addKitty = async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Create notifications for the userId (kitty creator)
-    const creatorNotification = {
-      userId,
-      kittyId: newKitty._id,
-      message: `You have created a kitty: ${newKitty.name}`,
-      type: "kitty",
-      image:tampimage
-    };
-    const adminnotify = {
-      userId: group.userId,
-      kittyId: newKitty._id,
-      message: `A New Kitty Is Created In Your Group : ${newKitty.name}`,
-      type: "kitty-join-request",
-      image:tampimage
-    };
+    // Create notifications for the userId (kitty creator)// Create notifications for the userId (kitty creator)
+const creatorNotification = {
+  userId,
+  kittyId: newKitty._id,
+  message: `You have created a kitty: ${newKitty.name}`,
+  type: "kitty",
+  image: tampimage,
+};
 
+// Create notifications for all users in the group, excluding the creator
+const userNotifications = group.userIds
+  .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+  .map((user) => ({
+    userId: user.userId,
+    groupId: groupId,
+    kittyId: newKitty._id,
+    message: `A new kitty has been created in your group: ${newKitty.name}`,
+    type: "kitty-join-request",
+    image: tampimage,
+  }));
 
-    // Create notifications for all users in the group, excluding the creator
-    const userNotifications = group.userIds
-      .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
-      .map((user) => ({
-        userId: user.userId,
-        groupId: groupId,
-        kittyId: newKitty._id,
-        message: `A new kitty has been created in your group: ${newKitty.name}`,
-        type: "kitty-join-request",
-        image:tampimage
-      }));
+const allNotifications = [creatorNotification, ...userNotifications];
 
-    // Combine notifications for the creator and the group users (exclude the creator from the join request notification)
-    const allNotifications = [
-      creatorNotification,
-      ...userNotifications,
-      adminnotify
-    ];
+// ✅ Fix: Only send admin notification if admin is not the creator
+if (group.userId.toString() !== userId.toString()) {
+  const adminnotify = {
+    userId: group.userId,
+    kittyId: newKitty._id,
+    message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
+    type: "kitty-join-request",
+    image: tampimage,
+  };
+  allNotifications.push(adminnotify);
+}
 
-    // Insert all notifications into the database
-    await NotificationSchema.insertMany(allNotifications);
+// Insert all notifications into the database
+await NotificationSchema.insertMany(allNotifications);
+
     const notificationsWithPush = [
       { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
       { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId },
@@ -533,24 +533,30 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     };
 
     // Build the query filter
+    // const filter = userId
+    //   ? {
+    //     $and: [
+    //       {
+    //         $or: [
+    //           { userId }, // Include kitties where the user is the creator
+    //           { members: { $elemMatch: { userId, status: { $ne: "approved" } } } } // Include only if user status is NOT approved
+    //         ]
+    //       },
+    //       {
+    //         "groupId.userIds": {
+    //           $not: { $elemMatch: { userId, status: "approved" } } // Exclude if the user has "approved" status in groupId.userIds
+    //         }
+    //       }
+    //     ]
+    //   }
+    //   : {};
     const filter = userId
-      ? {
-        $and: [
-          {
-            $or: [
-              { userId }, // Include kitties where the user is the creator
-              { members: { $elemMatch: { userId, status: { $ne: "approved" } } } } // Include only if user status is NOT approved
-            ]
-          },
-          {
-            "groupId.userIds": {
-              $not: { $elemMatch: { userId, status: "approved" } } // Exclude if the user has "approved" status in groupId.userIds
-            }
-          }
-        ]
+    ? {
+        "members": { 
+          $elemMatch: { userId, status: "pending" } 
+        } // Ensures user exists in members with "pending" status
       }
-      : {};
-
+    : {};
 
     // Fetch all kitties with the filter
     const allKitties = await Kitty.find(filter)
