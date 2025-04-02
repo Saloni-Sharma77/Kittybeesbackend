@@ -87,7 +87,14 @@ exports.addKitty = async (req, res) => {
         .json({ error: "Time is required and must be a string" });
     }
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
+
+    // Create members array from userIds
     const members = group.userIds.map(user => ({ userId: user.userId, status: "pending" }));
+    
+    // Add the admin (group.userId) to members if not already included
+    if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+        members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
+    }
 
     // Validate and structure the poll data
     const theamePollData = theamepoll
