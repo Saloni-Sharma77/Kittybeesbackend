@@ -89,11 +89,13 @@ exports.addKitty = async (req, res) => {
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
     // Create members array from userIds
-    const members = group.userIds.map(user => ({ userId: user.userId, status: "pending" }));
-    
+    const members = group.userIds
+    .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+    .map(user => ({ userId: user.userId, status: "pending" }));
+
     // Add the admin (group.userId) to members if not already included
     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-        members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
+      members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
     }
 
     // Validate and structure the poll data
@@ -188,42 +190,42 @@ exports.addKitty = async (req, res) => {
     }
 
     // Create notifications for the userId (kitty creator)// Create notifications for the userId (kitty creator)
-const creatorNotification = {
-  userId,
-  kittyId: newKitty._id,
-  message: `You have created a kitty: ${newKitty.name}`,
-  type: "kitty",
-  image: tampimage,
-};
+    const creatorNotification = {
+      userId,
+      kittyId: newKitty._id,
+      message: `You have created a kitty: ${newKitty.name}`,
+      type: "kitty",
+      image: tampimage,
+    };
 
-// Create notifications for all users in the group, excluding the creator
-const userNotifications = group.userIds
-  .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
-  .map((user) => ({
-    userId: user.userId,
-    groupId: groupId,
-    kittyId: newKitty._id,
-    message: `A new kitty has been created in your group: ${newKitty.name}`,
-    type: "kitty-join-request",
-    image: tampimage,
-  }));
+    // Create notifications for all users in the group, excluding the creator
+    const userNotifications = group.userIds
+      .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+      .map((user) => ({
+        userId: user.userId,
+        groupId: groupId,
+        kittyId: newKitty._id,
+        message: `A new kitty has been created in your group: ${newKitty.name}`,
+        type: "kitty-join-request",
+        image: tampimage,
+      }));
 
-const allNotifications = [creatorNotification, ...userNotifications];
+    const allNotifications = [creatorNotification, ...userNotifications];
 
-// ✅ Fix: Only send admin notification if admin is not the creator
-if (group.userId.toString() !== userId.toString()) {
-  const adminnotify = {
-    userId: group.userId,
-    kittyId: newKitty._id,
-    message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
-    type: "kitty-join-request",
-    image: tampimage,
-  };
-  allNotifications.push(adminnotify);
-}
+    // ✅ Fix: Only send admin notification if admin is not the creator
+    if (group.userId.toString() !== userId.toString()) {
+      const adminnotify = {
+        userId: group.userId,
+        kittyId: newKitty._id,
+        message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
+        type: "kitty-join-request",
+        image: tampimage,
+      };
+      allNotifications.push(adminnotify);
+    }
 
-// Insert all notifications into the database
-await NotificationSchema.insertMany(allNotifications);
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(allNotifications);
 
     const notificationsWithPush = [
       { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
@@ -558,12 +560,12 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     //   }
     //   : {};
     const filter = userId
-    ? {
-        "members": { 
-          $elemMatch: { userId, status: "pending" } 
+      ? {
+        "members": {
+          $elemMatch: { userId, status: "pending" }
         } // Ensures user exists in members with "pending" status
       }
-    : {};
+      : {};
 
     // Fetch all kitties with the filter
     const allKitties = await Kitty.find(filter)
@@ -935,7 +937,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //         status: status, // Set the status
 //       };
 //       console.log(newMember,"newMembernewMembernewMember");
-      
+
 //       kitty.members.push(newMember); // Push the new member to the array
 //     }
 
