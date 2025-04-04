@@ -5,6 +5,7 @@ const router = express.Router();
 // Upload images to S3 bucket
 const uploadImage = require("../controller/admin/s3UploadController")
 const detectGender = require("../controller/admin/detectGenderController")
+const walletController = require('../controller/client/groupWalletControllers');
 
 // Admin controllers
 const user_admin_controller = require("../controller/admin/userController");
@@ -20,6 +21,8 @@ const themes_controller = require("../controller/admin/themesController");
 const pages_controller = require("../controller/admin/pageController");
 
 const venueCategory_controller = require("../controller/admin/venueCategoryController"); // Import the controller for venueCategory
+
+const {createProfession,getAllProfessions,getProfessionById, deleteProfession, updateProfession} = require('../controller/admin/professionController')
 
 // Client controllers
 const user_controller = require("../controller/client/usercontroller");
@@ -64,8 +67,27 @@ const {
 
   const pollController = require('../controller/client/pollcontrollers');
 
-  const messageController = require('../controller/client/postshareControllers');
+const messageController = require('../controller/client/postshareControllers');
 
+
+const {getGroupHostedByMe,getUsersByGroupId,removeUserFromGroup} = require('../controller/client/groupController')
+
+//route for crud operation on profession
+
+router.post('/createProfession',createProfession)
+router.get('/getAllProfessions',getAllProfessions)
+router.get('/getProfessionById/:id',getProfessionById)
+router.delete('/deleteProfession/:id',deleteProfession)
+router.put('/updateProfession/:id',updateProfession)
+
+
+// groupController route
+router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
+
+
+// get list of users via group name 
+router.get('/getUsersByGroupId/:id',getUsersByGroupId)
+router.delete('/removeUserFromGroup',removeUserFromGroup)
 
 // S3bucket image upload route
 /**
@@ -250,6 +272,7 @@ router.post("/isUserLoggedIn", otp_controller.isUserLoggedIn);
  *         description: Invalid request data
  */
 router.post("/sendotptest", test_controller.sendotptest);
+router.put("/deleteFcmToken", test_controller.deleteFcmToken);
 
 /**
  * @swagger
@@ -599,6 +622,7 @@ router.get("/getAllUsersList", user_admin_controller.getAllUsersList);
  *         description: Successfully retrieved the counts
  */
 router.get("/getUserKittyVenueGroupCount", user_admin_controller.getUserKittyVenueGroupCount);
+
 
 /**
  * @swagger
@@ -3132,6 +3156,7 @@ router.delete("/deleteWishlistById/:venueId/:userId", wishlist_controller.delete
  *         description: Server error
  */
 router.post("/addVenue", venue_controller.addVenue);
+router.get("/getPlaces", venue_controller.getPlaces);
 router.get("/searchPlace", venue_controller.searchPlace);
 router.get("/getPlaceDetails", venue_controller.getPlaceDetails);
 
@@ -3544,6 +3569,7 @@ router.put("/submitKittyReview/:id", kitty_controller.submitKittyReview);
 router.put("/quitKittyByUser/:id", kitty_controller.quitKittyByUser);
 router.post("/getNearByKitty", kitty_controller.getNearByKitty);
 router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser);
+router.get("/kittysummary/:kittyId",kitty_controller.getKittySummary);
 
 
 
@@ -3575,6 +3601,7 @@ router.post("/sendKittyReminderToUser", kitty_controller.sendKittyReminderToUser
  *         description: Server error
  */
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
+router.get("/kitties", kitty_controller.getAllKittiesForUser);
 router.get("/getAllPastAndFutureKittiesOfGroups", kitty_controller.getAllPastAndFutureKittiesOfGroups);
 
 
@@ -6488,6 +6515,12 @@ router.get('/getNotificationsOfUser/:userId', notification_Controller.getNotific
 router.delete('/deleteNotificationById/:notificationId', notification_Controller.deleteNotificationById);
 
 
+// group wallet 
+// router.get('/group/:groupId/total-amount', walletController.getTotalAmountOfGroup);
+// router.get('/group/:groupId/total-expenses', walletController.getTotalExpensesOnGroup);
+// router.get('/group/:groupId/total-spent-on-kitties', walletController.getTotalSpentOnKitties);
+// router.get('/group/:groupId/user-transactions', walletController.getTotalAmountByGroupUsers);
+router.get('/group/:groupId/summary', walletController.getGroupFinancialSummary);
 
 
 

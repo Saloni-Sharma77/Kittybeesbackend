@@ -1,7 +1,8 @@
 const WalletModel = require("../../schema/walletSchema");
 const WalletCategeorymodel = require("../../schema/WalletCategorySchema");
 const Kitty = require("../../schema/kittySchema");
-
+const Message = require("../../schema/messageSchema"); // Assuming this is your Message model
+const User = require("../../schema/userSchema"); // As
 const moment = require("moment"); // Add moment.js to handle date formatting
 const mongoose = require("mongoose");
 
@@ -180,6 +181,60 @@ exports.getAllWalletTransactionsForUser = async (req, res) => {
   }
 };
 
+// exports.addExpenseAndContributionForKitty = async (req, res) => {
+//   try {
+//     const {
+//       userId,
+//       receiverId,
+//       invoice,
+//       walletCategoryId,
+//       groupId,
+//       kittyId,
+//       amount,
+//       transactionType,
+//       date,
+//       description,
+//     } = req.body;
+
+//     // Validate the required fields
+//     if (!userId || !groupId || !kittyId || !amount || !transactionType) {
+//       return res.status(400).json({ error: "Missing required fields" });
+//     }
+
+//     // Check if transactionType is valid
+//     const validTransactionTypes = ["Contribution", "Expense"];
+//     if (!validTransactionTypes.includes(transactionType)) {
+//       return res.status(400).json({ error: "Invalid transactionType" });
+//     }
+
+//     // Create a new wallet entry
+//     const newExpense = new WalletModel({
+//       userId,
+//       groupId,
+//       receiverId,
+//       walletCategoryId,
+//       invoice,
+//       kittyId,
+//       amount,
+//       transactionType,
+//       date: date || Date.now(),
+//       description, // Optional field
+//     });
+
+//     // Save to the database
+//     const savedExpense = await newExpense.save();
+
+//     // Send a success response
+//     res
+//       .status(201)
+//       .json({ message: "Expense added successfully", data: savedExpense });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json({ error: "An error occurred while adding the expense" });
+//   }
+// };
+
 exports.addExpenseAndContributionForKitty = async (req, res) => {
   try {
     const {
@@ -195,16 +250,28 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       description,
     } = req.body;
 
-    // Validate the required fields
+    // Validate required fields
     if (!userId || !groupId || !kittyId || !amount || !transactionType) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if transactionType is valid
+    // Validate transactionType
     const validTransactionTypes = ["Contribution", "Expense"];
     if (!validTransactionTypes.includes(transactionType)) {
       return res.status(400).json({ error: "Invalid transactionType" });
     }
+
+    // Fetch the user's full name
+    const user = await User.findById(userId).select("fullname");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    console.log("Fetched user:", user); // Debugging log
+
+    // Ensure fullName exists
+    const userName = user.fullname || "Unknown User";
 
     // Create a new wallet entry
     const newExpense = new WalletModel({
@@ -223,94 +290,244 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
     // Save to the database
     const savedExpense = await newExpense.save();
 
+    // Create a new message entry
+    const newMessage = {
+      senderId: userId,
+      amount,
+      amountType: transactionType,
+      name: userName,
+      message: `${userName} added ${amount} ${transactionType}`,
+      timestamp: Date.now(),
+    };
+
+    // Find the message document for the group, or create one if it doesn't exist
+    let messageDoc = await Message.findOne({ groupId });
+
+    if (!messageDoc) {
+      messageDoc = new Message({
+        groupId,
+        messages: [newMessage],
+      });
+    } else {
+      messageDoc.messages.push(newMessage);
+    }
+
+    // Save the message document
+    await messageDoc.save();
+
     // Send a success response
-    res
-      .status(201)
-      .json({ message: "Expense added successfully", data: savedExpense });
+    res.status(201).json({
+      message: "Expense added successfully",
+      data: savedExpense,
+      messageData: newMessage,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while adding the expense" });
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred while adding the expense" });
   }
 };
+
+
+
+
+// exports.getAllWalletTransactionsForKitty = async (req, res) => {
+//   try {
+//     const { kittyId } = req.params;
+//     const { search, type } = req.query; // Get search and type filter from query params
+
+//     // Validate kittyId
+//     if (!kittyId) {
+//       return res.status(400).json({ error: "kittyId is required" });
+//     }
+
+//     // Build the filter query
+//     let filter = { kittyId };
+
+//     // Apply type filter if provided
+//     if (type) {
+//       filter.transactionType = type; // Filters for 'Expense' or 'Contribution'
+//     }
+
+//     // Fetch all transactions related to the given kittyId
+//     let transactions = await WalletModel.find(filter)
+//       .populate("userId", "fullname")
+//       .populate("receiverId", "fullname profileImage")
+//       .populate("kittyId", "name image")
+//       .populate("groupId", "name");
+
+//     // Apply search filter (if provided)
+//     if (search) {
+//       const lowerCaseSearch = search.toLowerCase();
+//       transactions = transactions.filter((transaction) => {
+//         const senderName = transaction?.userId?.fullname?.toLowerCase() || "";
+//         const receiverName =
+//           transaction?.receiverId?.fullname?.toLowerCase() || "";
+//         return (
+//           senderName.includes(lowerCaseSearch) ||
+//           receiverName.includes(lowerCaseSearch)
+//         );
+//       });
+//     }
+
+//     // Check if transactions exist
+//     if (!transactions.length) {
+//       return res
+//         .status(404)
+//         .json({ message: "No transactions found for this kittyId" });
+//     }
+
+//     // Group transactions by date and calculate totals
+//     let expenseTotal = 0;
+//     let contributionTotal = 0;
+
+//     const groupedByDate = transactions.reduce((result, transaction) => {
+//       if (transaction.transactionType === "Expense") {
+//         expenseTotal += transaction.amount;
+//       }
+//       if (transaction.transactionType === "Contribution") {
+//         contributionTotal += transaction.amount;
+//       }
+
+//       // Format the date to 'YYYY-MM-DD'
+//       const date = moment(transaction.date).format("YYYY-MM-DD");
+
+//       // Initialize array if date key does not exist
+//       if (!result[date]) {
+//         result[date] = [];
+//       }
+
+//       // Push the transaction into the date's array
+//       result[date].push(transaction);
+//       return result;
+//     }, {});
+
+//     // Convert grouped object to an array format
+//     const groupedArray = Object.entries(groupedByDate).map(
+//       ([date, transactions]) => ({
+//         date,
+//         transactions,
+//       })
+//     );
+
+//     // Total calculations
+//     const total = {
+//       expenseTotal,
+//       contributionTotal,
+//     };
+
+//     // Send success response
+//     res.status(200).json({
+//       message: "Transactions retrieved successfully",
+//       data: groupedArray,
+//       total,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .json({ error: "An error occurred while fetching transactions" });
+//   }
+// };
+
+
+
 
 exports.getAllWalletTransactionsForKitty = async (req, res) => {
   try {
     const { kittyId } = req.params;
+    const { search, type } = req.query; // Removed walletCategoryId since we will search by name
 
     // Validate kittyId
     if (!kittyId) {
       return res.status(400).json({ error: "kittyId is required" });
     }
 
-    // Fetch all transactions related to the given kittyId
-    const transactions = await WalletModel.find({ kittyId })
-      .populate("userId")
-      .populate("receiverId","fullname profileImage")
-      .populate("kittyId", "name image")
-      .populate("groupId", "name");
+    // Build the filter query
+    let filter = { kittyId };
 
+    // Apply type filter if provided
+    if (type) {
+      filter.transactionType = type; // Filters for 'Expense' or 'Contribution'
+    }
+
+    // Fetch all transactions related to the given kittyId
+    let transactions = await WalletModel.find(filter)
+      .populate("userId", "fullname")
+      .populate("receiverId", "fullname profileImage")
+      .populate("kittyId", "name image")
+      .populate("groupId", "name")
+      .populate("walletCategoryId", "name"); // ✅ Populate category name
+
+    // Apply search filter (if provided)
+    if (search) {
+      const lowerCaseSearch = search.toLowerCase();
+      transactions = transactions.filter((transaction) => {
+        const senderName = transaction?.userId?.fullname?.toLowerCase() || "";
+        const receiverName = transaction?.receiverId?.fullname?.toLowerCase() || "";
+        const categoryName = transaction?.walletCategoryId?.name?.toLowerCase() || ""; // ✅ Extract category name
+
+        return (
+          senderName.includes(lowerCaseSearch) ||
+          receiverName.includes(lowerCaseSearch) ||
+          categoryName.includes(lowerCaseSearch) // ✅ Search by category name
+        );
+      });
+    }
 
     // Check if transactions exist
     if (!transactions.length) {
-      return res
-        .status(404)
-        .json({ message: "No transactions found for this kittyId" });
+      return res.status(404).json({ message: "No transactions found for this kittyId" });
     }
 
-    // Group transactions by date
+    // Group transactions by date and calculate totals
     let expenseTotal = 0;
     let contributionTotal = 0;
 
-
     const groupedByDate = transactions.reduce((result, transaction) => {
-      if(transaction?.transactionType == 'Expense'){
-        expenseTotal +=  transaction?.amount;
-        console.log(transaction.expenseTotal,'transactionExpense')
+      if (transaction.transactionType === "Expense") {
+        expenseTotal += transaction.amount;
+      }
+      if (transaction.transactionType === "Contribution") {
+        contributionTotal += transaction.amount;
+      }
 
-      }
-      if(transaction?.transactionType == 'Contribution'){
-        contributionTotal +=  transaction?.amount;
-        
-      }
-      // Format the date to 'YYYY-MM-DD' format to ignore time part
+      // Format the date to 'YYYY-MM-DD'
       const date = moment(transaction.date).format("YYYY-MM-DD");
+
       // Initialize array if date key does not exist
       if (!result[date]) {
         result[date] = [];
       }
+
       // Push the transaction into the date's array
       result[date].push(transaction);
       return result;
     }, {});
-    console.log(groupedByDate,'groupedByDate',expenseTotal,contributionTotal)
 
-    // Convert grouped object to an array format if preferred
-    const groupedArray = Object.entries(groupedByDate).map(
-      ([date, transactions]) => ({
-        date,
-        transactions,
-      })
-    );
-    total={
-      expenseTotal:expenseTotal,
-      contributionTotal:contributionTotal
-      
-    }
+    // Convert grouped object to an array format
+    const groupedArray = Object.entries(groupedByDate).map(([date, transactions]) => ({
+      date,
+      transactions,
+    }));
 
-    // Send a success response with grouped transactions
+    // Total calculations
+    const total = {
+      expenseTotal,
+      contributionTotal,
+    };
+
+    // Send success response
     res.status(200).json({
       message: "Transactions retrieved successfully",
       data: groupedArray,
-      total:total
+      total,
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching transactions" });
+    res.status(500).json({ error: "An error occurred while fetching transactions" });
   }
 };
+
 
 exports.getUserWalletForGroup = async (req, res) => {
   const { userId, groupId } = req.params; // Assuming you get these from the request params

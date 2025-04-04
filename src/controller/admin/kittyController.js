@@ -2,6 +2,7 @@ require('dotenv').config();
 const Kitty = require("../../schema/kittySchema");
 const Venue = require("../../schema/venueSchema");
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
+const admin = require("firebase-admin");
 
 const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
@@ -252,11 +253,11 @@ exports.updateKitty = async (req, res) => {
     // if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
     //   return res.status(400).json({ error: "Invalid groupId" });
     // }
-    if (groupId) {
-      if (mongoose.Types.ObjectId.isValid(groupId)) {
-        groupId = [groupId]; // Ensure it's an array with a valid ObjectId
-      }
+    let updatedGroupId = groupId;
+    if (groupId && mongoose.Types.ObjectId.isValid(groupId)) {
+      updatedGroupId = [groupId]; // Ensure it's an array with a valid ObjectId
     }
+
     if (userId && !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: "Invalid userId" });
     }
@@ -302,7 +303,7 @@ exports.updateKitty = async (req, res) => {
     // Prepare the update object
     const updatedData = {
       ...(name && { name }),
-      ...(groupId && { groupId }),
+      ...(groupId && { groupId: updatedGroupId }),
       ...(userId && { userId }),
       ...(date && { date }),
       ...(time && { time }),
@@ -410,9 +411,76 @@ exports.getKittyAttendance = async (req, res) => {
   }
 };
 
+// exports.getAllPastAndFutureKitties = async (req, res) => {
+//   try {
+//     const { type } = req.query; // Fetch type parameter
+//     const now = new Date(); // Current date and time in JavaScript
+
+//     // Function to combine date and time into a Date object
+//     const combineDateAndTime = (dateStr, timeStr) => {
+//       const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+//       const [day, month, year] =
+//         dateParts.length === 3 ? dateParts : [null, null, null];
+//       const [time, modifier] = timeStr.split(" "); // Split time by space to get time and AM/PM
+
+//       // Convert time to 24-hour format
+//       const [hours, minutes] = time.split(":").map(Number);
+//       const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
+//       const completeDate = new Date(year, month - 1, day, hours24, minutes);
+
+//       return completeDate;
+//     };
+
+//     // Fetch all kitties to manually filter in the app
+//     const allKitties = await Kitty.find({})
+//       .populate({
+//         path: "groupId",
+//         populate: {
+//           path: "userId",
+//           model: "Users",
+//         },
+//       })
+//       .populate("userId")
+//       .populate("venueId")
+//       .populate("themeId")
+//       .populate("colorId")
+//       .populate("addressId");
+
+//     // Filter kitties based on combined date and time
+//     const filteredKitties = allKitties.filter((kitty) => {
+//       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+
+//       if (type == "past") {
+//         return kittyDateTime < now;
+//       } else if (type == "future") {
+//         return kittyDateTime > now;
+//       }
+//     });
+//     const sortedKitties = filteredKitties.sort((a, b) => {
+//       const dateTimeA = combineDateAndTime(a.date, a.time);
+//       const dateTimeB = combineDateAndTime(b.date, b.time);
+
+//       // For future kitties, sort ascending (nearest future date first)
+//       // For past kitties, sort descending (most recent past date first)
+//       if (type === "future") {
+//         return dateTimeA - dateTimeB; // Ascending order
+//       } else if (type === "past") {
+//         return dateTimeB - dateTimeA; // Descending order
+//       }
+//     });
+
+//     res
+//       .status(200)
+//       .json({ message: "Data fetched successfully", data: filteredKitties });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
-    const { type } = req.query; // Fetch type parameter
+    const { type, page = 1, limit = 20, userId } = req.query; // Fetch type, page, limit, and userId from query params
     const now = new Date(); // Current date and time in JavaScript
 
     // Function to combine date and time into a Date object
@@ -430,8 +498,18 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       return completeDate;
     };
 
-    // Fetch all kitties to manually filter in the app
-    const allKitties = await Kitty.find({})
+    // Build the query filter
+    const filter = userId
+    ? {
+        $or: [
+          { userId }, // Match the userId directly
+          { "members.userId": userId, "members.status": "approved" }, // Match inside members array with approved status
+        ],
+      }
+    : {};
+
+    // Fetch all kitties with the filter
+    const allKitties = await Kitty.find(filter)
       .populate({
         path: "groupId",
         populate: {
@@ -449,12 +527,14 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
-      if (type == "past") {
+      if (type === "past") {
         return kittyDateTime < now;
-      } else if (type == "future") {
+      } else if (type === "future") {
         return kittyDateTime > now;
       }
     });
+
+    // Sort the filtered kitties based on the date/time
     const sortedKitties = filteredKitties.sort((a, b) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
@@ -468,31 +548,111 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       }
     });
 
-    res
-      .status(200)
-      .json({ message: "Data fetched successfully", data: filteredKitties });
+    // Paginate combined results
+    const totalKitties = sortedKitties.length;
+    const totalPages = Math.ceil(totalKitties / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    // Slice the results to implement pagination
+    const paginatedKitties = sortedKitties.slice(startIndex, endIndex);
+
+    // Check if no kitties are found
+    if (paginatedKitties.length === 0) {
+      return res.status(404).json({ message: "No kitties found for the given filters." });
+    }
+
+    res.status(200).json({
+      message: "Data fetched successfully",
+      data: paginatedKitties,
+      totalKitties,
+      currentPage: page,
+      totalPages: totalPages,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+exports.getAllKittiesForUser = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, userId, type } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!type || (type !== "past" && type !== "future")) {
+      return res.status(400).json({ message: "Type must be 'past' or 'future'" });
+    }
+
+    const now = moment();
+
+    const userKitties = await Kitty.find({
+      $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
+    })
+      .populate("userId")
+      .populate("groupId")
+      .populate("venueId")
+      .populate("themeId")
+      .populate("colorId")
+      .populate("addressId")
+      .populate("activityId")
+      .lean();
+
+    const filteredKitties = userKitties.filter((kitty) => {
+      const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
+      return type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now);
+    });
+
+    // Sort kitties:
+    const sortedKitties = filteredKitties.sort((a, b) => {
+      const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
+      const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
+      return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
+    });
+
+    // Pagination
+    const totalKitties = sortedKitties.length;
+    const totalPages = Math.ceil(totalKitties / limit);
+    const startIndex = (page - 1) * limit;
+    const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
+
+    if (paginatedKitties.length === 0) {
+      return res.status(404).json({ message: `No ${type} kitties found for this user.` });
+    }
+
+    return res.status(200).json({
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
+      data: paginatedKitties,
+      totalKitties,
+      currentPage: parseInt(page),
+      totalPages,
+    });
+
+  } catch (error) {
+    console.error(`Error fetching ${req.query.type || "unknown"} kitties:`, error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
 exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
   try {
-    const { type ,groupId} = req.query; // Fetch type parameter
-    const now = new Date(); // Current date and time in JavaScript
+    const { type ,groupId} = req.query; 
+    const now = new Date(); 
     if(!groupId){
       return res.status(400).json({error:'GroupId is required'})
     }
 
-    // Function to combine date and time into a Date object
+   
     const combineDateAndTime = (dateStr, timeStr) => {
-      const dateParts = dateStr.split(/[\/-]/).map(Number); // Split date by '/' or '-'
+      const dateParts = dateStr.split(/[\/-]/).map(Number);
       const [day, month, year] =
         dateParts.length === 3 ? dateParts : [null, null, null];
-      const [time, modifier] = timeStr.split(" "); // Split time by space to get time and AM/PM
+      const [time, modifier] = timeStr.split(" "); 
 
-      // Convert time to 24-hour format
+     
       const [hours, minutes] = time.split(":").map(Number);
       const hours24 = modifier === "PM" && hours !== 12 ? hours + 12 : hours;
       const completeDate = new Date(year, month - 1, day, hours24, minutes);
@@ -500,7 +660,7 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       return completeDate;
     };
 
-    // Fetch all kitties to manually filter in the app
+   
     const allKitties = await Kitty.find({groupId:groupId})
       .populate({
         path: "groupId",
@@ -510,12 +670,13 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
         },
       })
       .populate("userId")
+      .populate("userId")
       .populate("venueId")
       .populate("themeId")
       .populate("colorId")
       .populate("addressId");
 
-    // Filter kitties based on combined date and time
+   
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
 
@@ -529,12 +690,11 @@ exports.getAllPastAndFutureKittiesOfGroups = async (req, res) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
 
-      // For future kitties, sort ascending (nearest future date first)
-      // For past kitties, sort descending (most recent past date first)
+      
       if (type === "future") {
-        return dateTimeA - dateTimeB; // Ascending order
+        return dateTimeA - dateTimeB; 
       } else if (type === "past") {
-        return dateTimeB - dateTimeA; // Descending order
+        return dateTimeB - dateTimeA; 
       }
     });
 
@@ -553,9 +713,8 @@ exports.getAllKittyForMe = async (req, res) => {
     const userId = req.params.userId;
     const { name, page = 1, limit = 0 } = req.query;
 
-    const currentTime = moment(); // Current date and time
+    const currentTime = moment(); 
 
-    // Fetch all kitties with optional name search
     const query = {};
     if (name) {
       query.name = { $regex: new RegExp(name, "i") };
@@ -564,35 +723,35 @@ exports.getAllKittyForMe = async (req, res) => {
     let KittyData = await Kitty.find(query)
       .lean()
       .populate("venueId", "name")
-      .populate("groupId", "name contributionAmount")
+      .populate("groupId", "name contributionAmount groupType")
       .populate("themeId", "name");
 
-    // Filter kitties by future date and time
     const filteredKitties = KittyData.filter((kitty) => {
+      const isPublicGroup = kitty.groupId.some(group => group.groupType === "public");
+
       const kittyDateTime = moment(
         kitty.date + " " + kitty.time,
         "DD/MM/YYYY hh:mm A"
       );
-      return kittyDateTime.isAfter(currentTime);
+      return isPublicGroup && kittyDateTime.isAfter(currentTime);
     });
 
-    // Total records after filtering
     const totalKitties = filteredKitties.length;
 
-    // Apply pagination
     const startIndex = (page - 1) * limit;
     const paginatedKitties = limit
       ? filteredKitties.slice(startIndex, startIndex + parseInt(limit))
       : filteredKitties;
 
-    // Modify response to add `kittymemberstatus` for each kitty
     const response = paginatedKitties.map((kitty) => {
-      const member = kitty.members.find(
-        (member) => member.userId.toString() === userId
+      const members = Array.isArray(kitty.members) ? kitty.members : [];
+      
+      const member = members.find(
+        (member) => member.userId?.toString() === userId
       );
-      let kittymemberstatus = "guest"; // Default if not in members array
-
-      // Set status based on membership or if the user is the host
+    
+      let kittymemberstatus = "guest"; 
+    
       if (member) {
         kittymemberstatus =
           member.status === "approved"
@@ -600,17 +759,18 @@ exports.getAllKittyForMe = async (req, res) => {
             : member.status === "rejected"
             ? "rejected"
             : "requested";
-      } else if (kitty.userId.toString() === userId) {
+      } else if (kitty.userId?.toString() === userId) {
         kittymemberstatus = "host";
       } else {
         kittymemberstatus = "notmember";
       }
-
+    
       return {
         ...kitty,
         kittymemberstatus,
       };
     });
+    
 
     // Response metadata
     const totalPages = limit ? Math.ceil(totalKitties / limit) : 1;
@@ -787,6 +947,7 @@ exports.joinKitty = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong" });
   }
 };
+
 exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
@@ -813,93 +974,109 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       return res.status(404).json({ message: "Member not found in the Kitty" });
     }
 
-    // Check if the member's status is already approved
-    if (findWhichKitty.members[memberIndex].status === 'approved') {
+    // Fetch the Notification document
+    const existingNotification = await NotificationSchema.findById(notificationId);
+    if (!existingNotification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    // Convert "approved" to "accepted" for Notification Schema
+    const notificationStatus = status === 'approved' ? 'accepted' : status;
+
+    // Check if both are already approved/accepted
+    if (
+      findWhichKitty.members[memberIndex].status === 'approved' &&
+      existingNotification.status === 'accepted'
+    ) {
       return res.status(400).json({ message: "Request has already been approved" });
     }
 
-    // Update the member's status
+    // Update the member's status in the Kitty document
     findWhichKitty.members[memberIndex].status = status;
-
-    // Save the updated Kitty document
     await findWhichKitty.save();
 
-    // Prepare notification messages based on the status
-    const notificationMessage =
-      status === "approved"
-        ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
-        : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
-
-    const hostNotificationMessage =
-      status === "approved"
-        ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
-        : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
-
-    // Log the messages for debugging
-    console.log(notificationMessage, hostNotificationMessage);
-
-    // Update or create the notification for the host
+    // Update the notification's status
     await NotificationSchema.findByIdAndUpdate(
       notificationId,
-      { message: hostNotificationMessage, type: "kitty" },
-      { new: true, upsert: true } // upsert ensures creation if the notification doesn't exist
+      { 
+        message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
+        type: "kitty",
+        status: notificationStatus // Update status field in NotificationSchema
+      },
+      { new: true }
     );
+
+    // Prepare notification messages
+    const notificationMessage = status === "approved"
+      ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
+      : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
+
+    const hostNotificationMessage = status === "approved"
+      ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
+      : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
+
+    console.log(notificationMessage, hostNotificationMessage);
 
     // Send a new notification to the user
     const userNotification = new NotificationSchema({
-      userId, // Notification for the user
-      kittyId: kittyId,
+      userId,
+      kittyId,
       message: notificationMessage,
       type: "kitty",
+      status: notificationStatus // Ensure the status update in new notification
     });
 
     await userNotification.save();
-    const fcmTokens = await FcmToken.find({ userId: userId,deviceType: 'Android',});
-    // const tokens = fcmTokens
-    // .map(tokenDoc => tokenDoc.fcmToken)
-  
-    const tokens = fcmTokens
-  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays
-  .filter((token) => token && token.trim() !== ''); // Skip invalid or empty tokens
 
+    // Send FCM notifications
+    const fcmTokens = await FcmToken.find({ userId: userId, deviceType: 'Android' });
+    const tokens = fcmTokens.flatMap((tokenDoc) => tokenDoc?.fcmToken).filter((token) => token && token.trim() !== '');
 
-        const payload = {
-          notification: {
-              title: findWhichKitty.name,
-              body: notificationMessage,
-              image: 'your_image_url', // Optional image URL if needed
-          },
-          data: {
-              route: 'your_route', 
-              title: findWhichKitty.name,
-              body: notificationMessage,
-          },
-      };
+    const payload = {
+      notification: {
+        title: findWhichKitty.name,
+        body: notificationMessage,
+        image: 'your_image_url', // Optional
+      },
+      data: {
+        route: 'your_route',
+        title: findWhichKitty.name,
+        body: notificationMessage,
+      },
+    };
+
+    const options = {
+      priority: "high",
+    };
+
+    if (tokens.length > 0) {
+      await Promise.all(
+        tokens.map(async (token) => {
+          try {
+            await admin.messaging().send({
+              token: token,
+              notification: payload.notification,
+              data: payload.data,
+              android: {
+                priority: options.priority,
+              },
+            });
+          } catch (error) {
+            console.error(`FCM error for token ${token}:`, error);
     
-      const options = {
-          priority: "high",
-      };
+            // If token is invalid, remove it from the database
+            if (error.code === "messaging/registration-token-not-registered") {
+              await FcmToken.findOneAndDelete({ fcmToken: token });
+              console.log(`Removed invalid FCM token: ${token}`);
+            }
+          }
+        })
+      );
+    }
     
-      // Send notification to each token using the send method
-      if(tokens?.length > 0){
-
-        const response = await Promise.all(tokens.map(token =>
-            admin.messaging().send({
-                token: token,
-                notification: payload.notification,
-                data: payload.data,
-                android: {
-                    priority: options.priority,
-                },
-            })
-        ));
-      }
-
-    // Respond with success message
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
-    // Handle errors
-    console.error(error); // Log the error for debugging
+    console.error("Error in acceptOrRejectRequestOfKitty:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -1136,52 +1313,66 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   return distance;
 }
 
-exports.getNearByKitty = async (req, res) => {
+ exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
 
-    if (!lat || !long) {
-      return res.status(400).json({ error: 'Latitude and longitude are required.' });
-    }
+     if (!lat || !long) {
+     return res.status(400).json({ error: 'Latitude and longitude are required.' });
+  }
 
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(long);
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(long);
+       
+    //Getting today's date 
+       const today = new Date();
+       today.setUTCHours(0, 0, 0, 0);
 
-    // Find all venues (since we don’t have a geospatial index in this schema)
-    const venues = await Venue.find().select('_id lat long');
+  //Find all venues (since we don’t have a geospatial index in this schema)
+   const venues = await Venue.find().select('_id lat long');
 
-    // Filter venues within 5 km radius
-    const nearbyVenueIds = venues
-      .filter(venue => {
-        const venueLat = parseFloat(venue.lat);
-        const venueLong = parseFloat(venue.long);
-        const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
-        return distance <= 5;
-      })
-      .map(venue => venue._id);
+  // Filter venues within 5 km radius
+ const nearbyVenueIds = venues
+       .filter(venue => {
+         const venueLat = parseFloat(venue.lat);
+      const venueLong = parseFloat(venue.long);
+     const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
+     return distance <= 10;
+   })
+   .map(venue => venue._id);
 
-    // Find kitties associated with the nearby venues
-    const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds } })
-      .populate({
-        path: 'venueId',
-        select: 'name location lat long pricing',  // Include venue name, location, lat, and long
-      }).populate('themeId','name')
-      .exec();
+  // Find kitties associated with the nearby venues
+  const   kittiesWithApprovedCount= await Kitty.find({ venueId: { $in: nearbyVenueIds }, })
+    .populate({
+     path: 'venueId',
+      select: 'name location lat long pricing',  // Include venue name, location, lat, and long
+   }).populate('themeId','name')
+   .exec();
 
-      const  kitties= kittiesWithApprovedCount.map(kitty => {
-        const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
-        return {
-          ...kitty.toObject(),
-          approvedMembersCount: approvedCount
-        };
+   
+   // filtering upcoming kitties only (by date)
+   const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
+    const [day, month, year] = kitty.date.split('/').map(Number);  
+    const kittyDate = new Date(year, month - 1, day); 
+    return kittyDate >= today; 
+  });
+
+   const  kitties= filteredKitties.map(kitty => {
+       const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
+       return {
+      ...kitty.toObject(),
+         approvedMembersCount: approvedCount
+         };
       });
 
-    return res.status(200).json({ success: true,kitties });
+     return res.status(200).json({ success: true,kitties });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
+     return res.status(500).json({ error: 'Internal Server Error' });
+ }
 };
+
+
 
 
 exports.submitKittyReview = async (req, res) => {
@@ -1300,3 +1491,62 @@ exports.sendKittyReminderToUser = async (req, res) => {
     return res.status(500).json({ error: "Internal server error." });
   }
 };
+
+
+exports.getKittySummary = async (req, res) => {
+  try {
+    const { kittyId } = req.params;
+
+    if (!kittyId) {
+      return res.status(400).json({ error: "Kitty ID is required" });
+    }
+
+    // Aggregation to calculate total contribution, expense, and their counts
+    const result = await WalletSchema.aggregate([
+      { $match: { kittyId: new mongoose.Types.ObjectId(kittyId) } }, // Filter by kittyId
+      {
+        $group: {
+          _id: "$kittyId",
+          totalContribution: {
+            $sum: {
+              $cond: [{ $eq: ["$transactionType", "Contribution"] }, "$amount", 0],
+            },
+          },
+          totalExpense: {
+            $sum: {
+              $cond: [{ $eq: ["$transactionType", "Expense"] }, "$amount", 0],
+            },
+          },
+          contributionCount: {
+            $sum: { $cond: [{ $eq: ["$transactionType", "Contribution"] }, 1, 0] },
+          },
+          expenseCount: {
+            $sum: { $cond: [{ $eq: ["$transactionType", "Expense"] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalContribution: 1,
+          totalExpense: 1,
+          contributionCount: 1,
+          expenseCount: 1,
+          savedAmount: { $subtract: ["$totalContribution", "$totalExpense"] }, // Calculate saved amount
+          totalAmount: { $add: ["$totalContribution", "$totalExpense"] }, // Calculate total transaction amount
+          totalTransactions: { $add: ["$contributionCount", "$expenseCount"] }, // Total transaction count
+        },
+      },
+    ]);
+
+    if (!result.length) {
+      return res.status(404).json({ message: "No transactions found for this kitty" });
+    }
+
+    res.status(200).json({ success: true, data: result[0] });
+  } catch (error) {
+    console.error("Error fetching kitty summary:", error);
+    res.status(500).json({ error: "An error occurred while fetching kitty summary" });
+  }
+};
+

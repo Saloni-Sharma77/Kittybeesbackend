@@ -22,6 +22,7 @@ sociallinks: [
       instaurl: { type: String },
       Linkedinurl: { type: String },
       Websiteurl: { type: String },
+      Facebookurl: { type: String },
     }
   ],
   isnotvalid :{type:Boolean},

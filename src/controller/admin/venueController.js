@@ -113,6 +113,7 @@ exports.addVenue = async (req, res) => {
       lat,
       long,
       image,
+      menu,
       pricing,
       contactNo,
       kittiesHappened,
@@ -144,6 +145,7 @@ exports.addVenue = async (req, res) => {
       lat,
       long,
       image,
+      menu,
       pricing,
       contactNo,
       kittiesHappened,
@@ -169,6 +171,7 @@ exports.updateVenue = async (req, res) => {
       lat,
       long,
       image,
+      menu,
       pricing,
       contactNo,
       kittiesHappened,
@@ -195,6 +198,7 @@ exports.updateVenue = async (req, res) => {
         lat,
         long,
         image,
+        menu,
         pricing,
         contactNo,
         kittiesHappened,
@@ -659,6 +663,24 @@ exports.updateStatus = async (req, res)=>{
   }
 }
 
+// Fetch places from Google Places API
+exports.getPlaces = async (req, res) => {
+  const query = req.query.query;
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter is required" });
+  }
+
+  const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    res.json(response.data); // Send response back to frontend
+  } catch (error) {
+    console.error("Google API Error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+};
 
 
 
@@ -691,6 +713,10 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 //   "minKittiesHappened": 10,
 //   "maxKittiesBooked": 50
 // }
+
+
+
+
 
 
 

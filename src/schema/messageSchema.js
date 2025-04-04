@@ -33,7 +33,10 @@ const messageArray = new Schema({
   document: { type: String, default: '' },
   timestamp: { type: Date, default: Date.now },
   pollOptions: { type: pollSchema, default: null }, // Embed the poll schema
-
+  amount: { type: Number, default: 0 }, // Store amount value
+  amountType: { type: String, enum: ['Contribution', 'Expense'], default: 'Contribution' }, // Store type of amount
+  name: { type: String, default: '' }, // Store name
+  message: { type: String, default: '' }, // Store name
 
 })
 

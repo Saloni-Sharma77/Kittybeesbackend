@@ -155,33 +155,31 @@ exports.voteForPost = async (req, res) => {
       return res.status(404).json({ message: 'Post or poll not found' });
     }
 
-    // Check if the user has already voted for any option in the poll
-    const alreadyVotedOption = post.poll.options.find(option =>
-      option.voters.some(voter => voter.toString() === userId)
-    );
+    let previousOption = null;
 
-    if (alreadyVotedOption) {
-      if (alreadyVotedOption._id.toString() === optionId) {
-        // User is trying to remove their vote from the current option
-        alreadyVotedOption.votes -= 1;
-        alreadyVotedOption.voters = alreadyVotedOption.voters.filter(
-          voter => voter.toString() !== userId
-        );
-      } else {
-        // User has voted for a different option
-        return res.status(400).json({ message: 'You have already voted for another option' });
+    // Find if the user has already voted for any option
+    post.poll.options.forEach(option => {
+      if (option.voters.some(voter => voter.toString() === userId)) {
+        previousOption = option;
       }
-    } else {
-      // Find the option by ID
-      const option = post.poll.options.id(optionId);
-      if (!option) {
-        return res.status(404).json({ message: 'Option not found' });
-      }
+    });
 
-      // Add the user's vote to the selected option
-      option.votes += 1;
-      option.voters.push(userId);
+    // If the user previously voted, remove their vote from the old option
+    if (previousOption) {
+      previousOption.votes -= 1;
+      previousOption.voters = previousOption.voters.filter(
+        voter => voter.toString() !== userId
+      );
     }
+
+    // Find the new option and add the user's vote
+    const newOption = post.poll.options.id(optionId);
+    if (!newOption) {
+      return res.status(404).json({ message: 'Option not found' });
+    }
+
+    newOption.votes += 1;
+    newOption.voters.push(userId);
 
     // Save the updated post
     await post.save();
@@ -192,7 +190,6 @@ exports.voteForPost = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 
 // Add a comment to a post
@@ -294,80 +291,159 @@ exports.deleteComment = async (req, res) => {
 };
 
 
+  // // Get all posts
+  // exports.getAllPost = async (req, res) => {
+  //   try {
+  //     const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
+  
+  //     const matchStage = fullname
+  //       ? { 'userId.fullname': { $regex: fullname, $options: 'i' } }
+  //       : {};
+  
+  //     const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
+  
+  //     const posts = await PostModel.aggregate([
+  //       {
+  //         $lookup: {
+  //           from: 'users', // The collection name of the User model
+  //           localField: 'userId',
+  //           foreignField: '_id',
+  //           as: 'userId',
+  //         },
+  //       },
+  //       {
+  //         $unwind: '$userId', // Unwind the userId array to work with the object
+  //       },
+  //       {
+  //         $match: matchStage, // Apply the search filter on the populated fullname field
+  //       },
+  //       {
+  //         $sort: { createdAt: -1 }, // Sort by creation date
+  //       },
+  //       {
+  //         $skip: skip, // Skip documents based on the current page
+  //       },
+  //       {
+  //         $limit: parseInt(limit), // Limit the number of documents per page
+  //       },
+  //     ]);
+  
+  //     const totalPosts = await PostModel.aggregate([
+  //       {
+  //         $lookup: {
+  //           from: 'users',
+  //           localField: 'userId',
+  //           foreignField: '_id',
+  //           as: 'userId',
+  //         },
+  //       },
+  //       {
+  //         $unwind: '$userId',
+  //       },
+  //       {
+  //         $match: matchStage,
+  //       },
+  //       {
+  //         $count: 'totalCount', // Count the total number of matching posts
+  //       },
+  //     ]);
+  
+  //     const totalCount = totalPosts[0]?.totalCount || 0; // Handle cases where no posts match
+  
+  //     res.status(200).json({
+  //       message: 'All posts fetched successfully',
+  //       data: posts,
+  //       pagination: {
+  //         currentPage: parseInt(page),
+  //         totalPages: Math.ceil(totalCount / parseInt(limit)),
+  //         totalItems: totalCount,
+  //       },
+  //     });
+  //   } catch (err) {
+  //     console.error(err);
+  //     res.status(500).json({ message: 'Internal server error' });
+  //   }
+  // };
   // Get all posts
-  exports.getAllPost = async (req, res) => {
-    try {
-      const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
-  
-      const matchStage = fullname
-        ? { 'userId.fullname': { $regex: fullname, $options: 'i' } }
-        : {};
-  
-      const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
-  
-      const posts = await PostModel.aggregate([
-        {
-          $lookup: {
-            from: 'users', // The collection name of the User model
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'userId',
-          },
+exports.getAllPost = async (req, res) => {
+  try {
+    const { fullname, page = 1, limit = 10 } = req.query; // Get search term, page, and limit from query parameters
+
+    const matchStage = fullname
+      ? {
+          $or: [
+            { 'userId.fullname': { $regex: fullname, $options: 'i' } },
+            { name: { $regex: fullname, $options: 'i' } },
+            { description: { $regex: fullname, $options: 'i' } }
+          ],
+        }
+      : {};
+
+    const skip = (parseInt(page) - 1) * parseInt(limit); // Calculate the number of documents to skip
+
+    const posts = await PostModel.aggregate([
+      {
+        $lookup: {
+          from: 'users', // The collection name of the User model
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userId',
         },
-        {
-          $unwind: '$userId', // Unwind the userId array to work with the object
+      },
+      {
+        $unwind: '$userId', // Unwind the userId array to work with the object
+      },
+      {
+        $match: matchStage, // Apply the search filter on fullname, name, or description
+      },
+      {
+        $sort: { createdAt: -1 }, // Sort by creation date
+      },
+      {
+        $skip: skip, // Skip documents based on the current page
+      },
+      {
+        $limit: parseInt(limit), // Limit the number of documents per page
+      },
+    ]);
+
+    const totalPosts = await PostModel.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'userId',
         },
-        {
-          $match: matchStage, // Apply the search filter on the populated fullname field
-        },
-        {
-          $sort: { createdAt: -1 }, // Sort by creation date
-        },
-        {
-          $skip: skip, // Skip documents based on the current page
-        },
-        {
-          $limit: parseInt(limit), // Limit the number of documents per page
-        },
-      ]);
-  
-      const totalPosts = await PostModel.aggregate([
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'userId',
-          },
-        },
-        {
-          $unwind: '$userId',
-        },
-        {
-          $match: matchStage,
-        },
-        {
-          $count: 'totalCount', // Count the total number of matching posts
-        },
-      ]);
-  
-      const totalCount = totalPosts[0]?.totalCount || 0; // Handle cases where no posts match
-  
-      res.status(200).json({
-        message: 'All posts fetched successfully',
-        data: posts,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(totalCount / parseInt(limit)),
-          totalItems: totalCount,
-        },
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  };
-  
+      },
+      {
+        $unwind: '$userId',
+      },
+      {
+        $match: matchStage,
+      },
+      {
+        $count: 'totalCount', // Count the total number of matching posts
+      },
+    ]);
+
+    const totalCount = totalPosts[0]?.totalCount || 0; // Handle cases where no posts match
+
+    res.status(200).json({
+      message: 'All posts fetched successfully',
+      data: posts,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalItems: totalCount,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 
   exports.getPostByTag = async (req, res) => {
     try {

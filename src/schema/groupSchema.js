@@ -31,8 +31,14 @@ const GroupSchema = new mongoose.Schema(
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
       memoryimage: { type: String }, 
       }],
-      referralCode:{type:String}
+      referralCode:{type:String},
+      userNumbers:[
+        { type: String }
+      ],
 
+    // newUser:{
+    //  type:String
+    // }
   },
   { timestamps: true }
 );

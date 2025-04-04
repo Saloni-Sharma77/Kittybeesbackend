@@ -55,7 +55,15 @@ exports.getDraftByUserId = async (req, res) => {
   const userId = req.params.userId; // Capture the userId from request parameters
 
   try {
-    const drafts = await Draft.find({ userId, isDraft: true }).sort({ createdAt: -1 });
+    const drafts = await Draft.find({ userId, isDraft: true })
+      .populate("userId")      // Populate user details
+      .populate("groupId")     // Populate group details
+      .populate("venueId")     // Populate venue details
+      .populate("themeId")     // Populate theme details
+      .populate("colorId")     // Populate color details
+      .populate("addressId")   // Populate address details
+      .populate("activityId")  // Populate activity details
+      .sort({ createdAt: -1 });
 
     res.status(200).json({ message: "Drafts fetched successfully", data: drafts });
   } catch (err) {
@@ -63,6 +71,7 @@ exports.getDraftByUserId = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 // Get all drafts
 exports.getAllDrafts = async (req, res) => {

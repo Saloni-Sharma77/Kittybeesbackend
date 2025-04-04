@@ -6,7 +6,7 @@ const groupSchema = new Schema({
   userIds: [
     {
       userId: { type: Schema.Types.ObjectId, ref: 'Users', required: true },
-      status: { type: String, enum: ['pending', 'approved'], required: true }
+      status: { type: String, enum: ['pending', 'approved','rejected'], required: true }
     }
   ]
 });
