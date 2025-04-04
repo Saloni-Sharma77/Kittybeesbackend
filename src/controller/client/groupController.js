@@ -36,7 +36,7 @@ exports.addGroup = async (req, res) => {
       { name: 'name', value: name },
       { name: 'userId', value: userId },
       { name: 'groupType', value: groupType },
-      { name: 'description', value: description },
+      // { name: 'description', value: description },
       // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
@@ -278,99 +278,59 @@ exports.addGroup = async (req, res) => {
 
 
 
-
 exports.getAllGroups = async (req, res) => {
   try {
-    const { page = 1, limit = 20, name = "", userId, interestName } = req.query;
+    const { page = 1, limit = 20, name = '', userId } = req.query; // Get pagination, search term, and userId from the query parameters
 
+    // Convert page and limit to numbers
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
+    console.log('Page:', pageNumber, 'Limit:', pageSize); // Log page and limit values to debug
+
+    // Build the query object
     const query = {};
 
     if (name) {
-      query.name = { $regex: name, $options: "i" };
+      query.name = { $regex: name, $options: "i" }; // Search by name if provided
     }
 
+    // Exclude groups with the specified userId if provided
     if (userId) {
       const objectId = new mongoose.Types.ObjectId(userId);
+
       query.$and = [
-        { groupType: { $eq: "public" } },
-        { userId: { $ne: objectId } },
-        { userIds: { $not: { $elemMatch: { userId: objectId, status: "approved" } } } },
+        { groupType: { $eq: 'public' } },
+        { userId: { $ne: objectId } }, // Exclude groups where the creator's userId matches
+        {
+          userIds: {
+            $not: { $elemMatch: { userId: objectId, status: 'approved' } },
+          }, // Exclude groups where userIds contains the userId
+        },
       ];
     }
 
-    let interestIds = [];
-    if (interestName) {
-      const interestNamesArray = Array.isArray(interestName) ? interestName : [interestName];
+    // Count total documents for pagination info
+    const totalGroups = await Group.countDocuments(query);
 
-      const matchingInterests = await GroupInterest.find({ name: { $in: interestNamesArray } }).select("_id");
-      interestIds = matchingInterests.map((interest) => interest._id);
-    }
-
-    const interestQuery = interestIds.length > 0 ? { groupInterestId: { $in: interestIds } } : {};
-
-    // Count total interest-based groups
-    const totalInterestGroups = await Group.countDocuments({ ...query, ...interestQuery });
-
-    // Fetch paginated interest-based groups
-    const matchedGroup = await Group.find({ ...query, ...interestQuery })
-      .populate("userIds.userId", "_id fullname")
-      // .populate("userId")
-      .populate("groupFrequencyId")
-      .populate("groupInterestId")
-       .populate("userId", "userId.isActive")
+    // Fetch groups with pagination
+    const getAllGroup = await Group.find(query)
+      .populate('userIds.userId', '_id fullname')
+      .populate('userId')
+      .populate('groupFrequencyId')
+      .populate('groupInterestId')
       .sort({ createdAt: -1 })
-      .skip((pageNumber - 1) * pageSize) // Skip correctly based on page number
+      .skip((pageNumber - 1) * pageSize)
       .limit(pageSize);
 
-    // const matchedGroupIds = matchedGroups.map((group) => group._id);
-  //  const  matchedGroupIds = matchedGroups.filter(group => group.userId && group.userId.isActive);
-  //   //   const matchedGroupIds = matchedGroups
-  //   // .filter(group => group.userId !== null && group.userId.isActive)
-  //   // .map(group => group._id);
-
-  const matchedGroups = matchedGroup.filter(group => group.userId && group.userId.isActive);
-
-  const matchedGroupIds = matchedGroups.map(group => group._id);
-
-   
-    const remainingSlots = pageSize - matchedGroups.length; // Remaining slots to fill
-
-    let remainingGroups = [];
-    if (remainingSlots > 0) {
-      // Fetch remaining groups if interest groups are fewer than pageSize
-      remainingGroups = await Group.find({
-        ...query,
-        _id: { $nin: matchedGroupIds },
-      })
-        .populate("userIds.userId", "_id fullname")
-        .populate("userId")
-        // .populate({
-        //   path: "userId",
-        //   match: { isActive: true},
-        //   select: "_id  isActive"
-
-        // })
-        .populate("groupFrequencyId")
-        .populate("groupInterestId")
-        .sort({ createdAt: -1 })
-        .limit(remainingSlots); 
-    }
-
-    const allGroups = [...matchedGroups, ...remainingGroups];
-
-
-    const uniqueGroups = Array.from(new Set(allGroups.map(group => group._id))).map(id => allGroups.find(group => group._id === id));
-
-
-
-    const groupsWithUserCount = uniqueGroups.map((group) => ({
+    const groupsWithUserCount = getAllGroup.map(group => ({
       ...group.toObject(),
-      userCount: group.userIds.length,
-      groupMemberStatus: (() => {
-        const member = group.userIds.find((mem) => mem?.userId?._id?.toString() == userId?.toString());
+      userCount: group.userIds.length, // Add userCount to each group object
+      groupMemberStatus: (() => { // Dynamically calculate groupMemberStatus
+        const member = group.userIds.find(
+          mem => mem?.userId?._id?.toString() == userId?.toString()
+        );
+
         if (member) {
           return member.status === "approved"
             ? "approved"
@@ -378,11 +338,9 @@ exports.getAllGroups = async (req, res) => {
             ? "pending"
             : "rejected";
         }
-        return "join";
+        return "join"; // Default status if userId is not found
       })(),
     }));
-
-    const totalGroups = totalInterestGroups + remainingGroups.length;
 
     res.status(200).json({
       message: "Group List fetched successfully",
@@ -391,9 +349,6 @@ exports.getAllGroups = async (req, res) => {
       currentPage: pageNumber,
       totalPages: Math.ceil(totalGroups / pageSize),
     });
-    
-
- 
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
@@ -422,76 +377,143 @@ exports.getAllGroups = async (req, res) => {
 
 
 
+// exports.getGroupHostedByMe = async (req, res) => {
+//   try {
+//     const { page = 1, limit=10 , name = '' } = req.query; // Destructure query params
+//     const userId = req.params.id;
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page, 10);
+//     const pageSize = parseInt(limit, 10);
+
+//     // Build search filter for group name
+//     const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
+
+//     // Fetch hosted groups
+//     const hostedGroups = await Group.find({ userId, ...nameFilter })
+//       .sort({ createdAt: -1 })
+//       .populate('groupInterestId') // Populate groupInterestId
+//       .populate('groupFrequencyId') // Populate groupFrequencyId
+//       .populate('userIds.userId', '_id fullname');
+
+//     // Fetch joined groups
+//     const joinedGroups = await Group.find({
+//       ...nameFilter,
+//       userIds: {
+//         $elemMatch: { userId, status: 'approved' },
+//       },
+//     })
+//     .sort({ createdAt: -1 })
+//     .populate('groupInterestId') // Populate groupInterestId
+//     .populate('groupFrequencyId') // Populate groupFrequencyId
+//     .populate('userIds.userId', '_id fullname');
+    
+//     // Combine results
+//     let allGroups = [...hostedGroups, ...joinedGroups];
+   
+//     allGroups = allGroups.map((group) => {
+//       if (group?.userIds && Array.isArray(group?.userIds)) {
+//         group.userIds = group.userIds.filter(user => user.userId != null);
+//       }
+//       return group;
+//     });
+   
+
+   
+
+    
+//     // Total count for pagination
+//     const totalGroups = allGroups.length;
+    
+//     // Paginate combined results
+//     const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+
+//     // Check if no groups are found
+//     if (paginatedGroups.length === 0) {
+//       return res.status(404).json({ message: "No groups found hosted or joined by this user." });
+//     }
+
+//     res.status(200).json({
+//       message: "Groups fetched successfully",
+//       data: paginatedGroups,
+//       totalGroups,
+//       currentPage: pageNumber,
+//       totalPages: Math.ceil(totalGroups / pageSize),
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 exports.getGroupHostedByMe = async (req, res) => {
   try {
-    const { page = 1, limit=10 , name = '' } = req.query; // Destructure query params
+    const { name = '' } = req.query;
     const userId = req.params.id;
-
-    // Convert page and limit to numbers
-    const pageNumber = parseInt(page, 10);
-    const pageSize = parseInt(limit, 10);
 
     // Build search filter for group name
     const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
 
-    // Fetch hosted groups
-    const hostedGroups = await Group.find({ userId, ...nameFilter })
+    // Fetch both hosted and joined groups in a single query
+    const groups = await Group.find({
+      $or: [
+        { userId }, // Hosted groups
+        { userIds: { $elemMatch: { userId: userId, status: "approved" } } }, // Only approved members
+      ],
+      ...nameFilter,
+    })
       .sort({ createdAt: -1 })
-      .populate('groupInterestId') // Populate groupInterestId
-      .populate('groupFrequencyId') // Populate groupFrequencyId
+      .populate('groupInterestId')
+      .populate('groupFrequencyId')
       .populate('userIds.userId', '_id fullname');
 
-    // Fetch joined groups
-    const joinedGroups = await Group.find({
-      ...nameFilter,
-      userIds: {
-        $elemMatch: { userId, status: 'approved' },
-      },
-    })
-    .sort({ createdAt: -1 })
-    .populate('groupInterestId') // Populate groupInterestId
-    .populate('groupFrequencyId') // Populate groupFrequencyId
-    .populate('userIds.userId', '_id fullname');
-    
-    // Combine results
-    let allGroups = [...hostedGroups, ...joinedGroups];
-   
-    allGroups = allGroups.map((group) => {
-      if (group?.userIds && Array.isArray(group?.userIds)) {
+    // Initialize counts
+    let hostedCount = 0;
+    let joinedCount = 0;
+console.log(groups,"groupsgroupsgroups");
+
+    // Process the groups and remove duplicate entries
+    const groupMap = new Map();
+
+    groups.forEach(group => {
+      const groupId = group._id.toString();
+      
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, { ...group.toObject(), isHosted: false, isJoined: false });
+      }
+
+      if (group.userId.toString() === userId) {
+        groupMap.get(groupId).isHosted = true;
+        hostedCount++;
+      }
+
+      if (group.userIds.some(user => user.userId && user.userId._id.toString() === userId)) {
+        groupMap.get(groupId).isJoined = true;
+        joinedCount++;
+      }
+    });
+
+    // Convert map values to an array
+    const allGroups = Array.from(groupMap.values());
+
+    // Filter out null userIds
+    allGroups.forEach(group => {
+      if (group.userIds && Array.isArray(group.userIds)) {
         group.userIds = group.userIds.filter(user => user.userId != null);
       }
-      return group;
     });
-   
-
-   
-
-    
-    // Total count for pagination
-    const totalGroups = allGroups.length;
-    
-    // Paginate combined results
-    const paginatedGroups = allGroups.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-
-    // Check if no groups are found
-    if (paginatedGroups.length === 0) {
-      return res.status(404).json({ message: "No groups found hosted or joined by this user." });
-    }
 
     res.status(200).json({
       message: "Groups fetched successfully",
-      data: paginatedGroups,
-      totalGroups,
-      currentPage: pageNumber,
-      totalPages: Math.ceil(totalGroups / pageSize),
+      data: allGroups,
+      hostedCount,
+      joinedCount,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 
 
@@ -571,15 +593,33 @@ exports.getGroupById = async (req, res) => {
     if (group.userIds) {
       group.userIds = group.userIds.filter((us) => us.userId !== null);
     }
-
-    const users = await Users.find({ phoneNumber: { $in: group.userNumbers } }); 
+    
+    const users = await Users.find({ 
+      phoneNumber: { 
+        $in: group.userNumbers.map(num => num.replace(/\s+/g, '')) // Remove spaces 
+      } 
+    });
+    
     users.forEach(user => {
-      const isUserAlreadyInGroup = group.userIds.some(member => String(member.userId._id) === String(user._id));
+      const normalizedPhoneNumber = user.phoneNumber.replace(/\s+/g, ''); // Remove spaces from user phone number
+    
+      const isUserAlreadyInGroup = group.userIds.some(
+        member => String(member.userId._id) === String(user._id)
+      );
+    
       if (!isUserAlreadyInGroup) {
         group.userIds.push({ userId: user, status: 'approved' });
-        group.userNumbers = group.userNumbers.filter(num => num !== user.phoneNumber); 
+    
+        // Remove the matched number from group.userNumbers after normalizing both formats
+        group.userNumbers = group.userNumbers.filter(
+          num => num.replace(/\s+/g, '') !== normalizedPhoneNumber
+        );
       }
     });
+    
+    
+    await group.save(); // Save the updated group
+    
     
 
 
@@ -1197,6 +1237,32 @@ exports.performSpin = async (req, res) => {
 
 
 
+// exports.removeUserFromGroup = async (req, res) => {
+//   try {
+//     const { groupId, userId } = req.query;
+
+//     if (!groupId || !userId) {
+//       return res.status(400).json({ message: "groupId and userId are required" });
+//     }
+
+//     const updatedGroup = await Group.findByIdAndUpdate(
+//       groupId,
+//       { $pull: { userIds: { userId } } }, 
+//       { new: true }
+//     );
+
+//     if (!updatedGroup) {
+//       return res.status(404).json({ message: "Group not found" });
+//     }
+
+//     res.json({ message: "User removed successfully", data: updatedGroup });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
+
+
 exports.removeUserFromGroup = async (req, res) => {
   try {
     const { groupId, userId } = req.query;
@@ -1205,6 +1271,19 @@ exports.removeUserFromGroup = async (req, res) => {
       return res.status(400).json({ message: "groupId and userId are required" });
     }
 
+    // Find the group before updating
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if the user is in the group
+    const userInGroup = group.userIds.some(member => member.userId.toString() === userId);
+    if (!userInGroup) {
+      return res.status(400).json({ message: "User is not in this group" });
+    }
+
+    // Remove the user from the group
     const updatedGroup = await Group.findByIdAndUpdate(
       groupId,
       { $pull: { userIds: { userId } } }, 
@@ -1212,10 +1291,40 @@ exports.removeUserFromGroup = async (req, res) => {
     );
 
     if (!updatedGroup) {
-      return res.status(404).json({ message: "Group not found" });
+      return res.status(404).json({ message: "Group not found after update" });
+    }
+
+    // Notification work ------------------------->>>>
+    const notification = {
+      userId,
+      groupId,
+      message: `You have been removed from the group: ${group.name}`,
+      type: "group",
+    };
+
+    // Save notification in the database
+    await NotificationSchema.create(notification);
+
+    // Fetch FCM token for the removed user
+    const fcmTokenDoc = await FcmToken.findOne({ userId });
+    const fcmToken = fcmTokenDoc?.fcmToken;
+
+    if (fcmToken) {
+      // Send push notification to the removed user
+      const pushNotification = {
+        title: "Group Notification",
+        message: `You have been removed from the group: ${group.name}`,
+        userId,
+      };
+      
+      await sendPushNotifications(pushNotification);
+      console.log("Notification sent to removed user");
+    } else {
+      console.log("No FCM token found for removed user");
     }
 
     res.json({ message: "User removed successfully", data: updatedGroup });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });

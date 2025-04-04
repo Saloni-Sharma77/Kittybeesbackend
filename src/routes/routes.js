@@ -50,6 +50,7 @@ const memoriesControllers = require('../controller/client/memoriesControllers');
 const iconControllers = require('../controller/client/popupiconControllers');
 const wallet_Controller = require('../controller/client/walletController');
 const notification_Controller = require('../controller/client/notificationController');
+const contactController = require("../controller/client/contactsControllers");
 
 
 
@@ -70,7 +71,7 @@ const {
 const messageController = require('../controller/client/postshareControllers');
 
 
-const {getGroupHostedByMe,getUsersByGroupId,removeUserFromGroup} = require('../controller/client/groupController')
+const {getUsersByGroupId,removeUserFromGroup} = require('../controller/client/groupController')
 
 //route for crud operation on profession
 
@@ -82,7 +83,7 @@ router.put('/updateProfession/:id',updateProfession)
 
 
 // groupController route
-router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
+// router.get('/getAllGroupHostedByMe/:id',group_controller.getGroupHostedByMe )
 
 
 // get list of users via group name 
@@ -5987,6 +5988,8 @@ router.post('/uploadWalletInvoice', uploadImageController.uploadWalletInvoice);
  *         description: Server error
  */
 router.post('/addtodraft', draftController.addToDraft);
+router.delete("/deleteDraft/:id", draftController.deleteDraft);
+router.put("/update/:draftId",draftController.updateDraft);
 
 /**
  * @swagger
@@ -6522,6 +6525,13 @@ router.delete('/deleteNotificationById/:notificationId', notification_Controller
 // router.get('/group/:groupId/user-transactions', walletController.getTotalAmountByGroupUsers);
 router.get('/group/:groupId/summary', walletController.getGroupFinancialSummary);
 
+
+//contacts routes 
+
+router.post("/createContactList", contactController.createContactList);   // Create contact list
+router.post("/adaddContactd", contactController.addContact);             // Add contact
+router.get("/getContactsByUserId/:userId", contactController.getContactsByUserId); // Get contacts
+router.delete("deleteContact/delete", contactController.deleteContact); 
 
 
 module.exports = router;

@@ -3,12 +3,13 @@ const ActivityModel = require("../../schema/activitySchema");
 const mongoose =require('mongoose')
 exports.addActivity = async (req, res) => {
   try {
-      const { name ,description,userId,createdBy} = req.body;
+      const { name ,description,userId,createdBy,icon} = req.body;
       const newActivity = new ActivityModel({
           name,
           description,
           userId,
-          createdBy
+          createdBy,
+          icon
       });
 
       await newActivity.save();
@@ -24,11 +25,11 @@ exports.addActivity = async (req, res) => {
 exports.updateActivity = async (req, res) => {
   try {
       const { id } = req.params;
-      const { name,description ,userId,createdBy} = req.body;
+      const { name,description ,userId,createdBy,icon} = req.body;
 
       const updatedActivity = await ActivityModel.findByIdAndUpdate(
           id,
-          { name,description,userId,createdBy },
+          { name,description,userId,createdBy ,icon},
           { new: true, runValidators: true }
       );
 

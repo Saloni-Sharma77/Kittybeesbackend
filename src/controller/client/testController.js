@@ -10,7 +10,7 @@ const saltRounds = 10;
 // Send OTP via SMS
 
 exports.sendotptest = async (req, res) => {
-  const { phoneNumber,fcmToken } = req.body;
+  const { phoneNumber, fcmToken } = req.body;
 
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
@@ -29,7 +29,7 @@ exports.sendotptest = async (req, res) => {
       });
     }
      // save fcm token
-     const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType:'Android'});
+     const fcmRecord = await FcmTokenModel.findOne({ userId: user._id,deviceType:'Android'});
      // Send OTP
 
      if (fcmRecord) {
@@ -40,10 +40,11 @@ exports.sendotptest = async (req, res) => {
          await fcmRecord.save();
        }
      } else {
+      console.log('else')
        // Create a new FCM record
        await FcmTokenModel.create({
          userId: user._id,
-         deviceType,
+         deviceType:'Android',
          fcmToken: [fcmToken],
        });
      }
