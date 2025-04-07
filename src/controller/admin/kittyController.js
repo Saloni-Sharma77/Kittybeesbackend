@@ -597,7 +597,8 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const sortedKitties = filteredKitties.sort((a, b) => {
       const dateTimeA = combineDateAndTime(a.date, a.time);
       const dateTimeB = combineDateAndTime(b.date, b.time);
-
+      console.log("dateTimeA:", a.date, a.time, dateTimeA);
+      console.log("dateTimeB:", b.date, b.time, dateTimeB);
       // For future kitties, sort ascending (nearest future date first)
       // For past kitties, sort descending (most recent past date first)
       if (type === "future") {
@@ -692,6 +693,70 @@ exports.getAllKittiesForUser = async (req, res) => {
 
   } catch (error) {
     console.error(`Error fetching ${req.query.type || "unknown"} kitties:`, error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+
+
+exports.getNearestKittyCountdown = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const now = moment();
+
+    const futureKitties = await Kitty.find({
+      $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
+    })
+      .populate("userId")
+      .populate("groupId")
+      .populate("venueId")
+      .populate("themeId")
+      .populate("colorId")
+      .populate("addressId")
+      .populate("activityId")
+      .lean();
+
+    const filteredKitties = futureKitties.filter((kitty) => {
+      const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
+      return kittyDateTime.isAfter(now);
+    });
+
+    if (filteredKitties.length === 0) {
+      return res.status(404).json({ message: "No upcoming kitties found." });
+    }
+
+    // Find nearest kitty
+    const nearestKitty = filteredKitties.reduce((nearest, current) => {
+      const nearestDateTime = moment(`${nearest.date} ${nearest.time}`, "DD/MM/YYYY hh:mm A");
+      const currentDateTime = moment(`${current.date} ${current.time}`, "DD/MM/YYYY hh:mm A");
+      return currentDateTime.isBefore(nearestDateTime) ? current : nearest;
+    });
+
+    const kittyDateTime = moment(`${nearestKitty.date} ${nearestKitty.time}`, "DD/MM/YYYY hh:mm A");
+    const duration = moment.duration(kittyDateTime.diff(now));
+
+    const countdown = {
+      days: duration.days(),
+      hours: duration.hours(),
+      minutes: duration.minutes(),
+      seconds: duration.seconds(),
+    };
+
+    return res.status(200).json({
+      message: "Nearest kitty countdown fetched successfully",
+      kittyId: nearestKitty._id,
+      date: nearestKitty.date,
+      time: nearestKitty.time,
+      countdown,
+    });
+
+  } catch (error) {
+    console.error("Error fetching nearest kitty countdown:", error);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };

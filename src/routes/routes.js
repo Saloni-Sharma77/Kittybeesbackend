@@ -3603,6 +3603,8 @@ router.get("/kittysummary/:kittyId",kitty_controller.getKittySummary);
  */
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
 router.get("/kitties", kitty_controller.getAllKittiesForUser);
+router.get("/kittycountdown", kitty_controller.getNearestKittyCountdown);
+
 router.get("/getAllPastAndFutureKittiesOfGroups", kitty_controller.getAllPastAndFutureKittiesOfGroups);
 
 
