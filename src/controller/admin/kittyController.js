@@ -721,30 +721,41 @@ exports.getNearestKittyCountdown = async (req, res) => {
       .populate("activityId")
       .lean();
 
-    const filteredKitties = futureKitties.filter((kitty) => {
-      const kittyDateTime = moment.tz(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
-      return kittyDateTime.isAfter(now);
-    });
+    const filteredKitties = futureKitties
+      .filter((kitty) => {
+        const kittyDateTime = moment.tz(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
+        return kittyDateTime.isAfter(now);
+      })
+      .sort((a, b) => {
+        const aDateTime = moment.tz(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
+        const bDateTime = moment.tz(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
+        return aDateTime - bDateTime;
+      });
 
     if (filteredKitties.length === 0) {
       return res.status(404).json({ message: "No upcoming kitties found." });
     }
 
-    const nearestKitty = filteredKitties.reduce((nearest, current) => {
-      const nearestDateTime = moment.tz(`${nearest.date} ${nearest.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
-      const currentDateTime = moment.tz(`${current.date} ${current.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
-      return currentDateTime.isBefore(nearestDateTime) ? current : nearest;
-    });
+    let nearestKitty;
+    let countdown;
 
-    const kittyDateTime = moment.tz(`${nearestKitty.date} ${nearestKitty.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
-    const duration = moment.duration(kittyDateTime.diff(now));
+    for (const kitty of filteredKitties) {
+      const kittyDateTime = moment.tz(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A", "Asia/Kolkata");
+      const duration = moment.duration(kittyDateTime.diff(now));
 
-    const countdown = {
-      days: duration.days(),
-      hours: duration.hours(),
-      minutes: duration.minutes(),
-      seconds: duration.seconds(),
-    };
+      const days = duration.days();
+      const hours = duration.hours();
+
+      if (days > 0 || hours > 0) {
+        nearestKitty = kitty;
+        countdown = { days, hours };
+        break;
+      }
+    }
+
+    if (!nearestKitty) {
+      return res.status(404).json({ message: "No valid upcoming kitty found." });
+    }
 
     return res.status(200).json({
       message: "Nearest kitty countdown fetched successfully",
@@ -759,6 +770,7 @@ exports.getNearestKittyCountdown = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 
 // exports.getNearestKittyCountdown = async (req, res) => {

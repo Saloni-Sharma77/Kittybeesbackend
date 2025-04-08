@@ -6534,6 +6534,10 @@ router.post("/createContactList", contactController.createContactList);   // Cre
 router.post("/adaddContactd", contactController.addContact);             // Add contact
 router.get("/getContactsByUserId/:userId", contactController.getContactsByUserId); // Get contacts
 router.delete("deleteContact/delete", contactController.deleteContact); 
+router.get("/getcommoncontacts", contactController.getCommonContacts);
+router.get("/searchcontacts", contactController.searchUserContacts);
+
+
 
 
 module.exports = router;
