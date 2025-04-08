@@ -9,7 +9,7 @@ const NotificationSchema = require("../../schema/notificationSchema");
 const UserSchema = require("../../schema/userSchema");
 const GroupSchema = require("../../schema/groupSchema");
 const WalletSchema = require("../../schema/walletSchema");
-const moment = require("moment"); // For date and time parsing
+const moment = require("moment-timezone");
 
 const mongoose = require("mongoose");
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
