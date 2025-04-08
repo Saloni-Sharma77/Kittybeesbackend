@@ -707,7 +707,11 @@ exports.getNearestKittyCountdown = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const now = moment();
+    // const now = moment();
+    let testnow = moment()
+    const now = moment.tz("Asia/Kolkata");
+    console.log(testnow,now,'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn')
+
 
     const futureKitties = await Kitty.find({
       $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
