@@ -86,16 +86,18 @@ exports.deleteContact = async (req, res) => {
 exports.getCommonContacts = async (req, res) => {
   try {
     // Get all contacts
-    const { userId } = req.params;
-    const allContacts = await Contact.findOne(userId).lean();
+    const { userId } = req.query;
+    const allContacts = await Contact.findOne({userId:userId}).lean();
 
     if (!allContacts ) {
       return res.status(404).json({ message: "No contacts found." });
     }
 
+
     // Find users where phoneNumber matches contact number
+    const contactNumbers = allContacts.contacts.map(contact => contact.number);
     const matchedUsers = await User.find({
-      phoneNumber: { $in: allContacts.contacts }
+      phoneNumber: { $in: contactNumbers }
     })
     .select("fullname phoneNumber userId")
     .lean();
