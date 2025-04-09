@@ -16,7 +16,7 @@ const socketHandler = require('./src/socket/socket');
 
 socketHandler(wss);
 // Middleware configuration
-app.use(express.json());
+// app.use(express.json());
 app.use(cors({
   origin: '*', // Adjust to match your production requirements
   // methods: ['GET', 'POST'], // Specify the allowed methods
