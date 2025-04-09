@@ -94,8 +94,12 @@ exports.getCommonContacts = async (req, res) => {
     }
 
     // Find users where phoneNumber matches contact number
-    const matchedUsers = await User.find({ phoneNumber: { $in: allContacts.contacts } }).select("fullname" , "phoneNumber" ,"userId").lean();
-
+    const matchedUsers = await User.find({
+      phoneNumber: { $in: allContacts.contacts }
+    })
+    .select("fullname phoneNumber userId")
+    .lean();
+    
     if (!matchedUsers) {
       return res.status(404).json({ message: "No common contacts found." });
     }
