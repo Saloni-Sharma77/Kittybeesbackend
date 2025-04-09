@@ -6,9 +6,17 @@ const User = require("../../schema/userSchema");
 exports.createContactList = async (req, res) => {
   try {
     const { userId, contacts } = req.body;
-    const newContactList = new Contact({ userId, contacts });
-    await newContactList.save();
-    res.status(201).json({ message: "Contact list created successfully", data: newContactList });
+
+    const contactAlreadyExist = await Contact.findOne({ userId });
+
+    if (!contactAlreadyExist) {
+      const newContactList = new Contact({ userId, contacts });
+      await newContactList.save();
+      res.status(201).json({ message: "Contact list created successfully" });
+    }
+    return res.status(201).json({ message: "Contacts are already stored" });
+
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -35,15 +43,18 @@ exports.addContact = async (req, res) => {
 
 // Get contacts by user ID
 exports.getContactsByUserId = async (req, res) => {
+  const { page = 1, limit = 100} = req.query; // Get pagination, search term, and userId from the query parameters
+  const skip = (parseInt(page) - 1) * parseInt(limit);
   try {
     const { userId } = req.params;
     const contactList = await Contact.findOne({ userId });
+    const paginatedContacts = contactList.contacts.slice(skip, skip + parseInt(limit));
 
     if (!contactList) {
       return res.status(404).json({ message: "No contacts found" });
     }
 
-    res.status(200).json({ data: contactList.contacts });
+    res.status(200).json({ data: paginatedContacts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -75,48 +86,24 @@ exports.deleteContact = async (req, res) => {
 exports.getCommonContacts = async (req, res) => {
   try {
     // Get all contacts
-    const allContacts = await Contact.find({}).lean();
+    const { userId } = req.params;
+    const allContacts = await Contact.find(userId).lean();
 
-    if (allContacts.length === 0) {
+    if (!allContacts || allContacts.contacts.length === 0) {
       return res.status(404).json({ message: "No contacts found." });
     }
 
-    // Collect all numbers from all contacts
-    const allNumbers = allContacts.flatMap(contact =>
-      contact.contacts.map(c => c.number)
-    );
-
     // Find users where phoneNumber matches contact number
-    const matchedUsers = await User.find({ phoneNumber: { $in: allNumbers } }).lean();
+    const matchedUsers = await User.find({ phoneNumber: { $in: allNumbers.contacts } }).select("fullname" , "phoneNumber" ,"userId").lean();
 
-    if (matchedUsers.length === 0) {
+    if (!matchedUsers) {
       return res.status(404).json({ message: "No common contacts found." });
     }
 
-    // Prepare response data
-    const commonContacts = [];
-
-    allContacts.forEach(contactDoc => {
-      contactDoc.contacts.forEach(contact => {
-        const userData = matchedUsers.find(user => user.phoneNumber === contact.number);
-        if (userData) {
-          commonContacts.push({
-            contactName: contact.name,
-            contactNumber: contact.number,
-            userDetails: {
-              userId: userData._id,
-              fullname: userData.fullname,
-              phoneNumber: userData.phoneNumber,
-              image: userData.profileImage,
-            },
-          });
-        }
-      });
-    });
 
     return res.status(200).json({
       message: "Common contacts fetched successfully",
-      commonContacts,
+      matchedUsers,
     });
 
   } catch (error) {
