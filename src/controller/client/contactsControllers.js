@@ -3,6 +3,25 @@ const mongoose = require("mongoose");
 const User = require("../../schema/userSchema");
 
 // Create a new contact list for a user
+// exports.createContactList = async (req, res) => {
+//   try {
+//     const { userId, contacts } = req.body;
+
+//     const contactAlreadyExist = await Contact.findOne({ userId });
+
+//     if (!contactAlreadyExist) {
+//       const newContactList = new Contact({ userId, contacts });
+//       await newContactList.save();
+//       res.status(201).json({ message: "Contact list created successfully" });
+//     }
+//     return res.status(201).json({ message: "Contacts are already stored" });
+
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 exports.createContactList = async (req, res) => {
   try {
     const { userId, contacts } = req.body;
@@ -10,12 +29,20 @@ exports.createContactList = async (req, res) => {
     const contactAlreadyExist = await Contact.findOne({ userId });
 
     if (!contactAlreadyExist) {
-      const newContactList = new Contact({ userId, contacts });
-      await newContactList.save();
-      res.status(201).json({ message: "Contact list created successfully" });
-    }
-    return res.status(201).json({ message: "Contacts are already stored" });
 
+      // Remove duplicates based on name
+      const uniqueContacts = contacts.filter(
+        (contact, index, self) =>
+          index === self.findIndex((c) => c.name.trim().toLowerCase() === contact.name.trim().toLowerCase())
+      );
+
+      const newContactList = new Contact({ userId, contacts: uniqueContacts });
+      await newContactList.save();
+
+      return res.status(201).json({ message: "Contact list created successfully" });
+    }
+
+    return res.status(200).json({ message: "Contacts are already stored" });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
