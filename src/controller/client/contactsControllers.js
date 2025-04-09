@@ -87,9 +87,9 @@ exports.getCommonContacts = async (req, res) => {
   try {
     // Get all contacts
     const { userId } = req.params;
-    const allContacts = await Contact.find(userId).lean();
+    const allContacts = await Contact.findOne(userId).lean();
 
-    if (!allContacts || allContacts.contacts.length === 0) {
+    if (!allContacts ) {
       return res.status(404).json({ message: "No contacts found." });
     }
 
