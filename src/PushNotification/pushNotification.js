@@ -5,7 +5,7 @@ const FcmModel = require("../../src/schema/FcmSchema");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-async function sendPushNotifications({ title, message, userId,image  }) {
+async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
@@ -26,11 +26,19 @@ async function sendPushNotifications({ title, message, userId,image  }) {
                 title: title,
                 body: message,
                 image: imageUrl, // Optional image URL if needed
+                type:type,
+                id:ObjectId
+                
+
             },
             data: {
                 route: 'your_route',
                 title: title,
                 body: message,
+                image: imageUrl, // Optional image URL if needed
+                type:type,
+                id:ObjectId
+
             },
         };
 

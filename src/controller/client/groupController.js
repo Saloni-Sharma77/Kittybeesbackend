@@ -130,6 +130,8 @@ exports.addGroup = async (req, res) => {
         title: 'Group Notification',
         message: `You have created the group: ${newGroup.name}`,
         userId: newGroup.userId.toString(),
+        type:"group",
+        objectId:newGroup._id
       });
       
       // Send notifications to all users (creator + added members)

@@ -59,6 +59,8 @@ exports.addPost = async (req, res) => {
       message: notificationMessage,
       postId: newPost._id,
       userIds: allActiveUsers.map(user => user._id),
+      type:"post",
+      objectId:newPost._id
     });
     res.status(201).json({ message: 'Post created successfully', data: newPost });
   } catch (err) {
@@ -139,6 +141,8 @@ exports.toggleLike = async (req, res) => {
       message: generalNotificationMessage,
       postId: post._id,
       userIds: allActiveUsers.map(user => user._id),
+      type:"like",
+      objectId:post._id
     });
 
     res.status(200).json({ message: 'Like status updated successfully', post });
@@ -298,6 +302,8 @@ exports.addComment = async (req, res) => {
         title: "Comment Notification",
         message: userNotificationMessage,
         userId,
+        type:"comment",
+        objectId:post._id
       });
       console.log("Notification sent to user who commented");
     } else {
@@ -310,6 +316,8 @@ exports.addComment = async (req, res) => {
         title: "New Comment on Your Post",
         message: postOwnerNotificationMessage,
         userId: post.userId._id,
+        type:"comment",
+        objectId:post._id
       });
       console.log("Notification sent to post owner");
     } else {

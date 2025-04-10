@@ -241,7 +241,9 @@ exports.addKitty = async (req, res) => {
         title: notification.title,
         message: notification.message,
         userId: notification.userId,
-        image: tampimage // Include the image for the notification
+        image: tampimage, // Include the image for the notification
+        type:'kitty',
+        objectId: newKitty._id
       });
     }
     const wallet = new WalletSchema({
