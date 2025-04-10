@@ -75,7 +75,6 @@ const saltRounds = 10;
 //     });
 //   }
 // };
-
 exports.sendotptest = async (req, res) => {
   const { phoneNumber, fcmToken } = req.body;
 
@@ -90,8 +89,18 @@ exports.sendotptest = async (req, res) => {
   if (phoneNumber === '7568450276') {
     return res.status(200).send({
       success: true,
-      message: 'OTP verification bypassed for testing number',
-      data: {},
+      message: 'OTP sent successfully',
+      data: {
+        responseCode: 200,
+        message: "SUCCESS",
+        data: {
+          verificationId: "76851",
+          mobileNumber: "7734839066",
+          responseCode: "200",
+          timeout: "60.0",
+          transactionId: "f6ec5c76-abb1-466e-8df6-9fe1679fcfac"
+        }
+      }
     });
   }
 
@@ -152,7 +161,6 @@ exports.sendotptest = async (req, res) => {
     });
   }
 };
-
 
 // Verify OTP
 
