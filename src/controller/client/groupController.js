@@ -123,6 +123,8 @@ exports.addGroup = async (req, res) => {
           ? `You have created the group: ${newGroup.name}`
           : `You have been added to the group: ${newGroup.name}`,
         userId: memberId,
+        type:"group",
+        objectId:newGroup._id
       }));
       
       // Add notification for the creator separately
@@ -136,6 +138,7 @@ exports.addGroup = async (req, res) => {
       
       // Send notifications to all users (creator + added members)
       for (const notification of notifications) {
+        console.log(notification,'notif11111')
         await sendPushNotifications(notification);
       }
       

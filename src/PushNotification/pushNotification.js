@@ -6,6 +6,7 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
+    console.log(type,objectId,'otttt')
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
@@ -20,6 +21,7 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
         const userTokens = userTokensDoc
             .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
             .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+            console.log(userTokens,'ustttttttt');
 
         const payload = {
             notification: {
@@ -27,7 +29,7 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
                 body: message,
                 image: imageUrl, // Optional image URL if needed
                 type:type,
-                id:ObjectId
+                id:objectId?.toString()
                 
 
             },
@@ -37,7 +39,7 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
                 body: message,
                 image: imageUrl, // Optional image URL if needed
                 type:type,
-                id:ObjectId
+                id:objectId?.toString()
 
             },
         };
@@ -45,6 +47,9 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
         const options = {
             priority: "high",
         };
+
+        console.log(payload,'ppppppppp');
+
 
         // Send notifications using Promise.allSettled
         const responses = await Promise.allSettled(
