@@ -28,13 +28,9 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
                 title: title,
                 body: message,
                 image: imageUrl, // Optional image URL if needed
-                type:type,
-                id:objectId?.toString()
-                
-
             },
             data: {
-                route: 'your_route',
+                route: '/invitation',
                 title: title,
                 body: message,
                 image: imageUrl, // Optional image URL if needed
