@@ -138,7 +138,6 @@ exports.addGroup = async (req, res) => {
       
       // Send notifications to all users (creator + added members)
       for (const notification of notifications) {
-        console.log(notification,'notif11111')
         await sendPushNotifications(notification);
       }
       
