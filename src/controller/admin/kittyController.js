@@ -1173,6 +1173,130 @@ exports.getAllKittyForMe = async (req, res) => {
 
 
 
+// exports.joinKitty = async (req, res) => {
+//   try {
+//     const { notificationId, kittyId, requestUserId, status } = req.body;
+
+//     if (!mongoose.Types.ObjectId.isValid(requestUserId) || !mongoose.Types.ObjectId.isValid(kittyId)) {
+//       return res.status(400).json({ message: "Invalid userId or kittyId" });
+//     }
+
+//     // Convert requestUserId to ObjectId
+//     const requestUserIdObj = new mongoose.Types.ObjectId(requestUserId);
+
+//     // Find the kitty by ID
+//     let kitty = await Kitty.findById(kittyId);
+//     if (!kitty) {
+//       return res.status(404).json({ message: "Kitty not found" });
+//     }
+
+//     // Ensure `members` is an array
+//     if (!Array.isArray(kitty.members)) {
+//       kitty.members = [];
+//     }
+
+//     console.log("Before update:", kitty.members);
+
+//     // Find if user exists in members
+//     const existingMemberIndex = kitty.members.findIndex(
+//       (member) => member.userId.toString() === requestUserIdObj.toString()
+//     );
+
+//     if (existingMemberIndex !== -1) {
+//       // Update existing member's status
+//       kitty.members[existingMemberIndex].status = status;
+//     } else {
+//       // Add new member
+//       kitty.members.push({ userId: requestUserIdObj, status });
+//     }
+
+//     console.log("After update:", kitty.members);
+
+//     // Save the updated kitty document
+//     await kitty.save();
+
+//     // Fetch user details
+//     const user = await UserSchema.findById(requestUserId).select("fullname");
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Convert notificationId to ObjectId
+//     const notId = new mongoose.Types.ObjectId(notificationId);
+
+//     // Update notification
+//     await NotificationSchema.findOneAndUpdate(
+//       { _id: notId },
+//       {
+//         $set: {
+//           message: `You approved the join request for ${kitty?.name || "unknown"}`,
+//           status: status,
+//           isRead: true,
+//           type: "kitty",
+//         },
+//       },
+//       { new: true }
+//     );
+
+//     // Send a notification to the kitty admin
+//     const adminNotification = new NotificationSchema({
+//       userId: kitty.userId,
+//       kittyId: kittyId,
+//       requestUserId: requestUserId,
+//       message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
+//       type: "kitty-join-request",
+//     });
+
+//     // Save the notification
+//     await adminNotification.save();
+
+//     // Get FCM tokens
+//     const fcmTokens = await FcmToken.find({ userId: kitty.userId, deviceType: "Android" });
+
+//     // Filter valid FCM tokens
+//     const tokens = fcmTokens
+//       .flatMap((tokenDoc) => tokenDoc?.fcmToken)
+//       .filter((token) => token && token.trim() !== "");
+
+//     // Push Notification Payload
+//     const payload = {
+//       notification: {
+//         title: kitty.name,
+//         body: adminNotification?.message,
+//         image: "your_image_url", // Optional
+//       },
+//       data: {
+//         route: "your_route",
+//         title: kitty.name,
+//         body: adminNotification?.message,
+//       },
+//     };
+
+//     // Firebase Notification Options
+//     const options = { priority: "high" };
+
+//     // Send notifications if tokens exist
+//     if (tokens.length > 0) {
+//       console.log("Sending notifications to tokens:", tokens);
+//       const responses = await Promise.allSettled(
+//         tokens.map((token) =>
+//           admin.messaging().send({
+//             token: token,
+//             notification: payload.notification,
+//             data: payload.data,
+//             android: { priority: options.priority },
+//           })
+//         )
+//       );
+//       console.log("Notification responses:", responses);
+//     }
+
+//     return res.status(200).json({ message: "Member status updated successfully", updatedKitty: kitty });
+//   } catch (error) {
+//     console.error("Error in joinKitty:", error);
+//     return res.status(500).json({ error: "Something went wrong" });
+//   }
+// };
 exports.joinKitty = async (req, res) => {
   try {
     const { notificationId, kittyId, requestUserId, status } = req.body;
@@ -1181,117 +1305,122 @@ exports.joinKitty = async (req, res) => {
       return res.status(400).json({ message: "Invalid userId or kittyId" });
     }
 
-    // Convert requestUserId to ObjectId
     const requestUserIdObj = new mongoose.Types.ObjectId(requestUserId);
 
-    // Find the kitty by ID
-    let kitty = await Kitty.findById(kittyId);
-    if (!kitty) {
-      return res.status(404).json({ message: "Kitty not found" });
-    }
+    // 1. Find Kitty
+    const kitty = await Kitty.findById(kittyId);
+    if (!kitty) return res.status(404).json({ message: "Kitty not found" });
 
-    // Ensure `members` is an array
-    if (!Array.isArray(kitty.members)) {
-      kitty.members = [];
-    }
+    if (!Array.isArray(kitty.members)) kitty.members = [];
 
-    console.log("Before update:", kitty.members);
+    // 2. Find Group related to this kitty
+    const group = await GroupSchema.findOne({
+      _id: kitty.groupId || null // assuming kitty has groupId field (adjust if needed)
+    });
 
-    // Find if user exists in members
-    const existingMemberIndex = kitty.members.findIndex(
+    if (!group) return res.status(404).json({ message: "Group not found for this kitty" });
+
+    // 3. Check if user exists in Kitty or Group
+    const isInKitty = kitty.members.some(
       (member) => member.userId.toString() === requestUserIdObj.toString()
     );
 
-    if (existingMemberIndex !== -1) {
-      // Update existing member's status
-      kitty.members[existingMemberIndex].status = status;
+    const isInGroup = group.userIds?.some(
+      (entry) => entry.userId.toString() === requestUserIdObj.toString()
+    ) || group.userId.toString() === requestUserIdObj.toString();
+
+    let notificationType = "kitty-join-request";
+
+    // 4. If user is not in group and not in kitty, add to both
+    if (!isInKitty && !isInGroup) {
+      // Add to group.userIds
+   group.userIds = group.userIds || [];
+group.userIds.push({ userId: requestUserIdObj, status: 'pending' });
+await group.save();
+
+
+      // Add to kitty.members with "pending" status
+      kitty.members.push({ userId: requestUserIdObj, status: "pending" });
+      await kitty.save();
+
+      notificationType = "group-kitty-join-request";
     } else {
-      // Add new member
-      kitty.members.push({ userId: requestUserIdObj, status });
+      // 5. If already in kitty or group, just update status in kitty
+      const existingIndex = kitty.members.findIndex(
+        (member) => member.userId.toString() === requestUserIdObj.toString()
+      );
+
+      if (existingIndex !== -1) {
+        kitty.members[existingIndex].status = status;
+      } else {
+        kitty.members.push({ userId: requestUserIdObj, status });
+      }
+
+      await kitty.save();
     }
 
-    console.log("After update:", kitty.members);
+    // 6. Update previous notification (if exists)
+    if (notificationId) {
+      await NotificationSchema.findByIdAndUpdate(notificationId, {
+        message: `You approved the join request for ${kitty?.name || "unknown"}`,
+        status,
+        isRead: true,
+        type: "kitty",
+      });
+    }
 
-    // Save the updated kitty document
-    await kitty.save();
-
-    // Fetch user details
+    // 7. Get User
     const user = await UserSchema.findById(requestUserId).select("fullname");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Convert notificationId to ObjectId
-    const notId = new mongoose.Types.ObjectId(notificationId);
-
-    // Update notification
-    await NotificationSchema.findOneAndUpdate(
-      { _id: notId },
-      {
-        $set: {
-          message: `You approved the join request for ${kitty?.name || "unknown"}`,
-          status: status,
-          isRead: true,
-          type: "kitty",
-        },
-      },
-      { new: true }
-    );
-
-    // Send a notification to the kitty admin
+    // 8. Send Notification to Kitty Owner
     const adminNotification = new NotificationSchema({
       userId: kitty.userId,
-      kittyId: kittyId,
-      requestUserId: requestUserId,
+      kittyId,
+      requestUserId,
       message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
-      type: "kitty-join-request",
+      type: notificationType,
     });
 
-    // Save the notification
     await adminNotification.save();
 
-    // Get FCM tokens
+    // 9. Send FCM Notification
     const fcmTokens = await FcmToken.find({ userId: kitty.userId, deviceType: "Android" });
-
-    // Filter valid FCM tokens
     const tokens = fcmTokens
       .flatMap((tokenDoc) => tokenDoc?.fcmToken)
       .filter((token) => token && token.trim() !== "");
 
-    // Push Notification Payload
     const payload = {
       notification: {
         title: kitty.name,
-        body: adminNotification?.message,
+        body: adminNotification.message,
         image: "your_image_url", // Optional
       },
       data: {
         route: "your_route",
         title: kitty.name,
-        body: adminNotification?.message,
+        body: adminNotification.message,
       },
     };
 
-    // Firebase Notification Options
-    const options = { priority: "high" };
-
-    // Send notifications if tokens exist
     if (tokens.length > 0) {
-      console.log("Sending notifications to tokens:", tokens);
       const responses = await Promise.allSettled(
         tokens.map((token) =>
           admin.messaging().send({
-            token: token,
+            token,
             notification: payload.notification,
             data: payload.data,
-            android: { priority: options.priority },
+            android: { priority: "high" },
           })
         )
       );
-      console.log("Notification responses:", responses);
+      console.log("Push responses:", responses);
     }
 
-    return res.status(200).json({ message: "Member status updated successfully", updatedKitty: kitty });
+    return res.status(200).json({
+      message: "Join request processed successfully",
+      updatedKitty: kitty,
+    });
   } catch (error) {
     console.error("Error in joinKitty:", error);
     return res.status(500).json({ error: "Something went wrong" });
@@ -1299,123 +1428,266 @@ exports.joinKitty = async (req, res) => {
 };
 
 
+// exports.acceptOrRejectRequestOfKitty = async (req, res) => {
+//   try {
+//     const { notificationId, status, kittyId, userId } = req.body;
+
+//     if (!kittyId || !userId || !status || !notificationId) {
+//       return res.status(400).json({
+//         message: "kittyId, userId, status, and notificationId are required",
+//       });
+//     }
+
+//     // Find the Kitty document
+//     const findWhichKitty = await Kitty.findById(kittyId);
+//     if (!findWhichKitty) {
+//       return res.status(404).json({ message: "Kitty not found" });
+//     }
+
+//     // Find member index in Kitty
+//     const memberIndex = findWhichKitty.members.findIndex(
+//       (member) => member.userId.toString() === userId.toString()
+//     );
+//     if (memberIndex === -1) {
+//       return res.status(404).json({ message: "Member not found in the Kitty" });
+//     }
+
+//     // Fetch Notification
+//     const existingNotification = await NotificationSchema.findById(notificationId);
+//     if (!existingNotification) {
+//       return res.status(404).json({ message: "Notification not found" });
+//     }
+
+//     // Convert "approved" to "accepted" for notification schema
+//     const notificationStatus = status === "approved" ? "accepted" : status;
+
+//     // Avoid duplicate acceptance
+//     if (
+//       findWhichKitty.members[memberIndex].status === "approved" &&
+//       existingNotification.status === "accepted"
+//     ) {
+//       return res.status(400).json({ message: "Request has already been approved" });
+//     }
+
+//     // ✅ Update kitty member status
+//     findWhichKitty.members[memberIndex].status = status;
+//     await findWhichKitty.save();
+
+//     // ✅ If notification type is `group-kitty-join-request`, update group user status
+//     if (existingNotification.type === "group-kitty-join-request") {
+//       const group = await GroupSchema.findOne({
+//         $or: [
+//           { "userIds.userId": userId },
+//           { userId: userId }
+//         ],
+//       });
+
+//       if (group) {
+//         const groupUserIndex = group.userIds.findIndex(
+//           (entry) => entry.userId.toString() === userId.toString()
+//         );
+
+//         if (groupUserIndex !== -1) {
+//           group.userIds[groupUserIndex].status = status;
+//           await group.save();
+//         }
+//       }
+//     }
+
+//     // ✅ Update the original notification
+//     await NotificationSchema.findByIdAndUpdate(notificationId, {
+//       message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
+//       type: "kitty",
+//       status: notificationStatus,
+//     });
+
+//     // ✅ New notification to user
+//     const userMessage =
+//       status === "approved"
+//         ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
+//         : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
+
+//     const userNotification = new NotificationSchema({
+//       userId,
+//       kittyId,
+//       message: userMessage,
+//       type: "kitty",
+//       status: notificationStatus,
+//     });
+
+//     await userNotification.save();
+
+//     // ✅ FCM Push Notification
+//     const fcmTokens = await FcmToken.find({ userId, deviceType: "Android" });
+//     const tokens = fcmTokens
+//       .flatMap((t) => t?.fcmToken)
+//       .filter((token) => token && token.trim() !== "");
+
+//     const payload = {
+//       notification: {
+//         title: findWhichKitty.name,
+//         body: userMessage,
+//         image: "your_image_url", // Optional
+//       },
+//       data: {
+//         route: "your_route",
+//         title: findWhichKitty.name,
+//         body: userMessage,
+//       },
+//     };
+
+//     const options = { priority: "high" };
+
+//     if (tokens.length > 0) {
+//       await Promise.all(
+//         tokens.map(async (token) => {
+//           try {
+//             await admin.messaging().send({
+//               token,
+//               notification: payload.notification,
+//               data: payload.data,
+//               android: { priority: options.priority },
+//             });
+//           } catch (error) {
+//             console.error(`FCM error for token ${token}:`, error);
+
+//             if (error.code === "messaging/registration-token-not-registered") {
+//               await FcmToken.findOneAndDelete({ fcmToken: token });
+//               console.log(`Removed invalid FCM token: ${token}`);
+//             }
+//           }
+//         })
+//       );
+//     }
+
+//     res.status(200).json({ message: `Request ${status}` });
+//   } catch (error) {
+//     console.error("Error in acceptOrRejectRequestOfKitty:", error);
+//     res.status(500).json({ error: "Something went wrong" });
+//   }
+// };
+
+
 exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
 
-    // Check for required fields
     if (!kittyId || !userId || !status || !notificationId) {
       return res.status(400).json({
         message: "kittyId, userId, status, and notificationId are required",
       });
     }
 
-    // Find the Kitty document by ID
-    let findWhichKitty = await Kitty.findById(kittyId);
+    // Find the Kitty document
+    const findWhichKitty = await Kitty.findById(kittyId);
     if (!findWhichKitty) {
       return res.status(404).json({ message: "Kitty not found" });
     }
 
-    // Find the specific member in the Kitty's members array
+    // Find member index in Kitty
     const memberIndex = findWhichKitty.members.findIndex(
       (member) => member.userId.toString() === userId.toString()
     );
-
     if (memberIndex === -1) {
       return res.status(404).json({ message: "Member not found in the Kitty" });
     }
 
-    // Fetch the Notification document
+    // Fetch Notification
     const existingNotification = await NotificationSchema.findById(notificationId);
     if (!existingNotification) {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    // Convert "approved" to "accepted" for Notification Schema
-    const notificationStatus = status === 'approved' ? 'accepted' : status;
+    // Convert "approved" to "accepted" for notification schema
+    const notificationStatus = status === "approved" ? "accepted" : status;
 
-    // Check if both are already approved/accepted
+    // Avoid duplicate acceptance
     if (
-      findWhichKitty.members[memberIndex].status === 'approved' &&
-      existingNotification.status === 'accepted'
+      findWhichKitty.members[memberIndex].status === "approved" &&
+      existingNotification.status === "accepted"
     ) {
       return res.status(400).json({ message: "Request has already been approved" });
     }
 
-    // Update the member's status in the Kitty document
+    // ✅ Update kitty member status
     findWhichKitty.members[memberIndex].status = status;
     await findWhichKitty.save();
 
-    // Update the notification's status
-    await NotificationSchema.findByIdAndUpdate(
-      notificationId,
-      {
-        message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
-        type: "kitty",
-        status: notificationStatus // Update status field in NotificationSchema
-      },
-      { new: true }
-    );
+    // ✅ If notification type is `group-kitty-join-request`, update group user status
+    if (existingNotification.type === "group-kitty-join-request") {
+      const group = await GroupSchema.findById(findWhichKitty.groupId[0]);
 
-    // Prepare notification messages
-    const notificationMessage = status === "approved"
-      ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
-      : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
 
-    const hostNotificationMessage = status === "approved"
-      ? `You have accepted the invitation for Kitty: ${findWhichKitty.name}.`
-      : `You have rejected the invitation for Kitty: ${findWhichKitty.name}.`;
+      if (group) {
+        const groupUserIndex = group.userIds.findIndex(
+          (entry) => entry.userId.toString() === userId.toString()
+        );
 
-    console.log(notificationMessage, hostNotificationMessage);
+        if (groupUserIndex !== -1) {
+          // Update the status
+          group.userIds[groupUserIndex].status = status;
+          await group.save();
+        }
+      }
+    }
 
-    // Send a new notification to the user
+    // ✅ Update the original notification
+    await NotificationSchema.findByIdAndUpdate(notificationId, {
+      message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
+      type: "kitty",
+      status: notificationStatus,
+    });
+
+    // ✅ New notification to user
+    const userMessage =
+      status === "approved"
+        ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
+        : `Your request to join the Kitty: ${findWhichKitty.name} has been rejected.`;
+
     const userNotification = new NotificationSchema({
       userId,
       kittyId,
-      message: notificationMessage,
+      message: userMessage,
       type: "kitty",
-      status: notificationStatus // Ensure the status update in new notification
+      status: notificationStatus,
     });
 
     await userNotification.save();
 
-    // Send FCM notifications
-    const fcmTokens = await FcmToken.find({ userId: userId, deviceType: 'Android' });
-    const tokens = fcmTokens.flatMap((tokenDoc) => tokenDoc?.fcmToken).filter((token) => token && token.trim() !== '');
+    // ✅ FCM Push Notification
+    const fcmTokens = await FcmToken.find({ userId, deviceType: "Android" });
+    const tokens = fcmTokens
+      .flatMap((t) => t?.fcmToken)
+      .filter((token) => token && token.trim() !== "");
 
     const payload = {
       notification: {
         title: findWhichKitty.name,
-        body: notificationMessage,
-        image: 'your_image_url', // Optional
+        body: userMessage,
+        image: "your_image_url", // Optional
       },
       data: {
-        route: 'your_route',
+        route: "your_route",
         title: findWhichKitty.name,
-        body: notificationMessage,
+        body: userMessage,
       },
     };
 
-    const options = {
-      priority: "high",
-    };
+    const options = { priority: "high" };
 
     if (tokens.length > 0) {
       await Promise.all(
         tokens.map(async (token) => {
           try {
             await admin.messaging().send({
-              token: token,
+              token,
               notification: payload.notification,
               data: payload.data,
-              android: {
-                priority: options.priority,
-              },
+              android: { priority: options.priority },
             });
           } catch (error) {
             console.error(`FCM error for token ${token}:`, error);
 
-            // If token is invalid, remove it from the database
             if (error.code === "messaging/registration-token-not-registered") {
               await FcmToken.findOneAndDelete({ fcmToken: token });
               console.log(`Removed invalid FCM token: ${token}`);
@@ -1431,7 +1703,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     res.status(500).json({ error: "Something went wrong" });
   }
 };
-
 
 
 exports.addKittyMemories = async (req, res) => {

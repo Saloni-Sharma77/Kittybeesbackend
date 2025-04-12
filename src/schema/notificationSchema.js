@@ -11,7 +11,7 @@ const NotificationSchema = new mongoose.Schema(
     message: { type: String},
     image: { type: String},
     type: {type:String,
-      enum: ['group', 'kitty', 'message','comment','group-join-request','kitty-join-request','post'], 
+      enum: ['group', 'kitty', 'message','comment','group-join-request','kitty-join-request','post','group-kitty-join-request'], 
     },
     status: { 
       type: String, 
