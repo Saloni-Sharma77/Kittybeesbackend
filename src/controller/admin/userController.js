@@ -80,7 +80,22 @@ exports.signup = async (req, res) => {
       });
     }
   };
-
+  exports.deleteUser = async (req, res) => {
+    const userId = req.params.id; // or get from token: req.user.id
+  
+    try {
+      const deletedUser = await UsersModel.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      res.status(200).json({ message: "User account deleted successfully" });
+    } catch (error) {
+      console.error("Delete User Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
   exports.getCountOfKittyAndGroupByme = async (req, res) => {
     try {
       const userId = req.params.userId;
