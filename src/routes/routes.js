@@ -3603,6 +3603,8 @@ router.get("/kittysummary/:kittyId",kitty_controller.getKittySummary);
  */
 router.get("/getAllPastAndFutureKitties", kitty_controller.getAllPastAndFutureKitties);
 router.get("/kitties", kitty_controller.getAllKittiesForUser);
+router.get("/kittycountdown", kitty_controller.getNearestKittyCountdown);
+
 router.get("/getAllPastAndFutureKittiesOfGroups", kitty_controller.getAllPastAndFutureKittiesOfGroups);
 
 
@@ -6532,6 +6534,10 @@ router.post("/createContactList", contactController.createContactList);   // Cre
 router.post("/adaddContactd", contactController.addContact);             // Add contact
 router.get("/getContactsByUserId/:userId", contactController.getContactsByUserId); // Get contacts
 router.delete("deleteContact/delete", contactController.deleteContact); 
+router.get("/getcommoncontacts", contactController.getCommonContacts);
+router.get("/searchcontacts", contactController.searchUserContacts);
+
+
 
 
 module.exports = router;

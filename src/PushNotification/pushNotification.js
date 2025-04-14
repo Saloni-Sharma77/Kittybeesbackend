@@ -5,7 +5,8 @@ const FcmModel = require("../../src/schema/FcmSchema");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-async function sendPushNotifications({ title, message, userId,image  }) {
+async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
+    console.log(type,objectId,'otttt')
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
@@ -20,6 +21,7 @@ async function sendPushNotifications({ title, message, userId,image  }) {
         const userTokens = userTokensDoc
             .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
             .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+            console.log(userTokens,'ustttttttt');
 
         const payload = {
             notification: {
@@ -28,15 +30,22 @@ async function sendPushNotifications({ title, message, userId,image  }) {
                 image: imageUrl, // Optional image URL if needed
             },
             data: {
-                route: 'your_route',
+                route: '/invitation',
                 title: title,
                 body: message,
+                image: imageUrl, // Optional image URL if needed
+                type:type,
+                id:objectId?.toString()
+
             },
         };
 
         const options = {
             priority: "high",
         };
+
+        console.log(payload,'ppppppppp');
+
 
         // Send notifications using Promise.allSettled
         const responses = await Promise.allSettled(

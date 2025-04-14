@@ -40,7 +40,7 @@ exports.addGroup = async (req, res) => {
       // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
-      { name: 'contributionAmount', value: contributionAmount },
+      // { name: 'contributionAmount', value: contributionAmount },
       // { name: 'image', value: image },
       { name: 'referralCode', value: referralCode }
     ];
@@ -123,6 +123,8 @@ exports.addGroup = async (req, res) => {
           ? `You have created the group: ${newGroup.name}`
           : `You have been added to the group: ${newGroup.name}`,
         userId: memberId,
+        type:"group",
+        objectId:newGroup._id
       }));
       
       // Add notification for the creator separately
@@ -130,6 +132,8 @@ exports.addGroup = async (req, res) => {
         title: 'Group Notification',
         message: `You have created the group: ${newGroup.name}`,
         userId: newGroup.userId.toString(),
+        type:"group",
+        objectId:newGroup._id
       });
       
       // Send notifications to all users (creator + added members)
