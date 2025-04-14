@@ -571,7 +571,7 @@ router.get('/getVotesOnOption', message_controller.getVotesOnOption);
  */
 router.post("/signup", user_admin_controller.signup);
 router.post("/updateAllUsersReminderStatus", user_admin_controller.updateAllUsersReminderStatus);
-
+router.delete("/deleteUser/:id", user_admin_controller.deleteUser);
 
 
 
