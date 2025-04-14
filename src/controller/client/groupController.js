@@ -40,7 +40,7 @@ exports.addGroup = async (req, res) => {
       // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
-      { name: 'contributionAmount', value: contributionAmount },
+      // { name: 'contributionAmount', value: contributionAmount },
       // { name: 'image', value: image },
       { name: 'referralCode', value: referralCode }
     ];
