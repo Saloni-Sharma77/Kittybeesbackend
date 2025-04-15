@@ -18,6 +18,10 @@ const contactSchema = new mongoose.Schema({
       },
     },
   ],
+  uid: { 
+    type: String,
+    required: true, 
+  },
 });
 
 module.exports = mongoose.model("Contact", contactSchema);

@@ -22,11 +22,13 @@ const User = require("../../schema/userSchema");
 //   }
 // };
 
+
+
 exports.createContactList = async (req, res) => {
   try {
-    const { userId, contacts } = req.body;
-
-    const contactAlreadyExist = await Contact.findOne({ userId });
+    const { userId, contacts , uid } = req.body;
+// filter with and operator for userId and uid
+    const contactAlreadyExist = await Contact.findOne({ userId ,uid});
 
     if (!contactAlreadyExist) {
 
@@ -36,7 +38,7 @@ exports.createContactList = async (req, res) => {
           index === self.findIndex((c) => c.name.trim().toLowerCase() === contact.name.trim().toLowerCase())
       );
 
-      const newContactList = new Contact({ userId, contacts: uniqueContacts });
+      const newContactList = new Contact({ userId,uid, contacts: uniqueContacts });
       await newContactList.save();
 
       return res.status(201).json({ message: "Contact list created successfully" });
@@ -53,6 +55,7 @@ exports.createContactList = async (req, res) => {
 exports.addContact = async (req, res) => {
   try {
     const { userId, name, number } = req.body;
+
     const contactList = await Contact.findOne({ userId });
 
     if (!contactList) {
@@ -68,13 +71,15 @@ exports.addContact = async (req, res) => {
   }
 };
 
-// Get contacts by user ID
+
 exports.getContactsByUserId = async (req, res) => {
   const { page = 1, limit = 100} = req.query; // Get pagination, search term, and userId from the query parameters
   const skip = (parseInt(page) - 1) * parseInt(limit);
   try {
-    const { userId } = req.params;
-    const contactList = await Contact.findOne({ userId });
+    const { userId,uid } = req.params;
+// filter with and operator for userId and uid
+
+    const contactList = await Contact.findOne({ userId,uid });
     const paginatedContacts = contactList.contacts.slice(skip, skip + parseInt(limit));
 
     if (!contactList) {
