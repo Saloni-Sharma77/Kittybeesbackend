@@ -81,7 +81,7 @@ exports.getContactsByUserId = async (req, res) => {
 // filter with and operator for userId and uid
 
     const contactList = await Contact.findOne({ $and: [{ userId: userId }, { uid: uid }] }
-    );
+);
     const paginatedContacts = contactList.contacts.slice(skip, skip + parseInt(limit));
 
     if (!contactList) {
