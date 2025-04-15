@@ -28,7 +28,8 @@ exports.createContactList = async (req, res) => {
   try {
     const { userId, contacts , uid } = req.body;
 // filter with and operator for userId and uid
-    const contactAlreadyExist = await Contact.findOne({ userId ,uid});
+    const contactAlreadyExist = await Contact.findOne({ $and: [{ userId: userId }, { uid: uid }] }
+    );
 
     if (!contactAlreadyExist) {
 
@@ -75,11 +76,12 @@ exports.addContact = async (req, res) => {
 exports.getContactsByUserId = async (req, res) => {
   const { page = 1, limit = 100} = req.query; // Get pagination, search term, and userId from the query parameters
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  try {
+  try { 
     const { userId,uid } = req.params;
 // filter with and operator for userId and uid
 
-    const contactList = await Contact.findOne({ userId,uid });
+    const contactList = await Contact.findOne({ $and: [{ userId: userId }, { uid: uid }] }
+    );
     const paginatedContacts = contactList.contacts.slice(skip, skip + parseInt(limit));
 
     if (!contactList) {
