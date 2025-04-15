@@ -575,7 +575,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const totalKitties = sortedKitties.length;
     const totalPages = Math.ceil(totalKitties / limit);
     const startIndex = (page - 1) * limit;
-    const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
+    const paginatedKitties = sortedKitties;
 
     if (paginatedKitties.length === 0) {
       return res.status(404).json({ message: "No kitties found for the given filters." });
