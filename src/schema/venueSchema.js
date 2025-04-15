@@ -8,7 +8,7 @@ const GroupSchema = new mongoose.Schema({
   location: { type: String },
   lat: { type: String },
   long: { type: String },
-  images: [{ type: String }],
+  image: [{ type: String }],
   menu: { type: String },
   pricing: { type: String },
   contactNo: { type: String },
