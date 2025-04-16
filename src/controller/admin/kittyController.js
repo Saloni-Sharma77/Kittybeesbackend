@@ -1297,7 +1297,6 @@ group.userIds.push({ userId: requestUserIdObj, status: 'pending' });
 await group.save();
 
 
-      // Add to kitty.members with "pending" status
       kitty.members.push({ userId: requestUserIdObj, status: "pending" });
       await kitty.save();
 

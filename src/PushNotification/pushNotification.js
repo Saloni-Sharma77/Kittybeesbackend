@@ -5,81 +5,152 @@ const FcmModel = require("../../src/schema/FcmSchema");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
-    console.log(type,objectId,'otttt')
+
+// async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
+//     console.log(type,objectId,'otttt')
+//     try {
+//         const userTokensDoc = await FcmModel.find({
+//             userId,
+//             deviceType: 'Android',
+//         });
+
+//         // console.log(userTokensDoc, 'Tokens for the user');
+//         const defaultImageUrl = 'https://example.com/default-image.jpg';
+
+//         // Use the provided image if available, otherwise fallback to the default image
+//         const imageUrl = image ? image : defaultImageUrl;
+//         const userTokens = userTokensDoc
+//             .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
+//             .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
+//             console.log(userTokens,'ustttttttt');
+
+//         const payload = {
+//             notification: {
+//                 title: title,
+//                 body: message,
+//                 image: imageUrl, // Optional image URL if needed
+//             },
+//             data: {
+//                 route: '/invitation',
+//                 title: title,
+//                 body: message,
+//                 image: imageUrl, // Optional image URL if needed
+//                 type:type,
+//                 id:objectId?.toString()
+
+//             },
+//         };
+
+//         const options = {
+//             priority: "high",
+//         };
+
+//         console.log(payload,'ppppppppp');
+
+
+//         // Send notifications using Promise.allSettled
+//         const responses = await Promise.allSettled(
+//             userTokens.map((token) =>
+//                 admin.messaging().send({
+//                     token: token,
+//                     notification: payload.notification,
+//                     data: payload.data,
+//                     android: {
+//                         priority: options.priority,
+//                     },
+//                 })
+//             )
+//         );
+
+//         // Separate successful and failed notifications
+//         const successfulNotifications = responses.filter((r) => r.status === 'fulfilled');
+//         const failedNotifications = responses.filter((r) => r.status === 'rejected');
+
+//         // console.log('Successful Notifications:', successfulNotifications.length);
+//         // console.log('Failed Notifications:', failedNotifications.length);
+
+//         // Optionally, log failed tokens for further processing or cleanup
+//         if (failedNotifications.length > 0) {
+//             const failedTokens = failedNotifications.map((r, index) => ({
+//                 token: userTokens[index],
+//                 reason: r.reason,
+//             }));
+//             // console.error('Failed Tokens:', failedTokens);
+//         }
+
+//         return {
+//             successCount: successfulNotifications.length,
+//             failureCount: failedNotifications.length,
+//         };
+//     } catch (error) {
+//         console.error('Error sending push notification:', error);
+//         throw error;
+//     }
+// }
+
+async function sendPushNotifications({ title, message, userId, image, type, objectId }) {
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
             deviceType: 'Android',
         });
 
-        // console.log(userTokensDoc, 'Tokens for the user');
         const defaultImageUrl = 'https://example.com/default-image.jpg';
+        const imageUrl = image || defaultImageUrl;
 
-        // Use the provided image if available, otherwise fallback to the default image
-        const imageUrl = image ? image : defaultImageUrl;
         const userTokens = userTokensDoc
-            .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
-            .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
-            console.log(userTokens,'ustttttttt');
+            .flatMap(fcm => fcm?.fcmToken || [])
+            .filter(token => token && token.trim() !== '');
+
+        if (userTokens.length === 0) {
+            return { successCount: 0, failureCount: 0 };
+        }
+
+        const route = getRouteForType(type);
 
         const payload = {
             notification: {
-                title: title,
+                title,
                 body: message,
-                image: imageUrl, // Optional image URL if needed
+                image: imageUrl,
             },
             data: {
-                route: '/invitation',
-                title: title,
+                route,
+                title,
                 body: message,
-                image: imageUrl, // Optional image URL if needed
-                type:type,
-                id:objectId?.toString()
-
+                image: imageUrl,
+                type: type || '',
+                id: objectId?.toString() || '',
             },
         };
 
-        const options = {
-            priority: "high",
-        };
-
-        console.log(payload,'ppppppppp');
-
-
-        // Send notifications using Promise.allSettled
         const responses = await Promise.allSettled(
-            userTokens.map((token) =>
+            userTokens.map(token =>
                 admin.messaging().send({
-                    token: token,
+                    token,
                     notification: payload.notification,
                     data: payload.data,
                     android: {
-                        priority: options.priority,
+                        priority: "high",
                     },
                 })
             )
         );
 
-        // Separate successful and failed notifications
-        const successfulNotifications = responses.filter((r) => r.status === 'fulfilled');
-        const failedNotifications = responses.filter((r) => r.status === 'rejected');
+        const successful = responses.filter(r => r.status === 'fulfilled');
+        const failed = responses.filter(r => r.status === 'rejected');
 
-        // console.log('Successful Notifications:', successfulNotifications.length);
-        // console.log('Failed Notifications:', failedNotifications.length);
-
-        // Optionally, log failed tokens for further processing or cleanup
-        if (failedNotifications.length > 0) {
-            const failedTokens = failedNotifications.map((r, index) => ({
+        if (failed.length > 0) {
+            const failedTokens = failed.map((r, index) => ({
                 token: userTokens[index],
                 reason: r.reason,
             }));
-            // console.error('Failed Tokens:', failedTokens);
+            console.warn('Failed tokens:', failedTokens);
         }
 
         return {
-            successCount: successfulNotifications.length,
-            failureCount: failedNotifications.length,
+            successCount: successful.length,
+            failureCount: failed.length,
         };
     } catch (error) {
         console.error('Error sending push notification:', error);
@@ -87,6 +158,20 @@ async function sendPushNotifications({ title, message, userId,image,type,objectI
     }
 }
 
+function getRouteForType(type) {
+    switch (type) {
+        case 'kitty':
+        case 'kitty-join-request':
+            return '/invitation';
+        case 'group':
+        case 'group-join-request':
+            return '/GroupDetailsscreen';
+        case 'post':
+            return '/FourmComments';
+        default:
+            return '/unknown';
+    }
+}
 
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
