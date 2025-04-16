@@ -13,7 +13,7 @@ const bookingRequestSchema = new mongoose.Schema({
         
     },
     preference: {
-        type: String,
+        type: [String],
         enum: ['Buffet', 'AlaCarte', 'MainCourse'],
         
     },
