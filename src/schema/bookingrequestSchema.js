@@ -4,7 +4,7 @@ const bookingRequestSchema = new mongoose.Schema({
     contactPersonName: { type: String,  },
     emailAddress: { type: String,  },
     contactNumber: { type: String,  },
-    date: { type: Date, },
+    date: { type: String, },
     time: { type: String,  },
     minimumGuests: { type: Number, },
     vegNonVegDrinks: {
