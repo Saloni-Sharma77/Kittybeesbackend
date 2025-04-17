@@ -115,31 +115,33 @@ exports.deleteContact = async (req, res) => {
 
 
 
-
-
 exports.getCommonContacts = async (req, res) => {
   try {
-    // Get all contacts
-    const { userId } = req.query;
-    const allContacts = await Contact.findOne({userId:userId}).lean();
+    const { userId, uid } = req.query;
 
-    if (!allContacts ) {
+    const allContacts = await Contact.findOne({ userId }).lean();
+
+    if (!allContacts) {
       return res.status(404).json({ message: "No contacts found." });
     }
 
+    const filteredContacts = allContacts.contacts.filter(contact => contact.uid === uid);
 
-    // Find users where phoneNumber matches contact number
-    const contactNumbers = allContacts.contacts.map(contact => contact.number);
+    if (filteredContacts.length === 0) {
+      return res.status(404).json({ message: "No contacts found for the given uid." });
+    }
+
+    const contactNumbers = filteredContacts.map(contact => contact.number);
+
     const matchedUsers = await User.find({
       phoneNumber: { $in: contactNumbers }
     })
-    .select("fullname phoneNumber userId")
-    .lean();
-    
-    if (!matchedUsers) {
+      .select("fullname phoneNumber userId")
+      .lean();
+
+    if (!matchedUsers || matchedUsers.length === 0) {
       return res.status(404).json({ message: "No common contacts found." });
     }
-
 
     return res.status(200).json({
       message: "Common contacts fetched successfully",
