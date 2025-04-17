@@ -25,6 +25,7 @@ module.exports = (wss) => {
 
           case 'sendMessage':
             const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
+            
 
             // Ensure at least one of content, image, video, or document is provided
             if (!content && !image && !video && !document) {

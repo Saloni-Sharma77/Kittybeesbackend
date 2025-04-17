@@ -8,7 +8,7 @@ const GroupSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     userIds: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      status: { type: String, enum: ['pending', 'approved','rejected'], default: 'approved' }
+      status: { type: String, enum: ['pending', 'approved','rejected,isrequesteduser'], default: 'approved' }
   }],
     groupType: {
       type: String,
