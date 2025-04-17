@@ -24,7 +24,7 @@ module.exports = (wss) => {
             break;
 
           case 'sendMessage':
-            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document } = data;
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
 
             // Ensure at least one of content, image, video, or document is provided
             if (!content && !image && !video && !document) {
@@ -39,6 +39,7 @@ module.exports = (wss) => {
               image,
               video,
               document,
+              pollOptions,
               timestamp: new Date() // Add timestamp here
             };
 
@@ -72,6 +73,7 @@ module.exports = (wss) => {
               video: newMessage.video || '',
               document: newMessage.document || '',
               timestamp: newMessage.timestamp,
+              pollOptions: newMessage.pollOptions || null,
               _id: newMessage._id
             };
 
