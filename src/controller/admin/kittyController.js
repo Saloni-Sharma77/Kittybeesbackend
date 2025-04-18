@@ -1255,6 +1255,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //     return res.status(500).json({ error: "Something went wrong" });
 //   }
 // };
+
 exports.joinKitty = async (req, res) => {
   try {
     const { notificationId, kittyId, requestUserId, status } = req.body;

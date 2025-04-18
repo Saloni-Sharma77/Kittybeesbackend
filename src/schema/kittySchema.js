@@ -43,7 +43,7 @@ const KittySchema = new mongoose.Schema({
   tampimage: { type: String },
   members: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-    status: { type: String, enum: ['pending','deciding','approved','rejected'], default: 'pending' }
+    status: { type: String, enum: ['pending','deciding','approved','rejected','isrequesteduser'], default: 'pending' }
 }],
 kittyMemories:[{
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
