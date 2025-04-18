@@ -1301,7 +1301,7 @@ exports.joinKitty = async (req, res) => {
       await group.save();
       
 
-      kitty.members.push({ userId: requestUserIdObj, status: "pending" });
+      kitty.members.push({ userId: requestUserIdObj, status: status || "isrequesteduser" });
       await kitty.save();
 
       notificationType = "group-kitty-join-request";
