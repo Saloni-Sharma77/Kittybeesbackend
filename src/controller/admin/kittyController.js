@@ -1274,7 +1274,7 @@ exports.joinKitty = async (req, res) => {
 
     // 2. Find Group related to this kitty
     const group = await GroupSchema.findOne({
-      _id: kitty.groupId || null // assuming kitty has groupId field (adjust if needed)
+      _id: kitty.groupId || null 
     });
 
     if (!group) return res.status(404).json({ message: "Group not found for this kitty" });
@@ -1293,10 +1293,13 @@ exports.joinKitty = async (req, res) => {
     // 4. If user is not in group and not in kitty, add to both
     if (!isInKitty && !isInGroup) {
       // Add to group.userIds
-   group.userIds = group.userIds || [];
-group.userIds.push({ userId: requestUserIdObj, status: 'pending' });
-await group.save();
-
+      group.userIds = group.userIds || [];
+      group.userIds.push({
+        userId: requestUserIdObj,
+        status: status || "isrequesteduser"
+      });
+      await group.save();
+      
 
       kitty.members.push({ userId: requestUserIdObj, status: "pending" });
       await kitty.save();
