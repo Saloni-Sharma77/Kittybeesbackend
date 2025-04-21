@@ -514,32 +514,95 @@ exports.getKittyAttendance = async (req, res) => {
 //   }
 // };
 
+// exports.getAllPastAndFutureKitties = async (req, res) => {
+//   try {
+//     const { type, page = 1, limit = 20, userId } = req.query;
+//     const now = new Date();
+
+//     const combineDateAndTime = (dateStr, timeStr) => {
+//       const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
+//       const [rawTime, modifier] = timeStr.split(" ");
+//       let [hours, minutes] = rawTime.split(":").map(Number);
+
+//       if (modifier === "PM" && hours !== 12) hours += 12;
+//       if (modifier === "AM" && hours === 12) hours = 0;
+
+//       return new Date(year, month - 1, day, hours, minutes);
+//     };
+
+//     const filter = userId
+//       ? {
+//           $or: [
+//             { userId },
+//             { members: { $elemMatch: { userId } } }
+//           ]
+//         }
+//       : {};
+
+//     const allKitties = await Kitty.find(filter)
+//       .populate({
+//         path: "groupId",
+//         populate: { path: "userId", model: "Users" },
+//       })
+//       .populate("userId")
+//       .populate("venueId")
+//       .populate("themeId")
+//       .populate("colorId")
+//       .populate("addressId");
+
+//     const filteredKitties = allKitties.filter((kitty) => {
+//       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+//       return type === "past" ? kittyDateTime < now : kittyDateTime > now;
+//     });
+
+//     const sortedKitties = filteredKitties.sort((a, b) => {
+//       const aTime = combineDateAndTime(a.date, a.time);
+//       const bTime = combineDateAndTime(b.date, b.time);
+//       return type === "future" ? aTime - bTime : bTime - aTime;
+//     });
+
+//     const totalKitties = sortedKitties.length;
+//     const totalPages = Math.ceil(totalKitties / limit);
+//     const startIndex = (page - 1) * limit;
+//     const paginatedKitties = sortedKitties;
+
+//     if (paginatedKitties.length === 0) {
+//       return res.status(404).json({ message: "No kitties found for the given filters." });
+//     }
+
+//     res.status(200).json({
+//       message: "Data fetched successfully",
+//       data: paginatedKitties,
+//       totalKitties,
+//       currentPage: parseInt(page),
+//       totalPages,
+//     });
+//   } catch (err) {
+//     console.error("Error in getAllPastAndFutureKitties:", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const { type, page = 1, limit = 20, userId } = req.query;
-    const now = new Date();
 
-    // ✅ Improved date-time combiner
-    const combineDateAndTime = (dateStr, timeStr) => {
-      const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
-      const [rawTime, modifier] = timeStr.split(" ");
-      let [hours, minutes] = rawTime.split(":").map(Number);
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
 
-      if (modifier === "PM" && hours !== 12) hours += 12;
-      if (modifier === "AM" && hours === 12) hours = 0;
+    if (!type || (type !== "past" && type !== "future")) {
+      return res.status(400).json({ message: "Type must be 'past' or 'future'" });
+    }
 
-      return new Date(year, month - 1, day, hours, minutes);
+    const now = moment();
+
+    const filter = {
+      $or: [
+        { userId },
+        { "members.userId": userId, "members.status": "approved" }
+      ]
     };
-
-    // ✅ Relaxed filter to allow past/future for userId or all
-    const filter = userId
-      ? {
-          $or: [
-            { userId },
-            { members: { $elemMatch: { userId } } }
-          ]
-        }
-      : {};
 
     const allKitties = await Kitty.find(filter)
       .populate({
@@ -550,30 +613,43 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate("venueId")
       .populate("themeId")
       .populate("colorId")
-      .populate("addressId");
+      .populate("addressId")
+      .populate("activityId")
+      .lean();
+
+    console.log(`Raw kitties count: ${allKitties.length}`);
+    console.log(`Raw kitties: ${JSON.stringify(allKitties.map(k => ({ id: k._id, date: k.date, time: k.time })))}`);
 
     const filteredKitties = allKitties.filter((kitty) => {
-      const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
-      return type === "past" ? kittyDateTime < now : kittyDateTime > now;
+      if (!kitty.date || !kitty.time) {
+        console.log(`Skipping kitty ID: ${kitty._id} due to missing date/time`);
+        return false;
+      }
+      const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
+      const isValid = kittyDateTime.isValid();
+      console.log(`Kitty ID: ${kitty._id}, Date: ${kitty.date}, Time: ${kitty.time}, Parsed: ${isValid ? kittyDateTime.format() : 'Invalid'}, Valid: ${isValid}`);
+      return isValid && (type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now));
     });
 
+    console.log(`Filtered kitties count: ${filteredKitties.length}`);
+
     const sortedKitties = filteredKitties.sort((a, b) => {
-      const aTime = combineDateAndTime(a.date, a.time);
-      const bTime = combineDateAndTime(b.date, b.time);
-      return type === "future" ? aTime - bTime : bTime - aTime;
+      const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
+      const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
+      return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
     });
 
     const totalKitties = sortedKitties.length;
     const totalPages = Math.ceil(totalKitties / limit);
     const startIndex = (page - 1) * limit;
-    const paginatedKitties = sortedKitties;
+    const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
 
     if (paginatedKitties.length === 0) {
-      return res.status(404).json({ message: "No kitties found for the given filters." });
+      return res.status(404).json({ message: `No ${type} kitties found for this user.` });
     }
 
     res.status(200).json({
-      message: "Data fetched successfully",
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
       data: paginatedKitties,
       totalKitties,
       currentPage: parseInt(page),
@@ -581,11 +657,9 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in getAllPastAndFutureKitties:", err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
-
-
 exports.getAllKittiesForUser = async (req, res) => {
   try {
     const { page = 1, limit = 20, userId, type } = req.query;

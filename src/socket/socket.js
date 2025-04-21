@@ -1,7 +1,6 @@
 const WebSocket = require('ws');
 const Message = require('../schema/messageSchema'); // Import the Message schema
 
-// Function to handle WebSocket connections
 module.exports = (wss) => {
   const clients = new Map();
 
