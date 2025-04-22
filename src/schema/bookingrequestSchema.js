@@ -21,7 +21,8 @@ const bookingRequestSchema = new mongoose.Schema({
     mainCourse: { type: [String], default: [] },
     sweets: { type: [String], default: [] },
     drinks: { type: [String], default: [] },
-    message: { type: String }
+    message: { type: String },
+    venueName: { type: String, required: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('BookingRequest', bookingRequestSchema);

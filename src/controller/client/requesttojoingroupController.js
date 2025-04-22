@@ -6,6 +6,7 @@ const UserSchema = require('../../schema/userSchema');
 
 
 const mongoose = require('mongoose'); // Ensure mongoose is imported at the top
+const { sendPushNotifications } = require('../../PushNotification/pushNotification');
 
 const addUserToGroup = async (req, res) => {
   try {
@@ -15,7 +16,6 @@ const addUserToGroup = async (req, res) => {
       return res.status(400).json({ message: 'groupId, userId, and status are required' });
     }
 
-    // Find the group by its ID
     const group = await Group.findById(groupId);
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
@@ -25,42 +25,42 @@ const addUserToGroup = async (req, res) => {
     const userIds = group.userIds || [];
     console.log(userIds)
 
-    // Check if the user is the admin
     if (group.userId?.toString() === userId?.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
     }
 
-    // Check if the user is already in the group
     const existingUser = userIds.find(u => u.userId?.toString() === userId?.toString());
     if (existingUser) {
       return res.status(400).json({ error: 'User request already sent!' });
     }
 
-    // Add the new user with pending status
     group.userIds.push({
-      userId: userId, // Ensure this is an ObjectId
+      userId: userId, 
       status: status || 'pending'
     });
 
-    // Save the group with the updated user list
     await group.save();
 
-    // Fetch the user details
     const user = await UserSchema.findById(userId).select('fullname');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Send a notification to the group admin
     const adminNotification = new NotificationSchema({
-      userId: groupcopy.userId, // Notification to the group admin
+      userId: groupcopy.userId, 
       groupId: groupId,
       requestUserId: userId,
       message: `${user.fullname} has requested to join your group: ${groupcopy.name}`,
       type: 'group-join-request'
     });
-
-    // Save the notification
+    const adminPush = {
+      title: 'Group Join Request',
+      message: `${user.fullname} has requested to join your group: ${groupcopy.name}`,
+      userId: groupcopy.userId.toString(),
+      type: 'group-join-request',
+      objectId: groupId
+    };
+    await sendPushNotifications(adminPush);
     await adminNotification.save();
 
     res.status(200).json({ message: 'Join request sent successfully', group });
