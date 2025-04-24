@@ -884,7 +884,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const { type, page = 1, limit = 20, userId } = req.query;
     const now = new Date();
 
-    // ✅ Improved date-time combiner
     const combineDateAndTime = (dateStr, timeStr) => {
       const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
       const [rawTime, modifier] = timeStr.split(" ");
@@ -2270,8 +2269,11 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
-    const userId = req.user.toString(); 
+    const userId = req.params.id; 
 
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
     if (!lat || !long) {
       return res.status(400).json({ error: 'Latitude and longitude are required.' });
     }
@@ -2296,7 +2298,6 @@ exports.getNearByKitty = async (req, res) => {
       })
       .map(venue => venue._id);
 
-    // Find kitties associated with nearby venues and populate groupId to check if it's public
     const kittiesWithApprovedCount = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
       .populate({
         path: 'venueId',
@@ -2308,7 +2309,15 @@ exports.getNearByKitty = async (req, res) => {
       })
       .populate({
         path: 'groupId', // Make sure it supports arrays
-        select: '_id groupType name',
+        select: '_id groupType name userId userIds',
+      })
+      .populate({
+        path: 'userId', 
+        select: '_id',
+      })
+      .populate({
+        path: 'members.userId', 
+        select: '_id'
       })
       .exec();
 
@@ -2330,7 +2339,19 @@ exports.getNearByKitty = async (req, res) => {
           member => member.userId.toString() === userId
         );
 
-      return isFutureKitty && isPublicGroup  && !isUserMember;
+        // const isUserGroupCreator = kitty.groupId?.some(group =>
+        //   group.userId?._id?.toString() === userId
+        // );
+        const isUserCreatorOfKitty = kitty.userId && kitty.userId._id?.toString() === userId;
+
+        const isUserGroupMember = kitty.groupId?.some(group =>
+          group.userIds?.some(userObj =>
+            userObj.userId?.toString() === userId
+          )
+        );
+  
+
+      return isFutureKitty && isPublicGroup  && !isUserMember && !isUserGroupMember && !isUserCreatorOfKitty;
     });
 
     // Adding approved members count
