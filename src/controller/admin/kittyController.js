@@ -40,8 +40,6 @@ exports.checkLatestVersion = async (req, res) => {
     });
   }
 }
-
-
 exports.addKitty = async (req, res) => {
   try {
     const {
@@ -89,7 +87,15 @@ exports.addKitty = async (req, res) => {
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
     // Create members array from userIds
-  
+    const members = group.userIds
+    .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+    .map(user => ({ userId: user.userId, status: "pending" }));
+
+    // Add the admin (group.userId) to members if not already included
+    if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+      members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
+    }
+
     // Validate and structure the poll data
     const theamePollData = theamepoll
       ? {
@@ -166,6 +172,7 @@ exports.addKitty = async (req, res) => {
       venuepoll: venuePollData,
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
+      members,
       tampimage
 
     });
@@ -253,6 +260,218 @@ exports.addKitty = async (req, res) => {
     res.status(500).json({ error: "Failed to add kitty" });
   }
 };
+
+// exports.addKitty = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll,
+//       locationpoll,
+//       venuepoll,
+//       planKittypoll,
+//       activityKittypoll,
+//       tampimage,
+
+
+//     } = req.body;
+
+//     // Validation checks
+//     if (!name || typeof name !== "string") {
+//       return res
+//         .status(400)
+//         .json({ error: "Name is required and must be a string" });
+//     }
+//     if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
+//       return res.status(400).json({ error: "Invalid groupId" });
+//     }
+//     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+//       return res.status(400).json({ error: "Invalid userId" });
+//     }
+
+//     if (!time || typeof time !== "string") {
+//       return res
+//         .status(400)
+//         .json({ error: "Time is required and must be a string" });
+//     }
+//     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
+
+//     // Create members array from userIds
+  
+//     // Validate and structure the poll data
+//     const theamePollData = theamepoll
+//       ? {
+//         question: theamepoll.question,
+//         options: theamepoll.options.map((option) => ({
+//           optionText: option.optionText,
+//           votes: option.votes || 0, // Default to 0 if not provided
+//         })),
+//         type: "theampolls",
+//       }
+//       : null;
+
+//     const locationPollData = locationpoll
+//       ? {
+//         question: locationpoll.question,
+//         options: locationpoll.options.map((option) => ({
+//           optionText: option.optionText,
+//           votes: option.votes || 0,
+//         })),
+//         type: "locationpolls",
+//       }
+//       : null;
+
+//     const venuePollData = venuepoll
+//       ? {
+//         question: venuepoll.question,
+//         options: venuepoll.options.map((option) => ({
+//           optionText: option.optionText,
+//           votes: option.votes || 0,
+//         })),
+//         type: "venuepolls",
+//       }
+//       : null;
+
+//     const planKittyPollData = planKittypoll
+//       ? {
+//         question: planKittypoll.question,
+//         options: planKittypoll.options.map((option) => ({
+//           optionText: option.optionText,
+//           votes: option.votes || 0,
+//         })),
+//         type: "planKittypolls",
+//       }
+//       : null;
+
+//     const activityKittyPollData = activityKittypoll
+//       ? {
+//         question: activityKittypoll.question,
+//         options: activityKittypoll.options.map((option) => ({
+//           optionText: option.optionText,
+//           votes: option.votes || 0,
+//         })),
+//         type: "activityKittypolls",
+//       }
+//       : null;
+
+//     // Create new Kitty with poll data
+//     const newKitty = new Kitty({
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll: theamePollData,
+//       locationpoll: locationPollData,
+//       venuepoll: venuePollData,
+//       planKittypoll: planKittyPollData,
+//       activityKittypoll: activityKittyPollData,
+//       tampimage
+
+//     });
+
+//     // Save the new Kitty to the database
+//     await newKitty.save();
+
+//     //notification work------------>>>
+//     // Fetch group details to get userIds
+
+//     if (!group) {
+//       return res.status(404).json({ error: "Group not found" });
+//     }
+
+//     // Create notifications for the userId (kitty creator)// Create notifications for the userId (kitty creator)
+//     const creatorNotification = {
+//       userId,
+//       kittyId: newKitty._id,
+//       message: `You have created a kitty: ${newKitty.name}`,
+//       type: "kitty",
+//       image: tampimage,
+//     };
+
+//     // Create notifications for all users in the group, excluding the creator
+//     const userNotifications = group.userIds
+//       .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+//       .map((user) => ({
+//         userId: user.userId,
+//         groupId: groupId,
+//         kittyId: newKitty._id,
+//         message: `A new kitty has been created in your group: ${newKitty.name}`,
+//         type: "kitty-join-request",
+//         image: tampimage,
+//       }));
+
+//     const allNotifications = [creatorNotification, ...userNotifications];
+
+//     // ✅ Fix: Only send admin notification if admin is not the creator
+//     if (group.userId.toString() !== userId.toString()) {
+//       const adminnotify = {
+//         userId: group.userId,
+//         kittyId: newKitty._id,
+//         message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
+//         type: "kitty-join-request",
+//         image: tampimage,
+//       };
+//       allNotifications.push(adminnotify);
+//     }
+
+//     // Insert all notifications into the database
+//     await NotificationSchema.insertMany(allNotifications);
+
+//     const notificationsWithPush = [
+//       { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
+//       { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId },
+//       ...group.userIds
+//         .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+//         .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId }))
+//     ];
+
+//     // Send push notifications to all users
+//     for (const notification of notificationsWithPush) {
+//       await sendPushNotifications({
+//         title: notification.title,
+//         message: notification.message,
+//         userId: notification.userId,
+//         image: tampimage, // Include the image for the notification
+//         type:'kitty',
+//         objectId: newKitty._id
+//       });
+//     }
+//     const wallet = new WalletSchema({
+//       userId: userId,
+//       kittyId: newKitty._id,
+//       amount: group.contributionAmount, // The amount for this particular user
+//       transactionType: "Contribution", // Or dynamically set based on your needs
+//       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
+//     });
+//     await wallet.save();
+//     res
+//       .status(201)
+//       .json({ message: "Kitty added successfully", data: newKitty });
+//   } catch (err) {
+//     console.error("Error adding kitty", err);
+//     res.status(500).json({ error: "Failed to add kitty" });
+//   }
+// };
 
 exports.updateKitty = async (req, res) => {
   try {
@@ -583,26 +802,109 @@ exports.getKittyAttendance = async (req, res) => {
 //   }
 // };
 
+// exports.getAllPastAndFutureKitties = async (req, res) => {
+//   try {
+//     const { type, page = 1, limit = 20, userId } = req.query;
+
+//     if (!userId) {
+//       return res.status(400).json({ message: "User ID is required" });
+//     }
+
+//     if (!type || (type !== "past" && type !== "future")) {
+//       return res.status(400).json({ message: "Type must be 'past' or 'future'" });
+//     }
+
+//     const now = moment();
+
+//     const filter = {
+//       $or: [
+//         { userId },
+//         { "members.userId": userId, "members.status": "approved" }
+//       ]
+//     };
+
+//     const allKitties = await Kitty.find(filter)
+//       .populate({
+//         path: "groupId",
+//         populate: { path: "userId", model: "Users" },
+//       })
+//       .populate("userId")
+//       .populate("venueId")
+//       .populate("themeId")
+//       .populate("colorId")
+//       .populate("addressId")
+//       .populate("activityId")
+//       .lean();
+
+//     console.log(`Raw kitties count: ${allKitties.length}`);
+//     console.log(`Raw kitties: ${JSON.stringify(allKitties.map(k => ({ id: k._id, date: k.date, time: k.time })))}`);
+
+//     const filteredKitties = allKitties.filter((kitty) => {
+//       if (!kitty.date || !kitty.time) {
+//         console.log(`Skipping kitty ID: ${kitty._id} due to missing date/time`);
+//         return false;
+//       }
+//       const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
+//       const isValid = kittyDateTime.isValid();
+//       console.log(`Kitty ID: ${kitty._id}, Date: ${kitty.date}, Time: ${kitty.time}, Parsed: ${isValid ? kittyDateTime.format() : 'Invalid'}, Valid: ${isValid}`);
+//       return isValid && (type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now));
+//     });
+
+//     console.log(`Filtered kitties count: ${filteredKitties.length}`);
+
+//     const sortedKitties = filteredKitties.sort((a, b) => {
+//       const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
+//       const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
+//       return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
+//     });
+
+//     const totalKitties = sortedKitties.length;
+//     const totalPages = Math.ceil(totalKitties / limit);
+//     const startIndex = (page - 1) * limit;
+//     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
+
+//     if (paginatedKitties.length === 0) {
+//       return res.status(404).json({ message: `No ${type} kitties found for this user.` });
+//     }
+
+//     res.status(200).json({
+//       message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
+//       data: paginatedKitties,
+//       totalKitties,
+//       currentPage: parseInt(page),
+//       totalPages,
+//     });
+//   } catch (err) {
+//     console.error("Error in getAllPastAndFutureKitties:", err);
+//     res.status(500).json({ message: "Internal server error", error: err.message });
+//   }
+// };
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const { type, page = 1, limit = 20, userId } = req.query;
+    const now = new Date();
 
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+    // ✅ Improved date-time combiner
+    const combineDateAndTime = (dateStr, timeStr) => {
+      const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
+      const [rawTime, modifier] = timeStr.split(" ");
+      let [hours, minutes] = rawTime.split(":").map(Number);
 
-    if (!type || (type !== "past" && type !== "future")) {
-      return res.status(400).json({ message: "Type must be 'past' or 'future'" });
-    }
+      if (modifier === "PM" && hours !== 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
 
-    const now = moment();
-
-    const filter = {
-      $or: [
-        { userId },
-        { "members.userId": userId, "members.status": "approved" }
-      ]
+      return new Date(year, month - 1, day, hours, minutes);
     };
+
+    // ✅ Relaxed filter to allow past/future for userId or all
+    const filter = userId
+      ? {
+          $or: [
+            { userId },
+            { members: { $elemMatch: { userId } } }
+          ]
+        }
+      : {};
 
     const allKitties = await Kitty.find(filter)
       .populate({
@@ -613,30 +915,17 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate("venueId")
       .populate("themeId")
       .populate("colorId")
-      .populate("addressId")
-      .populate("activityId")
-      .lean();
-
-    console.log(`Raw kitties count: ${allKitties.length}`);
-    console.log(`Raw kitties: ${JSON.stringify(allKitties.map(k => ({ id: k._id, date: k.date, time: k.time })))}`);
+      .populate("addressId");
 
     const filteredKitties = allKitties.filter((kitty) => {
-      if (!kitty.date || !kitty.time) {
-        console.log(`Skipping kitty ID: ${kitty._id} due to missing date/time`);
-        return false;
-      }
-      const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
-      const isValid = kittyDateTime.isValid();
-      console.log(`Kitty ID: ${kitty._id}, Date: ${kitty.date}, Time: ${kitty.time}, Parsed: ${isValid ? kittyDateTime.format() : 'Invalid'}, Valid: ${isValid}`);
-      return isValid && (type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now));
+      const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+      return type === "past" ? kittyDateTime < now : kittyDateTime > now;
     });
 
-    console.log(`Filtered kitties count: ${filteredKitties.length}`);
-
     const sortedKitties = filteredKitties.sort((a, b) => {
-      const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
-      const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
-      return type === "past" ? dateTimeB - dateTimeA : dateTimeA - dateTimeB;
+      const aTime = combineDateAndTime(a.date, a.time);
+      const bTime = combineDateAndTime(b.date, b.time);
+      return type === "future" ? aTime - bTime : bTime - aTime;
     });
 
     const totalKitties = sortedKitties.length;
@@ -645,11 +934,11 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + parseInt(limit));
 
     if (paginatedKitties.length === 0) {
-      return res.status(404).json({ message: `No ${type} kitties found for this user.` });
+      return res.status(404).json({ message: "No kitties found for the given filters." });
     }
 
     res.status(200).json({
-      message: `${type.charAt(0).toUpperCase() + type.slice(1)} kitties fetched successfully`,
+      message: "Data fetched successfully",
       data: paginatedKitties,
       totalKitties,
       currentPage: parseInt(page),
@@ -657,9 +946,10 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in getAllPastAndFutureKitties:", err);
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
 exports.getAllKittiesForUser = async (req, res) => {
   try {
     const { page = 1, limit = 20, userId, type } = req.query;
@@ -1331,13 +1621,11 @@ exports.joinKitty = async (req, res) => {
 
     const requestUserIdObj = new mongoose.Types.ObjectId(requestUserId);
 
-    // 1. Find Kitty
     const kitty = await Kitty.findById(kittyId);
     if (!kitty) return res.status(404).json({ message: "Kitty not found" });
 
     if (!Array.isArray(kitty.members)) kitty.members = [];
 
-    // 2. Find Group related to this kitty
     const group = await GroupSchema.findOne({
       _id: kitty.groupId || null 
     });
@@ -1385,7 +1673,6 @@ exports.joinKitty = async (req, res) => {
       await kitty.save();
     }
 
-    // 6. Update previous notification (if exists)
     if (notificationId) {
       await NotificationSchema.findByIdAndUpdate(notificationId, {
         message: `You approved the join request for ${kitty?.name || "unknown"}`,
@@ -1395,11 +1682,9 @@ exports.joinKitty = async (req, res) => {
       });
     }
 
-    // 7. Get User
     const user = await UserSchema.findById(requestUserId).select("fullname");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 8. Send Notification to Kitty Owner
     const adminNotification = new NotificationSchema({
       userId: kitty.userId,
       kittyId,
@@ -1981,9 +2266,11 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const distance = R * c; // Distance in km
   return distance;
 }
+
 exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
+    const userId = req.user.toString(); 
 
     if (!lat || !long) {
       return res.status(400).json({ error: 'Latitude and longitude are required.' });
@@ -2027,7 +2314,6 @@ exports.getNearByKitty = async (req, res) => {
 
     console.log("Kitties Found:", kittiesWithApprovedCount);
 
-    // Filtering upcoming kitties only (by date) and checking if the group is public
     const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
       const [day, month, year] = kitty.date.split('/').map(Number);
       const kittyDate = new Date(year, month - 1, day);
@@ -2040,7 +2326,11 @@ exports.getNearByKitty = async (req, res) => {
         Array.isArray(kitty.groupId) &&
         kitty.groupId.some(group => group.groupType === 'public');
 
-      return isFutureKitty && isPublicGroup;
+        const isUserMember = kitty.members.some(
+          member => member.userId.toString() === userId
+        );
+
+      return isFutureKitty && isPublicGroup  && !isUserMember;
     });
 
     // Adding approved members count
