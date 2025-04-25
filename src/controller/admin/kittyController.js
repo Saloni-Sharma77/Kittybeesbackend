@@ -211,16 +211,16 @@ exports.addKitty = async (req, res) => {
     const allNotifications = [creatorNotification, ...userNotifications];
 
     // ✅ Fix: Only send admin notification if admin is not the creator
-    if (group.userId.toString() !== userId.toString()) {
-      const adminnotify = {
-        userId: group.userId,
-        kittyId: newKitty._id,
-        message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
-        type: "kitty-join-request",
-        image: tampimage,
-      };
-      allNotifications.push(adminnotify);
-    }
+    // if (group.userId.toString() !== userId.toString()) {
+    //   const adminnotify = {
+    //     userId: group.userId,
+    //     kittyId: newKitty._id,
+    //     message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
+    //     type: "kitty-join-request",
+    //     image: tampimage,
+    //   };
+    //   allNotifications.push(adminnotify);
+    // }
 
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
