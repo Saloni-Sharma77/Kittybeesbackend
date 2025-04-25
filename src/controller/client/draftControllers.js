@@ -1,4 +1,6 @@
 const Draft = require('../../schema/draftSchema');
+const VenueReviewSchema = require('../../schema/venueReviewSchema');
+
 
 // Add a draft
 exports.addToDraft = async (req, res) => {
@@ -126,5 +128,62 @@ exports.updateDraft = async (req, res) => {
   } catch (error) {
     console.error("Error updating draft:", error);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+
+// Get Draft by ID
+exports.getDraftById = async (req, res) => {
+  const draftId = req.params.id; // Get draft ID from URL params
+  const userId = req.query.userId; // Get userId from query params (if needed for additional checks)
+
+  try {
+    // Find the draft by ID and populate related fields
+    const draft = await Draft.findById(draftId)
+      .populate({
+        path: 'groupId',
+        populate: {
+          path: 'userId',
+          model: 'Users',
+        },
+      })
+      .populate('userId')
+      .populate('themeId')
+      .populate('colorId')
+      .populate('venueId')
+      .populate('addressId')
+      .populate('activityId')
+      .populate('templateId');
+
+    // If draft not found
+    if (!draft) {
+      return res.status(404).json({ error: 'Draft not found' });
+    }
+
+    // Check if the user is the owner or part of the draft (optional logic)
+    let isOwnerOrMember = false;
+    if (userId) {
+      if (draft.userId && draft.userId._id.toString() === userId) {
+        isOwnerOrMember = true;
+      }
+      if (draft.groupId && draft.groupId.some(group => group.userId._id.toString() === userId)) {
+        isOwnerOrMember = true;
+      }
+    }
+
+    // Get venue reviews (optional, just an example)
+    let venueReviews = await VenueReviewSchema.find({ venueId: draft.venueId });
+    
+    res.status(200).json({
+      message: 'Draft fetched successfully',
+      data: draft,
+      venueReviews: venueReviews.length || 0,
+      isOwnerOrMember, // Pass the flag to indicate if the user is part of the draft
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

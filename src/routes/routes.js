@@ -6031,6 +6031,7 @@ router.put("/update/:draftId",draftController.updateDraft);
  *         description: Server error
  */
 router.get('/getdraftbyuserid/:userId', draftController.getDraftByUserId);
+router.get("/getDraftById/:id", draftController.getDraftById);
 
 /**
  * @swagger

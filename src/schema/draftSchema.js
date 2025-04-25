@@ -15,7 +15,7 @@ const draftSchema = new mongoose.Schema({
   venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
   addressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
   activityId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activity' }],
-  templateId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'template' }],
+  templateId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Template' }],
   image: { type: String },
   isActive: { type: Boolean, default: true },
   isDraft: { type: Boolean, default: true }, // Add isDraft field
