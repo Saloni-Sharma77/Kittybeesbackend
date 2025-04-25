@@ -2213,7 +2213,9 @@ exports.getNearByKitty = async (req, res) => {
         kitty.groupId.some(group => group.groupType === 'public');
 
         const isUserMember = kitty.members.some(
-          member => member.userId.toString() === userId
+          // member => member.userId.toString() === userId
+          member => member.userId && member.userId.toString() === userId
+
         );
 
         // const isUserGroupCreator = kitty.groupId?.some(group =>

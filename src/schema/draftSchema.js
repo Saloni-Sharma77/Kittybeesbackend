@@ -12,7 +12,7 @@ const draftSchema = new mongoose.Schema({
   instructions: { type: String },
   themeId: { type: mongoose.Schema.Types.ObjectId, ref: 'theme' },
   colorId: { type: mongoose.Schema.Types.ObjectId, ref: 'color' },
-  venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'venues' },
+  venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
   addressId: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
   activityId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'activity' }],
   templateId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'template' }],
