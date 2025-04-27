@@ -40,6 +40,7 @@ exports.checkLatestVersion = async (req, res) => {
     });
   }
 }
+
 exports.addKitty = async (req, res) => {
   try {
     const {
@@ -62,8 +63,6 @@ exports.addKitty = async (req, res) => {
       planKittypoll,
       activityKittypoll,
       tampimage,
-
-
     } = req.body;
 
     // Validation checks
@@ -88,8 +87,8 @@ exports.addKitty = async (req, res) => {
 
     // Create members array from userIds
     const members = group.userIds
-    .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-    .map(user => ({ userId: user.userId, status: "pending" }));
+      .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+      .map(user => ({ userId: user.userId, status: "pending" }));
 
     // Add the admin (group.userId) to members if not already included
     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
@@ -99,57 +98,57 @@ exports.addKitty = async (req, res) => {
     // Validate and structure the poll data
     const theamePollData = theamepoll
       ? {
-        question: theamepoll.question,
-        options: theamepoll.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0, // Default to 0 if not provided
-        })),
-        type: "theampolls",
-      }
+          question: theamepoll.question,
+          options: theamepoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0, // Default to 0 if not provided
+          })),
+          type: "theampolls",
+        }
       : null;
 
     const locationPollData = locationpoll
       ? {
-        question: locationpoll.question,
-        options: locationpoll.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0,
-        })),
-        type: "locationpolls",
-      }
+          question: locationpoll.question,
+          options: locationpoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "locationpolls",
+        }
       : null;
 
     const venuePollData = venuepoll
       ? {
-        question: venuepoll.question,
-        options: venuepoll.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0,
-        })),
-        type: "venuepolls",
-      }
+          question: venuepoll.question,
+          options: venuepoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "venuepolls",
+        }
       : null;
 
     const planKittyPollData = planKittypoll
       ? {
-        question: planKittypoll.question,
-        options: planKittypoll.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0,
-        })),
-        type: "planKittypolls",
-      }
+          question: planKittypoll.question,
+          options: planKittypoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "planKittypolls",
+        }
       : null;
 
     const activityKittyPollData = activityKittypoll
       ? {
-        question: activityKittypoll.question,
-        options: activityKittypoll.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0,
-        })),
-        type: "activityKittypolls",
-      }
+          question: activityKittypoll.question,
+          options: activityKittypoll.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+          type: "activityKittypolls",
+        }
       : null;
 
     // Create new Kitty with poll data
@@ -173,64 +172,47 @@ exports.addKitty = async (req, res) => {
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
       members,
-      tampimage
-
+      tampimage,
     });
 
     // Save the new Kitty to the database
     await newKitty.save();
 
-    //notification work------------>>>
-    // Fetch group details to get userIds
-
+    // Notification work: Only one notification for all users
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Create notifications for the userId (kitty creator)// Create notifications for the userId (kitty creator)
-    const creatorNotification = {
-      userId,
+    // Send a single notification to all group members (excluding the creator)
+    const groupNotification = {
+      groupId: groupId,
       kittyId: newKitty._id,
-      message: `You have created a kitty: ${newKitty.name}`,
-      type: "kitty",
+      message: `A new kitty has been created in your group: ${newKitty.name}`,
+      type: "kitty-join-request",
       image: tampimage,
     };
 
-    // Create notifications for all users in the group, excluding the creator
     const userNotifications = group.userIds
       .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
       .map((user) => ({
         userId: user.userId,
-        groupId: groupId,
-        kittyId: newKitty._id,
-        message: `A new kitty has been created in your group: ${newKitty.name}`,
-        type: "kitty-join-request",
-        image: tampimage,
+        ...groupNotification, // Attach the group notification to each user
       }));
 
-    const allNotifications = [creatorNotification, ...userNotifications];
-
-    // ✅ Fix: Only send admin notification if admin is not the creator
-    // if (group.userId.toString() !== userId.toString()) {
-    //   const adminnotify = {
-    //     userId: group.userId,
-    //     kittyId: newKitty._id,
-    //     message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
-    //     type: "kitty-join-request",
-    //     image: tampimage,
-    //   };
-    //   allNotifications.push(adminnotify);
-    // }
-
-    // Insert all notifications into the database
-    await NotificationSchema.insertMany(allNotifications);
+    // Insert all notifications into the database (only one type of notification)
+    await NotificationSchema.insertMany(userNotifications);
 
     const notificationsWithPush = [
-      { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
-      { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId },
       ...group.userIds
-        .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-        .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId }))
+        .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
+        .map((user) => ({
+          title: 'New Kitty Created',
+          message: `A new kitty has been created in your group: ${newKitty.name}`,
+          userId: user.userId,
+          image: tampimage,
+          type: 'kitty',
+          objectId: newKitty._id,
+        })),
     ];
 
     // Send push notifications to all users
@@ -240,10 +222,11 @@ exports.addKitty = async (req, res) => {
         message: notification.message,
         userId: notification.userId,
         image: tampimage, // Include the image for the notification
-        type:'kitty',
-        objectId: newKitty._id
+        type: 'kitty',
+        objectId: newKitty._id,
       });
     }
+
     const wallet = new WalletSchema({
       userId: userId,
       kittyId: newKitty._id,
@@ -252,6 +235,7 @@ exports.addKitty = async (req, res) => {
       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
     });
     await wallet.save();
+
     res
       .status(201)
       .json({ message: "Kitty added successfully", data: newKitty });
@@ -308,7 +292,15 @@ exports.addKitty = async (req, res) => {
 //     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
 //     // Create members array from userIds
-  
+//     const members = group.userIds
+//     .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+//     .map(user => ({ userId: user.userId, status: "pending" }));
+
+//     // Add the admin (group.userId) to members if not already included
+//     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+//       members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
+//     }
+
 //     // Validate and structure the poll data
 //     const theamePollData = theamepoll
 //       ? {
@@ -385,6 +377,7 @@ exports.addKitty = async (req, res) => {
 //       venuepoll: venuePollData,
 //       planKittypoll: planKittyPollData,
 //       activityKittypoll: activityKittyPollData,
+//       members,
 //       tampimage
 
 //     });
