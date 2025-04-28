@@ -102,7 +102,7 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
           question: theamepoll.question,
           options: theamepoll.options.map((option) => ({
             optionText: option.optionText,
-            votes: option.votes || 0, // Default to 0 if not provided
+            votes: option.votes || 0, //  Default to 0 if not provided
           })),
           type: "theampolls",
         }
@@ -193,13 +193,29 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       image: tampimage,
     };
 
-    const userNotifications = group.userIds
-      .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
-      .map((user) => ({
-        userId: user.userId,
-        ...groupNotification, // Attach the group notification to each user
-      }));
-
+    // const userNotifications = group.userIds
+    //   .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+    //   .map((user) => ({
+    //     userId: user.userId,
+    //     ...groupNotification,
+    //   }));
+    const userNotifications = group.userIds.map((user) => ({
+      userId: user.userId,
+      ...groupNotification,
+    }));
+    
+    // Also notify the host/admin if not in the userIds array
+    const isHostInUserIds = group.userIds.some(
+      (user) => user.userId.toString() === group.userId.toString()
+    );
+    
+    if (!isHostInUserIds) {
+      userNotifications.push({
+        userId: group.userId,
+        ...groupNotification,
+      });
+    }
+    
     // Insert all notifications into the database (only one type of notification)
     await NotificationSchema.insertMany(userNotifications);
 
