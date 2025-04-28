@@ -188,7 +188,7 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
     const groupNotification = {
       groupId: groupId,
       kittyId: newKitty._id,
-      message: `A new kitty has been created in your group: ${newKitty.name}`,
+      message: `A new kitty has been created: ${newKitty.name}`,
       type: "kitty-join-request",
       image: tampimage,
     };
@@ -204,7 +204,6 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       ...groupNotification,
     }));
     
-    // Also notify the host/admin if not in the userIds array
     const isHostInUserIds = group.userIds.some(
       (user) => user.userId.toString() === group.userId.toString()
     );
@@ -219,20 +218,35 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
     // Insert all notifications into the database (only one type of notification)
     await NotificationSchema.insertMany(userNotifications);
 
-    const notificationsWithPush = [
-      ...group.userIds
-        .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
-        .map((user) => ({
-          title: 'New Kitty Created',
-          message: `A new kitty has been created in your group: ${newKitty.name}`,
-          userId: user.userId,
-          image: tampimage,
-          type: 'kitty',
-          objectId: newKitty._id,
-        })),
-    ];
+    // const notificationsWithPush = [
+    //   ...group.userIds
+    //     .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
+    //     .map((user) => ({
+    //       title: 'New Kitty Created',
+    //       message: `A new kitty has been created in your group: ${newKitty.name}`,
+    //       userId: user.userId,
+    //       image: tampimage,
+    //       type: 'kitty',
+    //       objectId: newKitty._id,
+    //     })),
+    // ];
+const pushRecipientIds = group.userIds.map(user => user.userId.toString());
 
-    // Send push notifications to all users
+if (!pushRecipientIds.includes(group.userId.toString())) {
+  pushRecipientIds.push(group.userId.toString());
+}
+
+const notificationsWithPush = pushRecipientIds.map(userId => ({
+  title: 'New Kitty Created',
+  message: `A new kitty has been created : ${newKitty.name}`,
+  userId: userId,
+  image: tampimage,
+  type: 'kitty',
+  objectId: newKitty._id,
+}));
+
+
+
     for (const notification of notificationsWithPush) {
       await sendPushNotifications({
         title: notification.title,
