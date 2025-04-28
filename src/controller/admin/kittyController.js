@@ -93,7 +93,7 @@ exports.addKitty = async (req, res) => {
     //   members.push({ userId: group.userId, status: "pending" }); 
     // }
 if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-  members.push({ userId: group.userId, status: "accepted" }); // Admin should have 'accepted' status
+  members.push({ userId: group.userId, status: "approved" }); 
 }
 
 
