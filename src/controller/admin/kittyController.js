@@ -1138,19 +1138,31 @@ exports.getAllKittyForMe = async (req, res) => {
 
       let kittymemberstatus = "guest";
 
-      if (member) {
+      // if (member) {
+      //   kittymemberstatus =
+      //     member.status === "approved"
+      //       ? "member"
+      //       : member.status === "rejected"
+      //         ? "rejected"
+      //         : "requested";
+      // } else if (kitty.userId?.toString() === userId) {
+      //   kittymemberstatus = "host";
+      // } else {
+      //   kittymemberstatus = "notmember";
+      // }
+
+      if (kitty.userId?.toString() === userId) {
+        kittymemberstatus = "host";
+      } else if (member) {
         kittymemberstatus =
           member.status === "approved"
             ? "member"
             : member.status === "rejected"
               ? "rejected"
               : "requested";
-      } else if (kitty.userId?.toString() === userId) {
-        kittymemberstatus = "host";
       } else {
         kittymemberstatus = "notmember";
       }
-
       return {
         ...kitty,
         kittymemberstatus,
@@ -1158,7 +1170,6 @@ exports.getAllKittyForMe = async (req, res) => {
     });
 
 
-    // Response metadata
     const totalPages = limit ? Math.ceil(totalKitties / limit) : 1;
 
     return res.status(200).json({
