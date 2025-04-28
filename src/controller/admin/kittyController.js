@@ -85,17 +85,18 @@ exports.addKitty = async (req, res) => {
     }
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
-    // Create members array from userIds
     const members = group.userIds
       .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
       .map(user => ({ userId: user.userId, status: "pending" }));
 
-    // Add the admin (group.userId) to members if not already included
-    if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-      members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
-    }
+    // if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+    //   members.push({ userId: group.userId, status: "pending" }); 
+    // }
+if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+  members.push({ userId: group.userId, status: "accepted" }); // Admin should have 'accepted' status
+}
 
-    // Validate and structure the poll data
+
     const theamePollData = theamepoll
       ? {
           question: theamepoll.question,
