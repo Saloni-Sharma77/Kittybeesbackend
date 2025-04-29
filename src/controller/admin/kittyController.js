@@ -760,9 +760,9 @@ exports.getKittyAttendance = async (req, res) => {
 //   }
 // };
 
-
+//past and future
 exports.getAllPastAndFutureKitties = async (req, res) => {
-  try {
+  try {    
     const now = new Date();
 
     const userId = req.query.userId || req.params.userId;
@@ -783,13 +783,13 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
     // Construct filter to find kitties created by or joined by this user
     const filter = userId
-      ? {
-          $or: [
-            { userId },
-            { members: { $elemMatch: { userId } } }
-          ]
-        }
-      : {};
+    ? {
+        $or: [
+          { userId },
+          { members: { $elemMatch: { userId, status: "approved" } } }
+        ]
+      }
+    : {};
 
     // Fetch all matching kitties with necessary population
     const allKitties = await Kitty.find(filter)
@@ -807,14 +807,15 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
+        return isCorrectTime;
 
-      const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
-      const hasApprovedMember = kitty.members?.some(
-        (member) => member.status === "approved"
-      );
+      // const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
+      // const hasApprovedMember = kitty.members?.some(
+      //   (member) => member.status === "approved"
+      // );
     
-      return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
-    });
+      // return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
+    });    
 
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {
@@ -843,11 +844,11 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       totalPages,
     });
   } catch (err) {
-    console.error("Error in getAllPastAndFutureKitties:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+//past kitties below
 exports.getAllKittiesForUser = async (req, res) => {
   try {
     const { page = 1, limit = 20, userId, type } = req.query;
@@ -918,7 +919,6 @@ exports.getAllKittiesForUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(`Error fetching ${req.query.type || "unknown"} kitties:`, error);
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
@@ -1010,7 +1010,6 @@ exports.getNearestKittyCountdown = async (req, res) => {
 //     // const now = moment();
 //     let testnow = moment()
 //     const now = moment.tz("Asia/Kolkata");
-//     console.log(testnow,now,'nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn')
 
 
 //     const futureKitties = await Kitty.find({
@@ -1647,7 +1646,6 @@ exports.joinKitty = async (req, res) => {
           })
         )
       );
-      console.log("Push responses:", responses);
     }
 
     return res.status(200).json({
@@ -2126,7 +2124,6 @@ exports.getKittyMemoriesById = async (req, res) => {
 
 exports.deleteKittyById = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
-  console.log(kittyId);
 
   try {
     const deletedKitty = await Kitty.findByIdAndDelete(kittyId);
@@ -2148,8 +2145,6 @@ exports.updateKittyStatus = async (req, res) => {
   const kittyId = req.params.id; // Capture the ID from request parameters
   const { isActive } = req.body;
 
-  console.log(req.body, "response");
-
   try {
     const updatedKitty = await Kitty.findByIdAndUpdate(
       kittyId,
@@ -2165,7 +2160,6 @@ exports.updateKittyStatus = async (req, res) => {
       .status(200)
       .json({ message: "Data updated successfully", data: updatedKitty });
   } catch (error) {
-    console.error("Error updating data", error);
     res
       .status(500)
       .json({ error: "Failed to update data", details: error.message });
@@ -2244,13 +2238,9 @@ exports.getNearByKitty = async (req, res) => {
       })
       .exec();
 
-    console.log("Kitties Found:", kittiesWithApprovedCount);
-
     const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
       const [day, month, year] = kitty.date.split('/').map(Number);
       const kittyDate = new Date(year, month - 1, day);
-
-      console.log(`Kitty: ${kitty.name}, GroupId:`, kitty.groupId);
 
       const isFutureKitty = kittyDate >= today;
       const isPublicGroup =
@@ -2319,7 +2309,6 @@ exports.submitKittyReview = async (req, res) => {
       { $push: { kittyReviews: reviewData } },
       { new: true, runValidators: true }
     );
-    console.log(kittyData, 'kkkkkkk')
 
     return res.status(200).json({ kittyData, success: true, message: 'Review Submitted Successfully' });
   } catch (error) {
