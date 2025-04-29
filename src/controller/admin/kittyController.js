@@ -807,17 +807,14 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
       // Exclude kitties where the creator's ID matches current user
       const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
+      
+      const isCurrentUserApproved = Array.isArray(kitty.members) &&
+        kitty.members.some(
+          (member) => member.userId == userId && member.status === "approved"
+        );
 
-       const result = isCorrectTime && !isCreatedByCurrentUser 
-       if(result){
-        let updatedMember = kitty?.members.filter((member) =>{
-           return !(member.userId == userId && member.status === "approved")
-        })
-        kitty.members = updatedMember
-       }
-      return result;
+      return isCorrectTime && !isCreatedByCurrentUser && !isCurrentUserApproved;
     });
-
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {
       const aTime = combineDateAndTime(a.date, a.time);
