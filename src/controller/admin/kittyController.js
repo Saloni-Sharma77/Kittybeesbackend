@@ -184,7 +184,6 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Send a single notification to all group members (excluding the creator)
     const groupNotification = {
       groupId: groupId,
       kittyId: newKitty._id,
@@ -193,16 +192,16 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       image: tampimage,
     };
 
-    // const userNotifications = group.userIds
-    //   .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
-    //   .map((user) => ({
-    //     userId: user.userId,
-    //     ...groupNotification,
-    //   }));
-    const userNotifications = group.userIds.map((user) => ({
-      userId: user.userId,
-      ...groupNotification,
-    }));
+    const userNotifications = group.userIds
+      .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+      .map((user) => ({
+        userId: user.userId,
+        ...groupNotification,
+      }));
+    // const userNotifications = group.userIds.map((user) => ({
+    //   userId: user.userId,
+    //   ...groupNotification,
+    // }));
     
     const isHostInUserIds = group.userIds.some(
       (user) => user.userId.toString() === group.userId.toString()
@@ -218,32 +217,32 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
     // Insert all notifications into the database (only one type of notification)
     await NotificationSchema.insertMany(userNotifications);
 
-    // const notificationsWithPush = [
-    //   ...group.userIds
-    //     .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
-    //     .map((user) => ({
-    //       title: 'New Kitty Created',
-    //       message: `A new kitty has been created in your group: ${newKitty.name}`,
-    //       userId: user.userId,
-    //       image: tampimage,
-    //       type: 'kitty',
-    //       objectId: newKitty._id,
-    //     })),
-    // ];
-const pushRecipientIds = group.userIds.map(user => user.userId.toString());
+    const notificationsWithPush = [
+      ...group.userIds
+        .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
+        .map((user) => ({
+          title: 'New Kitty Created',
+          message: `A new kitty has been created in your group: ${newKitty.name}`,
+          userId: user.userId,
+          image: tampimage,
+          type: 'kitty',
+          objectId: newKitty._id,
+        })),
+    ];
+// const pushRecipientIds = group.userIds.map(user => user.userId.toString());
 
-if (!pushRecipientIds.includes(group.userId.toString())) {
-  pushRecipientIds.push(group.userId.toString());
-}
+// if (!pushRecipientIds.includes(group.userId.toString())) {
+//   pushRecipientIds.push(group.userId.toString());
+// }
 
-const notificationsWithPush = pushRecipientIds.map(userId => ({
-  title: 'New Kitty Created',
-  message: `A new kitty has been created : ${newKitty.name}`,
-  userId: userId,
-  image: tampimage,
-  type: 'kitty',
-  objectId: newKitty._id,
-}));
+// const notificationsWithPush = pushRecipientIds.map(userId => ({
+//   title: 'New Kitty Created',
+//   message: `A new kitty has been created : ${newKitty.name}`,
+//   userId: userId,
+//   image: tampimage,
+//   type: 'kitty',
+//   objectId: newKitty._id,
+// }));
 
 
 
@@ -766,13 +765,11 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const now = new Date();
 
-    // Extracting filters and pagination parameters
     const userId = req.query.userId || req.params.userId;
     const type = req.query.type; // 'past' or 'future'
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    // Helper function to combine date and time into a JS Date object
     const combineDateAndTime = (dateStr, timeStr) => {
       const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
       const [rawTime, modifier] = timeStr.split(" ");
@@ -806,16 +803,17 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate("colorId")
       .populate("addressId");
 
-    // Filter out kitties based on date and remove ones created by this user
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
 
-      // Exclude kitties where the creator's ID matches current user
       const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
-
-      return isCorrectTime && !isCreatedByCurrentUser;
+      const hasApprovedMember = kitty.members?.some(
+        (member) => member.status === "approved"
+      );
+    
+      return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
     });
 
     // Sort kitties based on date
