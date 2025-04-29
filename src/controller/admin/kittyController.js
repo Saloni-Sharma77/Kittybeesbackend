@@ -757,10 +757,12 @@ exports.getKittyAttendance = async (req, res) => {
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const now = new Date();
+    // Extracting filters and pagination parameters
     const userId = req.query.userId || req.params.userId;
     const type = req.query.type; // 'past' or 'future'
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    // Helper function to combine date and time into a JS Date object
     const combineDateAndTime = (dateStr, timeStr) => {
       const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
       const [rawTime, modifier] = timeStr.split(" ");
@@ -778,15 +780,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
           ]
         }
       : {};
-      // const filter = userId
-      // ? {
-      //     $or: [
-      //       { userId },
-      //       { members: { $elemMatch: { userId, status: "approved" } } }
-      //     ]
-      //   }
-      // : {};
-
     // Fetch all matching kitties with necessary population
     const allKitties = await Kitty.find(filter)
       .populate({
@@ -798,22 +791,15 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       .populate("themeId")
       .populate("colorId")
       .populate("addressId");
-
+    // Filter out kitties based on date and remove ones created by this user
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
+      // Exclude kitties where the creator's ID matches current user
       const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
-      const hasApprovedMember = kitty.members?.some(
-        (member) => member.status === "approved"
-      );
-    
-      return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
+      return isCorrectTime && !isCreatedByCurrentUser;
     });
-
-    // const isCorrectTime = type === "past" ? kittyDateTime < now : kittyDateTime > now;
-    // return isCorrectTime;
-    
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {
       const aTime = combineDateAndTime(a.date, a.time);
@@ -825,12 +811,10 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const totalPages = Math.ceil(totalKitties / limit);
     const startIndex = (page - 1) * limit;
     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + limit);
-
     // If no kitties found
     if (paginatedKitties.length === 0) {
       return res.status(404).json({ message: "No kitties found for the given filters." });
     }
-
     // Return success response
     res.status(200).json({
       message: "Data fetched successfully",
