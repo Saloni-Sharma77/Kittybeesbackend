@@ -65,6 +65,9 @@ exports.addKitty = async (req, res) => {
       tampimage,
     } = req.body;
 
+    console.log("req.body ", req.body);
+    
+
     // Validation checks
     if (!name || typeof name !== "string") {
       return res
@@ -85,9 +88,14 @@ exports.addKitty = async (req, res) => {
     }
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
+    console.log("group ", group);
+
     const members = group.userIds
       .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
       .map(user => ({ userId: user.userId, status: "pending" }));
+
+    console.log("members ", members);
+
 
     // if (!members.some(member => member.userId.toString() === group.userId.toString())) {
     //   members.push({ userId: group.userId, status: "pending" }); 
@@ -761,35 +769,39 @@ exports.getKittyAttendance = async (req, res) => {
 // };
 
 //past and future
-exports.getAllPastAndFutureKitties = async (req, res) => {
-  try {    
-    const now = new Date();
 
+exports.getAllPastAndFutureKitties = async (req, res) => {
+  try {
+    const now = new Date();
     const userId = req.query.userId || req.params.userId;
     const type = req.query.type; // 'past' or 'future'
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-
     const combineDateAndTime = (dateStr, timeStr) => {
       const [day, month, year] = dateStr.split(/[\/-]/).map(Number);
       const [rawTime, modifier] = timeStr.split(" ");
       let [hours, minutes] = rawTime.split(":").map(Number);
-
       if (modifier === "PM" && hours !== 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
-
       return new Date(year, month - 1, day, hours, minutes);
     };
-
     // Construct filter to find kitties created by or joined by this user
     const filter = userId
-    ? {
-        $or: [
-          { userId },
-          { members: { $elemMatch: { userId, status: "approved" } } }
-        ]
-      }
-    : {};
+      ? {
+          $or: [
+            { userId },
+            { members: { $elemMatch: { userId } } }
+          ]
+        }
+      : {};
+      // const filter = userId
+      // ? {
+      //     $or: [
+      //       { userId },
+      //       { members: { $elemMatch: { userId, status: "approved" } } }
+      //     ]
+      //   }
+      // : {};
 
     // Fetch all matching kitties with necessary population
     const allKitties = await Kitty.find(filter)
@@ -807,29 +819,29 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
-        return isCorrectTime;
-
-      // const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
-      // const hasApprovedMember = kitty.members?.some(
-      //   (member) => member.status === "approved"
-      // );
+      const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
+      const hasApprovedMember = kitty.members?.some(
+        (member) => member.status === "approved"
+      );
     
-      // return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
-    });    
+      return isCorrectTime && !isCreatedByCurrentUser &&  !hasApprovedMember;
+    });
 
+    // const isCorrectTime = type === "past" ? kittyDateTime < now : kittyDateTime > now;
+    // return isCorrectTime;
+    
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {
       const aTime = combineDateAndTime(a.date, a.time);
       const bTime = combineDateAndTime(b.date, b.time);
       return type === "future" ? aTime - bTime : bTime - aTime;
     });
-
     // Paginate the result
     const totalKitties = sortedKitties.length;
     const totalPages = Math.ceil(totalKitties / limit);
     const startIndex = (page - 1) * limit;
     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + limit);
-
+    
     // If no kitties found
     if (paginatedKitties.length === 0) {
       return res.status(404).json({ message: "No kitties found for the given filters." });
