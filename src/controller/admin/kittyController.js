@@ -41,6 +41,235 @@ exports.checkLatestVersion = async (req, res) => {
   }
 }
 
+// exports.addKitty = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll,
+//       locationpoll,
+//       venuepoll,
+//       planKittypoll,
+//       activityKittypoll,
+//       tampimage,
+//     } = req.body;
+
+//     console.log("req.body ", req.body);
+    
+
+//     // Validation checks
+//     if (!name || typeof name !== "string") {
+//       return res
+//         .status(400)
+//         .json({ error: "Name is required and must be a string" });
+//     }
+//     if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
+//       return res.status(400).json({ error: "Invalid groupId" });
+//     }
+//     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+//       return res.status(400).json({ error: "Invalid userId" });
+//     }
+
+//     if (!time || typeof time !== "string") {
+//       return res
+//         .status(400)
+//         .json({ error: "Time is required and must be a string" });
+//     }
+//     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
+
+//     console.log("group ", group);
+
+//     const members = group.userIds
+//       .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+//       .map(user => ({ userId: user.userId, status: "pending" }));
+
+//       console.log("members1 ", members);
+
+// if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+//   members.push({ userId: group.userId, status: "approved" }); 
+// }
+
+// console.log("members2 ", members);
+
+//     const theamePollData = theamepoll
+//       ? {
+//           question: theamepoll.question,
+//           options: theamepoll.options.map((option) => ({
+//             optionText: option.optionText,
+//             votes: option.votes || 0, //  Default to 0 if not provided
+//           })),
+//           type: "theampolls",
+//         }
+//       : null;
+
+//     const locationPollData = locationpoll
+//       ? {
+//           question: locationpoll.question,
+//           options: locationpoll.options.map((option) => ({
+//             optionText: option.optionText,
+//             votes: option.votes || 0,
+//           })),
+//           type: "locationpolls",
+//         }
+//       : null;
+
+//     const venuePollData = venuepoll
+//       ? {
+//           question: venuepoll.question,
+//           options: venuepoll.options.map((option) => ({
+//             optionText: option.optionText,
+//             votes: option.votes || 0,
+//           })),
+//           type: "venuepolls",
+//         }
+//       : null;
+
+//     const planKittyPollData = planKittypoll
+//       ? {
+//           question: planKittypoll.question,
+//           options: planKittypoll.options.map((option) => ({
+//             optionText: option.optionText,
+//             votes: option.votes || 0,
+//           })),
+//           type: "planKittypolls",
+//         }
+//       : null;
+
+//     const activityKittyPollData = activityKittypoll
+//       ? {
+//           question: activityKittypoll.question,
+//           options: activityKittypoll.options.map((option) => ({
+//             optionText: option.optionText,
+//             votes: option.votes || 0,
+//           })),
+//           type: "activityKittypolls",
+//         }
+//       : null;
+
+//     // Create new Kitty with poll data
+//     const newKitty = new Kitty({
+//       name,
+//       groupId,
+//       userId,
+//       date,
+//       time,
+//       image,
+//       themeId,
+//       instructions,
+//       colorId,
+//       venueId,
+//       activityId,
+//       templateId,
+//       addressId,
+//       theamepoll: theamePollData,
+//       locationpoll: locationPollData,
+//       venuepoll: venuePollData,
+//       planKittypoll: planKittyPollData,
+//       activityKittypoll: activityKittyPollData,
+//       members,
+//       tampimage,
+//     });
+
+//     // Save the new Kitty to the database
+//     await newKitty.save();
+
+//     // Notification work: Only one notification for all users
+//     if (!group) {
+//       return res.status(404).json({ error: "Group not found" });
+//     }
+
+//     const groupNotification = {
+//       groupId: groupId,
+//       kittyId: newKitty._id,
+//       message: `A new kitty has been created: ${newKitty.name}`,
+//       type: "kitty-join-request",
+//       image: tampimage,
+//     };
+
+//     console.log("groupNotification ", groupNotification);
+    
+
+//     const userNotifications = group.userIds
+//       .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
+//       .map((user) => ({
+//         userId: user.userId,
+//         ...groupNotification,
+//       }));
+
+//     console.log("userNotifications ", userNotifications);
+    
+//     const isHostInUserIds = group.userIds.some(
+//       (user) => user.userId.toString() === group.userId.toString()
+//     );
+
+//     console.log("isHostInUserIds ", isHostInUserIds);
+    
+    
+//     if (!isHostInUserIds) {
+//       userNotifications.push({
+//         userId: group.userId,
+//         ...groupNotification,
+//       });
+//     }
+    
+//     console.log("userNotifications22 ", userNotifications);
+
+//     // Insert all notifications into the database (only one type of notification)
+//     await NotificationSchema.insertMany(userNotifications);
+
+//     const notificationsWithPush = [
+//       ...group.userIds
+//         .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
+//         .map((user) => ({
+//           title: 'New Kitty Created',
+//           message: `A new kitty has been created in your group: ${newKitty.name}`,
+//           userId: user.userId,
+//           image: tampimage,
+//           type: 'kitty',
+//           objectId: newKitty._id,
+//         })),
+//     ];
+
+//     for (const notification of notificationsWithPush) {
+//       await sendPushNotifications({
+//         title: notification.title,
+//         message: notification.message,
+//         userId: notification.userId,
+//         image: tampimage, // Include the image for the notification
+//         type: 'kitty',
+//         objectId: newKitty._id,
+//       });
+//     }
+
+//     const wallet = new WalletSchema({
+//       userId: userId,
+//       kittyId: newKitty._id,
+//       amount: group.contributionAmount, // The amount for this particular user
+//       transactionType: "Contribution", // Or dynamically set based on your needs
+//       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
+//     });
+//     await wallet.save();
+
+//     res
+//       .status(201)
+//       .json({ message: "Kitty added successfully", data: newKitty });
+//   } catch (err) {
+//     console.error("Error adding kitty", err);
+//     res.status(500).json({ error: "Failed to add kitty" });
+//   }
+// };
+
 exports.addKitty = async (req, res) => {
   try {
     const {
@@ -65,9 +294,6 @@ exports.addKitty = async (req, res) => {
       tampimage,
     } = req.body;
 
-    console.log("req.body ", req.body);
-    
-
     // Validation checks
     if (!name || typeof name !== "string") {
       return res
@@ -88,76 +314,70 @@ exports.addKitty = async (req, res) => {
     }
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
-    console.log("group ", group);
-
+    // Create members array from userIds
     const members = group.userIds
-      .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-      .map(user => ({ userId: user.userId, status: "pending" }));
+    .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+    .map(user => ({ userId: user.userId, status: "pending" }));
 
-    console.log("members ", members);
+    // Add the admin (group.userId) to members if not already included
+    if (!members.some(member => member.userId.toString() === group.userId.toString())) {
+      members.push({ userId: group.userId, status: "approved" }); // Admin has a different status
+    }
 
-
-    // if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-    //   members.push({ userId: group.userId, status: "pending" }); 
-    // }
-if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-  members.push({ userId: group.userId, status: "approved" }); 
-}
-
-
+    // Validate and structure the poll data
     const theamePollData = theamepoll
       ? {
-          question: theamepoll.question,
-          options: theamepoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0, //  Default to 0 if not provided
-          })),
-          type: "theampolls",
-        }
+        question: theamepoll.question,
+        options: theamepoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0, // Default to 0 if not provided
+        })),
+        type: "theampolls",
+      }
       : null;
 
     const locationPollData = locationpoll
       ? {
-          question: locationpoll.question,
-          options: locationpoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "locationpolls",
-        }
+        question: locationpoll.question,
+        options: locationpoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "locationpolls",
+      }
       : null;
 
     const venuePollData = venuepoll
       ? {
-          question: venuepoll.question,
-          options: venuepoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "venuepolls",
-        }
+        question: venuepoll.question,
+        options: venuepoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "venuepolls",
+      }
       : null;
 
     const planKittyPollData = planKittypoll
       ? {
-          question: planKittypoll.question,
-          options: planKittypoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "planKittypolls",
-        }
+        question: planKittypoll.question,
+        options: planKittypoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "planKittypolls",
+      }
       : null;
 
     const activityKittyPollData = activityKittypoll
       ? {
-          question: activityKittypoll.question,
-          options: activityKittypoll.options.map((option) => ({
-            optionText: option.optionText,
-            votes: option.votes || 0,
-          })),
-          type: "activityKittypolls",
-        }
+        question: activityKittypoll.question,
+        options: activityKittypoll.options.map((option) => ({
+          optionText: option.optionText,
+          votes: option.votes || 0,
+        })),
+        type: "activityKittypolls",
+      }
       : null;
 
     // Create new Kitty with poll data
@@ -181,90 +401,76 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
       members,
-      tampimage,
+      tampimage
+
     });
 
     // Save the new Kitty to the database
     await newKitty.save();
 
-    // Notification work: Only one notification for all users
+    //notification work------------>>>
+    // Fetch group details to get userIds
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const groupNotification = {
-      groupId: groupId,
+    // (kitty creator) Create notifications for host (kitty creator)
+    const creatorNotification = {
+      userId,
       kittyId: newKitty._id,
-      message: `A new kitty has been created: ${newKitty.name}`,
-      type: "kitty-join-request",
+      message: `You have created a kitty: ${newKitty.name}`,
+      type: "kitty",
       image: tampimage,
     };
 
+    // Create notifications for all users in the group, excluding the creator
     const userNotifications = group.userIds
       .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
       .map((user) => ({
         userId: user.userId,
-        ...groupNotification,
+        groupId: groupId,
+        kittyId: newKitty._id,
+        message: `A new kitty has been created in your group: ${newKitty.name}`,
+        type: "kitty-join-request",
+        image: tampimage,
       }));
-    // const userNotifications = group.userIds.map((user) => ({
-    //   userId: user.userId,
-    //   ...groupNotification,
-    // }));
-    
-    const isHostInUserIds = group.userIds.some(
-      (user) => user.userId.toString() === group.userId.toString()
-    );
-    
-    if (!isHostInUserIds) {
-      userNotifications.push({
+
+    const allNotifications = [creatorNotification, ...userNotifications];
+
+    // ✅ Fix: Only send admin notification if admin is not the creator
+    if (group.userId.toString() !== userId.toString()) {
+      const adminnotify = {
         userId: group.userId,
-        ...groupNotification,
-      });
-    }
-    
-    // Insert all notifications into the database (only one type of notification)
-    await NotificationSchema.insertMany(userNotifications);
+        kittyId: newKitty._id,
+        message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
+        type: "kitty-join-request",
+        image: tampimage,
+      };
+      allNotifications.push(adminnotify);
+    }    
+
+    // Insert all notifications into the database
+    await NotificationSchema.insertMany(allNotifications);
 
     const notificationsWithPush = [
+      { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId, type: 'kitty' },
+      { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId, type: 'kitty-join-request' },
       ...group.userIds
-        .filter((user) => user.userId.toString() !== userId.toString()) // Exclude the creator
-        .map((user) => ({
-          title: 'New Kitty Created',
-          message: `A new kitty has been created in your group: ${newKitty.name}`,
-          userId: user.userId,
-          image: tampimage,
-          type: 'kitty',
-          objectId: newKitty._id,
-        })),
+        .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+        .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId, type: "kitty-join-request" }))
     ];
-// const pushRecipientIds = group.userIds.map(user => user.userId.toString());
 
-// if (!pushRecipientIds.includes(group.userId.toString())) {
-//   pushRecipientIds.push(group.userId.toString());
-// }
-
-// const notificationsWithPush = pushRecipientIds.map(userId => ({
-//   title: 'New Kitty Created',
-//   message: `A new kitty has been created : ${newKitty.name}`,
-//   userId: userId,
-//   image: tampimage,
-//   type: 'kitty',
-//   objectId: newKitty._id,
-// }));
-
-
-
+    // Send push notifications to all users
     for (const notification of notificationsWithPush) {
       await sendPushNotifications({
         title: notification.title,
         message: notification.message,
         userId: notification.userId,
         image: tampimage, // Include the image for the notification
-        type: 'kitty',
-        objectId: newKitty._id,
+        type:notification.type,
+        objectId: newKitty._id
       });
     }
-
     const wallet = new WalletSchema({
       userId: userId,
       kittyId: newKitty._id,
@@ -273,7 +479,6 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
     });
     await wallet.save();
-
     res
       .status(201)
       .json({ message: "Kitty added successfully", data: newKitty });
@@ -282,227 +487,6 @@ if (!members.some(member => member.userId.toString() === group.userId.toString()
     res.status(500).json({ error: "Failed to add kitty" });
   }
 };
-
-// exports.addKitty = async (req, res) => {
-//   try {
-//     const {
-//       name,
-//       groupId,
-//       userId,
-//       date,
-//       time,
-//       image,
-//       themeId,
-//       instructions,
-//       colorId,
-//       venueId,
-//       activityId,
-//       templateId,
-//       addressId,
-//       theamepoll,
-//       locationpoll,
-//       venuepoll,
-//       planKittypoll,
-//       activityKittypoll,
-//       tampimage,
-
-
-//     } = req.body;
-
-//     // Validation checks
-//     if (!name || typeof name !== "string") {
-//       return res
-//         .status(400)
-//         .json({ error: "Name is required and must be a string" });
-//     }
-//     if (!groupId || !mongoose.Types.ObjectId.isValid(groupId)) {
-//       return res.status(400).json({ error: "Invalid groupId" });
-//     }
-//     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ error: "Invalid userId" });
-//     }
-
-//     if (!time || typeof time !== "string") {
-//       return res
-//         .status(400)
-//         .json({ error: "Time is required and must be a string" });
-//     }
-//     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
-
-//     // Create members array from userIds
-//     const members = group.userIds
-//     .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-//     .map(user => ({ userId: user.userId, status: "pending" }));
-
-//     // Add the admin (group.userId) to members if not already included
-//     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-//       members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
-//     }
-
-//     // Validate and structure the poll data
-//     const theamePollData = theamepoll
-//       ? {
-//         question: theamepoll.question,
-//         options: theamepoll.options.map((option) => ({
-//           optionText: option.optionText,
-//           votes: option.votes || 0, // Default to 0 if not provided
-//         })),
-//         type: "theampolls",
-//       }
-//       : null;
-
-//     const locationPollData = locationpoll
-//       ? {
-//         question: locationpoll.question,
-//         options: locationpoll.options.map((option) => ({
-//           optionText: option.optionText,
-//           votes: option.votes || 0,
-//         })),
-//         type: "locationpolls",
-//       }
-//       : null;
-
-//     const venuePollData = venuepoll
-//       ? {
-//         question: venuepoll.question,
-//         options: venuepoll.options.map((option) => ({
-//           optionText: option.optionText,
-//           votes: option.votes || 0,
-//         })),
-//         type: "venuepolls",
-//       }
-//       : null;
-
-//     const planKittyPollData = planKittypoll
-//       ? {
-//         question: planKittypoll.question,
-//         options: planKittypoll.options.map((option) => ({
-//           optionText: option.optionText,
-//           votes: option.votes || 0,
-//         })),
-//         type: "planKittypolls",
-//       }
-//       : null;
-
-//     const activityKittyPollData = activityKittypoll
-//       ? {
-//         question: activityKittypoll.question,
-//         options: activityKittypoll.options.map((option) => ({
-//           optionText: option.optionText,
-//           votes: option.votes || 0,
-//         })),
-//         type: "activityKittypolls",
-//       }
-//       : null;
-
-//     // Create new Kitty with poll data
-//     const newKitty = new Kitty({
-//       name,
-//       groupId,
-//       userId,
-//       date,
-//       time,
-//       image,
-//       themeId,
-//       instructions,
-//       colorId,
-//       venueId,
-//       activityId,
-//       templateId,
-//       addressId,
-//       theamepoll: theamePollData,
-//       locationpoll: locationPollData,
-//       venuepoll: venuePollData,
-//       planKittypoll: planKittyPollData,
-//       activityKittypoll: activityKittyPollData,
-//       members,
-//       tampimage
-
-//     });
-
-//     // Save the new Kitty to the database
-//     await newKitty.save();
-
-//     //notification work------------>>>
-//     // Fetch group details to get userIds
-
-//     if (!group) {
-//       return res.status(404).json({ error: "Group not found" });
-//     }
-
-//     // Create notifications for the userId (kitty creator)// Create notifications for the userId (kitty creator)
-//     const creatorNotification = {
-//       userId,
-//       kittyId: newKitty._id,
-//       message: `You have created a kitty: ${newKitty.name}`,
-//       type: "kitty",
-//       image: tampimage,
-//     };
-
-//     // Create notifications for all users in the group, excluding the creator
-//     const userNotifications = group.userIds
-//       .filter((user) => user.userId.toString() !== userId.toString()) // Exclude creator
-//       .map((user) => ({
-//         userId: user.userId,
-//         groupId: groupId,
-//         kittyId: newKitty._id,
-//         message: `A new kitty has been created in your group: ${newKitty.name}`,
-//         type: "kitty-join-request",
-//         image: tampimage,
-//       }));
-
-//     const allNotifications = [creatorNotification, ...userNotifications];
-
-//     // ✅ Fix: Only send admin notification if admin is not the creator
-//     if (group.userId.toString() !== userId.toString()) {
-//       const adminnotify = {
-//         userId: group.userId,
-//         kittyId: newKitty._id,
-//         message: `A New Kitty Is Created In Your Group: ${newKitty.name}`,
-//         type: "kitty-join-request",
-//         image: tampimage,
-//       };
-//       allNotifications.push(adminnotify);
-//     }
-
-//     // Insert all notifications into the database
-//     await NotificationSchema.insertMany(allNotifications);
-
-//     const notificationsWithPush = [
-//       { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId },
-//       { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId },
-//       ...group.userIds
-//         .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-//         .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId }))
-//     ];
-
-//     // Send push notifications to all users
-//     for (const notification of notificationsWithPush) {
-//       await sendPushNotifications({
-//         title: notification.title,
-//         message: notification.message,
-//         userId: notification.userId,
-//         image: tampimage, // Include the image for the notification
-//         type:'kitty',
-//         objectId: newKitty._id
-//       });
-//     }
-//     const wallet = new WalletSchema({
-//       userId: userId,
-//       kittyId: newKitty._id,
-//       amount: group.contributionAmount, // The amount for this particular user
-//       transactionType: "Contribution", // Or dynamically set based on your needs
-//       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
-//     });
-//     await wallet.save();
-//     res
-//       .status(201)
-//       .json({ message: "Kitty added successfully", data: newKitty });
-//   } catch (err) {
-//     console.error("Error adding kitty", err);
-//     res.status(500).json({ error: "Failed to add kitty" });
-//   }
-// };
 
 exports.updateKitty = async (req, res) => {
   try {
@@ -841,7 +825,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     const totalPages = Math.ceil(totalKitties / limit);
     const startIndex = (page - 1) * limit;
     const paginatedKitties = sortedKitties.slice(startIndex, startIndex + limit);
-    
+
     // If no kitties found
     if (paginatedKitties.length === 0) {
       return res.status(404).json({ message: "No kitties found for the given filters." });
