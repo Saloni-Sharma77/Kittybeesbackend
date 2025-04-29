@@ -454,9 +454,19 @@ exports.addKitty = async (req, res) => {
 
     const notificationsWithPush = [
       { title: 'Kitty Created', message: `You have created a new kitty: ${newKitty.name}`, userId, type: 'kitty' },
-      { title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: group.userId, type: 'kitty-join-request' },
+      ...(group.userId.toString() !== userId.toString()
+      ? [
+          {
+            title: 'New Kitty Created',
+            message: `A new kitty has been created in your group: ${newKitty.name}`,
+            userId: group.userId,
+            type: 'kitty-join-request',
+          },
+        ]
+      : []),
+      // Send to all other users except the creator
       ...group.userIds
-        .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
+        .filter(user => user.userId.toString() !== userId.toString()) 
         .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId, type: "kitty-join-request" }))
     ];
 
@@ -753,7 +763,6 @@ exports.getKittyAttendance = async (req, res) => {
 // };
 
 //past and future
-
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const now = new Date();
@@ -798,8 +807,17 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
       // Exclude kitties where the creator's ID matches current user
       const isCreatedByCurrentUser = kitty.userId?._id?.toString() === userId;
-      return isCorrectTime && !isCreatedByCurrentUser;
+
+       const result = isCorrectTime && !isCreatedByCurrentUser 
+       if(result){
+        let updatedMember = kitty?.members.filter((member) =>{
+           return !(member.userId == userId && member.status === "approved")
+        })
+        kitty.members = updatedMember
+       }
+      return result;
     });
+
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {
       const aTime = combineDateAndTime(a.date, a.time);
