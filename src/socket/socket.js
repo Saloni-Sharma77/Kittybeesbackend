@@ -10,7 +10,8 @@ module.exports = (wss) => {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message); // Parse the incoming message
-
+        console.log(data,'ddddddddddddddddddddddddd')
+        
         switch (data.type) {
           case 'joinGroup':
             const { groupId, senderId, fullname } = data; // Extract data
