@@ -871,22 +871,22 @@ exports.getAllKittiesForUser = async (req, res) => {
       .lean();
 
     const filteredKitties = userKitties.filter((kitty) => {
+      if (!kitty.date || !kitty.time) return false;
+    
       const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
-    //   return type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now);
-    // });
-
-
-     const isRightTime =
-        type === "past" ? kittyDateTime.isBefore(now) : kittyDateTime.isAfter(now);
-
-      // Ensure user is a member with status "approved"
+      const isRightTime = type === "past"
+        ? kittyDateTime.isBefore(now)
+        : kittyDateTime.isAfter(now);
+    
+      const isUserCreator = kitty.userId?._id?.toString() === userId;
+    
       const isApprovedMember = kitty.members?.some(
         (member) =>
           member.userId?.toString() === userId && member.status === "approved"
       );
-
-      return isRightTime && isApprovedMember;
-    });
+    
+      return isRightTime && (isUserCreator || isApprovedMember);
+    });    
 
     // Sort kitties:
     const sortedKitties = filteredKitties.sort((a, b) => {
