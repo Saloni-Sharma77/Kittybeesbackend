@@ -22,6 +22,7 @@ const bookingRequestSchema = new mongoose.Schema({
     sweets: { type: [String], default: [] },
     drinks: { type: [String], default: [] },
     message: { type: String },
+    venueId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue' },
     venueName: { type: String, required: false },
     venueLocation: { type: String, required: false }
 

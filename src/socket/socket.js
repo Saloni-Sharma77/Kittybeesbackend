@@ -10,7 +10,8 @@ module.exports = (wss) => {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message); // Parse the incoming message
-
+        console.log(data,'ddddddddddddddddddddddddd')
+        
         switch (data.type) {
           case 'joinGroup':
             const { groupId, senderId, fullname } = data; // Extract data
@@ -26,9 +27,9 @@ module.exports = (wss) => {
             const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
             
 
-            // Ensure at least one of content, image, video, or document is provided
-            if (!content && !image && !video && !document) {
-              ws.send(JSON.stringify({ error: 'At least one of content, image, video, or document must be provided' }));
+            // Ensure at least one of content, image, video, or document and poll options is provided
+            if (!content && !image && !video && !document && !pollOptions) {
+              ws.send(JSON.stringify({ error: 'At least one of content, image, video, document and poll options must be provided' }));
               return;
             }
 

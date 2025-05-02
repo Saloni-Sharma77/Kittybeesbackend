@@ -396,6 +396,94 @@ console.log(filterData,'filterData')
           }
         }
       },
+      {
+        $lookup: {
+          from: 'kitties',
+          let: { venueId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$venueId', '$$venueId'] },
+                    {
+                      $lt: [
+                        {
+                          $dateFromString: {
+                            dateString: '$date', // Convert string 'date' to a Date object
+                            format: '%d/%m/%Y' 
+                          }
+                        },
+                        new Date() // Compare with current date
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 }
+              }
+            }
+          ],
+          as: 'kittyCountTemp'
+        }
+      },
+      {
+        $addFields: {
+          kittiesHappened: {
+            $ifNull: [{ $arrayElemAt: ['$kittyCountTemp.count', 0] }, 0]
+          }
+        }
+      },
+      {
+        $unset: 'kittyCountTemp'
+      },
+      {
+        $lookup: {
+          from: 'bookingrequests',
+          let: { venueId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$venueId', '$$venueId'] }
+              }
+            },
+            {
+              $addFields: {
+                parsedDate: {
+                  $dateFromString: {
+                    dateString: '$date',
+                    format: '%d/%m/%Y'
+                  }
+                }
+              }
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $gte: ['$parsedDate', { $dateFromParts: { year: { $year: '$$NOW' }, month: { $month: '$$NOW' }, day: 1 } }] },
+                    { $lt: ['$parsedDate', { $dateAdd: { startDate: { $dateFromParts: { year: { $year: '$$NOW' }, month: { $month: '$$NOW' }, day: 1 } }, unit: 'month', amount: 1 } }] }
+                  ]
+                }
+              }
+            },
+            {
+              $count: 'count'
+            }
+          ],
+          as: 'bookingRequestCountTemp'
+        }
+      },
+      {
+        $addFields: {
+          kittiesBooked: { $ifNull: [{ $arrayElemAt: ['$bookingRequestCountTemp.count', 0] }, 0] }
+        }
+      },
+      { $unset: 'bookingRequestCountTemp' },            
       { $sort: { createdAt: -1 } },
       { $skip: (pageNumber - 1) * pageSize },
       { $limit: pageSize }
