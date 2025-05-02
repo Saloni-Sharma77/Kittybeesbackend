@@ -691,7 +691,7 @@ exports.getKittyAttendance = async (req, res) => {
 
 
 
-// exports.getAllPastAndFutureKitties = async (req, res) => {
+// exports.AndFutureKitties = async (req, res) => {
 //   try {
 //     const { type, page = 1, limit = 20, userId } = req.query;
 //     const now = new Date();
