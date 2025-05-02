@@ -13,6 +13,7 @@ const moment = require("moment-timezone");
 
 const mongoose = require("mongoose");
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
+const { default: axios } = require('axios');
 
 exports.checkLatestVersion = async (req, res) => {
   const { currentVersion } = req.body;
@@ -2186,12 +2187,31 @@ exports.getNearByKitty = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
-    if (!lat || !long) {
-      return res.status(400).json({ error: 'Latitude and longitude are required.' });
-    }
+    let latitude;
+    let longitude;
 
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(long);
+    if (!lat || !long) {
+      const user = await UserSchema.findById(userId).select('location'); 
+      if (!user || !user.location) {
+        return res.status(400).json({ error: 'User location not found' });
+      }
+
+      const userLocation = user.location; 
+
+      const axiosres = await axios.get(`https://api.olamaps.io/places/v1/autocomplete?input=${userLocation}&api_key=TdoidCwf5FxL1rVCqS7KnbWT8Gq561obQaMWzBoR`);
+
+      const locationData = axiosres.data.predictions[0].geometry.location;
+
+      if (!locationData || !locationData.lat || !locationData.lng) {
+        return res.status(400).json({ error: 'Unable to retrieve latitude and longitude from location' });
+      }
+
+      latitude = parseFloat(locationData.lat); 
+      longitude = parseFloat(locationData.lng); 
+    } else {
+      latitude = parseFloat(lat);
+      longitude = parseFloat(long);
+    }    
 
     // Getting today's date
     const today = new Date();
