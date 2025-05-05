@@ -17,7 +17,7 @@ exports.createMessage = async (req, res) => {
     // Initialize message data
     const newMessageData = { senderId };
     let mentionedUserData = []; 
-    let mentionTokens = [];
+    
     if (req.body.content) {
       newMessageData.content = req.body.content;
 
