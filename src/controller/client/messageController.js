@@ -31,6 +31,21 @@ exports.createMessage = async (req, res) => {
           _id: u._id,
           fullname: u.fullname
         }));
+
+        // Get mentioned user IDs excluding sender
+const mentionedUserIds = mentionedUsers
+.map(u => u._id.toString())
+.filter(id => id !== senderId);
+
+// Fetch FCM tokens for mentioned users
+const mentionTokensDocs = await FcmToken.find({
+userId: { $in: mentionedUserIds },
+deviceType: "Android"
+});
+const mentionTokens = mentionTokensDocs
+.map(doc => doc.fcmToken)
+.filter(Boolean);
+
       }
     }
 
@@ -128,16 +143,37 @@ exports.createMessage = async (req, res) => {
     
     // Send notifications if tokens exist
     
-    await sendPushNotificationsCreateMessage({
-      title: savedDoc?.groupId?.name || "New Message",
-      message: newMessage.content || "You have a new message",
-        response,
-      userTokens: tokens,
+    // await sendPushNotificationsCreateMessage({
+    //   title: savedDoc?.groupId?.name || "New Message",
+    //   message: newMessage.content || "You have a new message",
+    //     response,
+    //   userTokens: tokens,
       
-    });
-    console.log(tokens,'tttttttttttttt')
-        console.log("Notification sent successfully.");
+    // });
+    // console.log(tokens,'tttttttttttttt')
+    //     console.log("Notification sent successfully.");
   
+// Notify group members
+if (tokens.length > 0) {
+  await sendPushNotificationsCreateMessage({
+    title: savedDoc?.groupId?.name || "New Message",
+    message: newMessage.content || "You have a new message",
+    responseData: response,
+    userTokens: tokens,
+  });
+  console.log("Notification sent to group users.");
+}
+
+// Notify mentioned users
+if (mentionTokens.length > 0) {
+  await sendPushNotificationsCreateMessage({
+    title: "You were mentioned",
+    message: `${response.fullname} mentioned you: ${newMessage.content || ""}`,
+    responseData: response,
+    userTokens: mentionTokens,
+  });
+  console.log("Notification sent to mentioned users.");
+}
 
     // Respond with the created message
     res.status(200).json(response);
