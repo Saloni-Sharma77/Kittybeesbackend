@@ -17,6 +17,30 @@ exports.createMessage = async (req, res) => {
     // Initialize message data
     const newMessageData = { senderId };
 
+    if (req.body.content) {
+      newMessageData.content = req.body.content;
+
+      const extractMentions = (text) => {
+        const regex = /@([\w\s]+)/g;
+        const mentions = [];
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          mentions.push(match[1].trim());
+        }
+        return mentions;
+      };
+
+      const mentionedFullnames = extractMentions(req.body.content);
+      if (mentionedFullnames.length > 0) {
+        const mentionedUsers = await UserModel.find({
+          fullname: { $in: mentionedFullnames }
+        }).select("_id fullname");
+
+        const mentionedUserIds = mentionedUsers.map(u => u._id.toString());
+        newMessageData.mentions = mentionedUserIds; // ✅ Add to message
+      }
+    }
+
     if (req.body.content) newMessageData.content = req.body.content;
     if (req.body.document) newMessageData.document = req.body.document;
     if (req.body.image) newMessageData.image = req.body.image;
@@ -40,7 +64,6 @@ exports.createMessage = async (req, res) => {
     }
 
 
-    // Find or create a message document for the group
     let messageDoc = await Message.findOne({ groupId });
     if (!messageDoc) {
       messageDoc = new Message({
@@ -99,6 +122,7 @@ exports.createMessage = async (req, res) => {
       image: newMessage.image || "",
       video: newMessage.video || "",
       document: newMessage.document || "",
+      mentions: newMessage?.mentions || [],
       timestamp: newMessage.timestamp || new Date(),
       _id: newMessage._id,
       pollOptions:  newMessage?.pollOptions || "",
