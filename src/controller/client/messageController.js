@@ -17,6 +17,7 @@ exports.createMessage = async (req, res) => {
     // Initialize message data
     const newMessageData = { senderId };
     let mentionedUserData = []; 
+    let mentionTokens = [];
     if (req.body.content) {
       newMessageData.content = req.body.content;
 
@@ -42,9 +43,10 @@ const mentionTokensDocs = await FcmToken.find({
 userId: { $in: mentionedUserIds },
 deviceType: "Android"
 });
-const mentionTokens = mentionTokensDocs
-.map(doc => doc.fcmToken)
-.filter(Boolean);
+// const mentionTokens = mentionTokensDocs
+// .map(doc => doc.fcmToken)
+// .filter(Boolean);
+mentionTokens = mentionTokensDocs.map(doc => doc.fcmToken).filter(Boolean);
 
       }
     }
@@ -54,7 +56,6 @@ const mentionTokens = mentionTokensDocs
     // if (req.body.content) newMessageData.content = req.body.content;
     if (req.body.document) newMessageData.document = req.body.document;
     if (req.body.image) newMessageData.image = req.body.image;
-    if (req.body.video) newMessageData.video = req.body.video;
     if (req.body.video) newMessageData.video = req.body.video;
     if (req.body.pollOptions) newMessageData.pollOptions = req.body.pollOptions;
 
