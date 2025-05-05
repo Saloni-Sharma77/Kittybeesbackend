@@ -16,10 +16,11 @@ exports.createMessage = async (req, res) => {
 
     // Initialize message data
     const newMessageData = { senderId };
-
+    let mentionedUserData = []; 
     if (req.body.content) {
       newMessageData.content = req.body.content;
 
+      // Extract @mentions
       const extractMentions = (text) => {
         const regex = /@([\w\s]+)/g;
         const mentions = [];
@@ -31,15 +32,25 @@ exports.createMessage = async (req, res) => {
       };
 
       const mentionedFullnames = extractMentions(req.body.content);
+
       if (mentionedFullnames.length > 0) {
         const mentionedUsers = await User.find({
-          fullname: { $in: mentionedFullnames }
+          $or: mentionedFullnames.map(name => ({
+            fullname: { $regex: new RegExp(`^${name}$`, 'i') } // Case-insensitive match
+          }))
         }).select("_id fullname");
 
         const mentionedUserIds = mentionedUsers.map(u => u._id.toString());
-        newMessageData.mentions = mentionedUserIds; // ✅ Add to message
+        newMessageData.mentions = mentionedUserIds;
+
+        // For returning fullname + ID in response
+        mentionedUserData = mentionedUsers.map(u => ({
+          _id: u._id,
+          fullname: u.fullname
+        }));
       }
     }
+
 
     // if (req.body.content) newMessageData.content = req.body.content;
     if (req.body.document) newMessageData.document = req.body.document;
@@ -122,7 +133,7 @@ exports.createMessage = async (req, res) => {
       image: newMessage.image || "",
       video: newMessage.video || "",
       document: newMessage.document || "",
-      mentions: newMessage?.mentions || [],
+      mentions: mentionedUserData,
       timestamp: newMessage.timestamp || new Date(),
       _id: newMessage._id,
       pollOptions:  newMessage?.pollOptions || "",
