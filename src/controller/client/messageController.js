@@ -43,10 +43,9 @@ const mentionTokensDocs = await FcmToken.find({
 userId: { $in: mentionedUserIds },
 deviceType: "Android"
 });
-// const mentionTokens = mentionTokensDocs
-// .map(doc => doc.fcmToken)
-// .filter(Boolean);
-mentionTokens = mentionTokensDocs.map(doc => doc.fcmToken).filter(Boolean);
+const mentionTokens = mentionTokensDocs
+.map(doc => doc.fcmToken)
+.filter(Boolean);
 
       }
     }
