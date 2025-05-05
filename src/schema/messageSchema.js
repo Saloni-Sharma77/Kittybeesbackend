@@ -37,6 +37,8 @@ const messageArray = new Schema({
   amountType: { type: String, enum: ['Contribution', 'Expense'], default: 'Contribution' }, // Store type of amount
   name: { type: String, default: '' }, // Store name
   message: { type: String, default: '' }, // Store name
+  mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
+
 
 })
 

@@ -32,7 +32,7 @@ exports.createMessage = async (req, res) => {
 
       const mentionedFullnames = extractMentions(req.body.content);
       if (mentionedFullnames.length > 0) {
-        const mentionedUsers = await UserModel.find({
+        const mentionedUsers = await User.find({
           fullname: { $in: mentionedFullnames }
         }).select("_id fullname");
 
@@ -41,7 +41,7 @@ exports.createMessage = async (req, res) => {
       }
     }
 
-    if (req.body.content) newMessageData.content = req.body.content;
+    // if (req.body.content) newMessageData.content = req.body.content;
     if (req.body.document) newMessageData.document = req.body.document;
     if (req.body.image) newMessageData.image = req.body.image;
     if (req.body.video) newMessageData.video = req.body.video;
