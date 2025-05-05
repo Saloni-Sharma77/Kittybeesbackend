@@ -20,36 +20,20 @@ exports.createMessage = async (req, res) => {
     if (req.body.content) {
       newMessageData.content = req.body.content;
 
-      // Extract @mentions
-      const extractMentions = (text) => {
-        const regex = /@([\w\s]+)/g;
-        const mentions = [];
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-          mentions.push(match[1].trim());
-        }
-        return mentions;
-      };
-
-      const mentionedFullnames = extractMentions(req.body.content);
-
-      if (mentionedFullnames.length > 0) {
+      // If mentions are provided from frontend, use them directly
+      if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
         const mentionedUsers = await User.find({
-          $or: mentionedFullnames.map(name => ({
-            fullname: { $regex: new RegExp(`^${name}$`, 'i') } // Case-insensitive match
-          }))
+          _id: { $in: req.body.mentions }
         }).select("_id fullname");
 
-        const mentionedUserIds = mentionedUsers.map(u => u._id.toString());
-        newMessageData.mentions = mentionedUserIds;
-
-        // For returning fullname + ID in response
+        newMessageData.mentions = mentionedUsers.map(u => u._id);
         mentionedUserData = mentionedUsers.map(u => ({
           _id: u._id,
           fullname: u.fullname
         }));
       }
     }
+
 
 
     // if (req.body.content) newMessageData.content = req.body.content;
