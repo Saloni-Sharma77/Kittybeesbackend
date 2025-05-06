@@ -175,6 +175,7 @@ function getRouteForType(type) {
 
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
+console.log(responseData,"responseDataresponseData");
 
     try {
         // Filter out invalid or empty tokens
@@ -185,7 +186,13 @@ async function sendPushNotificationsCreateMessage({ title, message, responseData
             console.log('No valid FCM tokens available for sending notifications.');
             return { message: 'No valid tokens found. No notifications sent.' };
         }
-
+        const sanitizedResponseData = {};
+        if (responseData && typeof responseData === 'object') {
+            for (const [key, value] of Object.entries(responseData)) {
+                sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
+            }
+        }
+        
         const payload = {
             notification: {
                 title: title,
@@ -196,7 +203,7 @@ async function sendPushNotificationsCreateMessage({ title, message, responseData
                 route: 'your_route', // Adjust to the route you need to pass
                 title: title,
                 body: message,
-                ...responseData, // Pass additional data if required
+                ...sanitizedResponseData,
             },
         };
 

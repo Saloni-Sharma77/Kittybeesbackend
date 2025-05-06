@@ -694,7 +694,7 @@ exports.getKittyAttendance = async (req, res) => {
 
 
 
-// exports.getAllPastAndFutureKitties = async (req, res) => {
+// exports.AndFutureKitties = async (req, res) => {
 //   try {
 //     const { type, page = 1, limit = 20, userId } = req.query;
 //     const now = new Date();
@@ -2191,24 +2191,157 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   return distance;
 }
 
+// exports.getNearByKitty = async (req, res) => {
+//   try {
+//     const { lat, long } = req.body;
+//     const userId = req.params.id; 
+
+//     if (!userId) {
+//       return res.status(400).json({ error: 'User ID is required' });
+//     }
+//     let latitude;
+//     let longitude;
+
+//     if (!lat || !long) {
+//       const user = await UserSchema.findById(userId).select('location'); 
+//       if (!user || !user.location) {
+//         return res.status(400).json({ error: 'User location not found' });
+//       }
+
+//       const userLocation = user.location; 
+
+//       const axiosres = await axios.get(`https://api.olamaps.io/places/v1/autocomplete?input=${userLocation}&api_key=TdoidCwf5FxL1rVCqS7KnbWT8Gq561obQaMWzBoR`);
+
+//       const locationData = axiosres.data.predictions[0].geometry.location;
+
+//       if (!locationData || !locationData.lat || !locationData.lng) {
+//         return res.status(400).json({ error: 'Unable to retrieve latitude and longitude from location' });
+//       }
+
+//       latitude = parseFloat(locationData.lat); 
+//       longitude = parseFloat(locationData.lng); 
+//     } else {
+//       latitude = parseFloat(lat);
+//       longitude = parseFloat(long);
+//     }    
+
+//     // Getting today's date
+//     const today = new Date();
+//     today.setUTCHours(0, 0, 0, 0);
+
+//     // Find all venues
+//     const venues = await Venue.find().select('_id lat long');
+
+//     // Filter venues within 10 km radius
+//     const nearbyVenueIds = venues
+//       .filter(venue => {
+//         const venueLat = parseFloat(venue.lat);
+//         const venueLong = parseFloat(venue.long);
+//         const distance = getDistanceFromLatLonInKm(latitude, longitude, venueLat, venueLong);
+//         return distance <= 10;
+//       })
+//       .map(venue => venue._id);
+
+//     const kittiesWithApprovedCount = await Kitty.find({ venueId: { $in: nearbyVenueIds } })
+//       .populate({
+//         path: 'venueId',
+//         select: 'name location lat long pricing',
+//       })
+//       .populate({
+//         path: 'themeId',
+//         select: 'name',
+//       })
+//       .populate({
+//         path: 'groupId', // Make sure it supports arrays
+//         select: '_id groupType name userId userIds',
+//       })
+//       .populate({
+//         path: 'userId', 
+//         select: '_id',
+//       })
+//       .populate({
+//         path: 'members.userId', 
+//         select: '_id'
+//       })
+//       .exec();
+
+//     const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
+//       const [day, month, year] = kitty.date.split('/').map(Number);
+//       const kittyDate = new Date(year, month - 1, day);
+
+//       const isFutureKitty = kittyDate >= today;
+//       const isPublicGroup =
+//         kitty.groupId &&
+//         Array.isArray(kitty.groupId) &&
+//         kitty.groupId.some(group => group.groupType === 'public');
+
+//         // const isUserMember = kitty.members.some(
+//         //   // member => member.userId.toString() === userId
+//         //   member => member.userId && member.userId.toString() === userId
+
+//         // );
+//         const isUserRequestedInGroup = kitty.groupId?.some(group =>
+//           group.userIds?.some(userObj =>
+//             userObj.userId?.toString() === userId && userObj.status === 'isrequesteduser'
+//           )
+//         );
+//         const isUserRequestedInMembers = kitty.members?.some(
+//           member => member.userId?.toString() === userId && member.status === 'isrequesteduser'
+//         );
+
+//         const isUserNotInKitty = !kitty.members.some(member => member.userId?.toString() === userId) && 
+//         !kitty.groupId.some(group => group.userIds?.some(userObj => userObj.userId?.toString() === userId));
+//         // const isUserGroupCreator = kitty.groupId?.some(group =>
+//         //   group.userId?._id?.toString() === userId
+//         // );
+//         const isUserCreatorOfKitty = kitty.userId && kitty.userId._id?.toString() === userId;
+
+//         const isUserGroupMember = kitty.groupId?.some(group =>
+//           group.userIds?.some(userObj =>
+//             userObj.userId?.toString() === userId
+//           )
+//         );
+  
+//         return isFutureKitty && isPublicGroup && (isUserRequestedInGroup || isUserRequestedInMembers || isUserNotInKitty);
+
+//       // return isFutureKitty && isPublicGroup  && !isUserMember && !isUserGroupMember && !isUserCreatorOfKitty;
+//     });
+
+//     // Adding approved members count
+//     const kitties = filteredKitties.map(kitty => {
+//       const approvedCount = kitty.members.filter(member => member.status === 'approved').length;
+//       return {
+//         ...kitty.toObject(),
+//         approvedMembersCount: approvedCount,
+//       };
+//     });
+
+//     return res.status(200).json({ success: true, kitties });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// };
+
 exports.getNearByKitty = async (req, res) => {
   try {
     const { lat, long } = req.body;
-    const userId = req.params.id; 
+    const userId = req.params.id;
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
+
     let latitude;
     let longitude;
 
     if (!lat || !long) {
-      const user = await UserSchema.findById(userId).select('location'); 
+      const user = await UserSchema.findById(userId).select('location');
       if (!user || !user.location) {
         return res.status(400).json({ error: 'User location not found' });
       }
 
-      const userLocation = user.location; 
+      const userLocation = user.location;
 
       const axiosres = await axios.get(`https://api.olamaps.io/places/v1/autocomplete?input=${userLocation}&api_key=TdoidCwf5FxL1rVCqS7KnbWT8Gq561obQaMWzBoR`);
 
@@ -2218,12 +2351,12 @@ exports.getNearByKitty = async (req, res) => {
         return res.status(400).json({ error: 'Unable to retrieve latitude and longitude from location' });
       }
 
-      latitude = parseFloat(locationData.lat); 
-      longitude = parseFloat(locationData.lng); 
+      latitude = parseFloat(locationData.lat);
+      longitude = parseFloat(locationData.lng);
     } else {
       latitude = parseFloat(lat);
       longitude = parseFloat(long);
-    }    
+    }
 
     // Getting today's date
     const today = new Date();
@@ -2265,36 +2398,46 @@ exports.getNearByKitty = async (req, res) => {
       })
       .exec();
 
-    const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
-      const [day, month, year] = kitty.date.split('/').map(Number);
-      const kittyDate = new Date(year, month - 1, day);
-
-      const isFutureKitty = kittyDate >= today;
-      const isPublicGroup =
-        kitty.groupId &&
-        Array.isArray(kitty.groupId) &&
-        kitty.groupId.some(group => group.groupType === 'public');
-
-        const isUserMember = kitty.members.some(
-          // member => member.userId.toString() === userId
-          member => member.userId && member.userId.toString() === userId
-
+      const filteredKitties = kittiesWithApprovedCount.filter(kitty => {
+        const [day, month, year] = kitty.date.split('/').map(Number);
+        const kittyDate = new Date(year, month - 1, day);
+      
+        const isFutureKitty = kittyDate >= today;
+      
+        const isPublicGroup =
+          kitty.groupId &&
+          Array.isArray(kitty.groupId) &&
+          kitty.groupId.some(group => group.groupType === 'public');
+      
+        // ✅ Fixed comparison for approved members
+        const isUserApprovedInMembers = kitty.members?.some(
+          member => member.userId?._id?.toString() === userId && member.status === 'approved'
         );
-
-        // const isUserGroupCreator = kitty.groupId?.some(group =>
-        //   group.userId?._id?.toString() === userId
-        // );
-        const isUserCreatorOfKitty = kitty.userId && kitty.userId._id?.toString() === userId;
-
-        const isUserGroupMember = kitty.groupId?.some(group =>
+        if (isUserApprovedInMembers) {
+          return false;
+        }
+      
+        const isUserRequestedInGroup = kitty.groupId?.some(group =>
           group.userIds?.some(userObj =>
-            userObj.userId?.toString() === userId
+            userObj.userId?.toString() === userId && userObj.status === 'isrequesteduser'
           )
         );
-  
-
-      return isFutureKitty && isPublicGroup  && !isUserMember && !isUserGroupMember && !isUserCreatorOfKitty;
-    });
+      
+        const isUserRequestedInMembers = kitty.members?.some(
+          member => member.userId?._id?.toString() === userId && member.status === 'isrequesteduser'
+        );
+      
+        const isUserNotInKitty =
+          !kitty.members?.some(member => member.userId?._id?.toString() === userId) &&
+          !kitty.groupId?.some(group =>
+            group.userIds?.some(userObj => userObj.userId?.toString() === userId)
+          );
+      
+        return isFutureKitty && isPublicGroup &&
+               (isUserRequestedInGroup || isUserRequestedInMembers || isUserNotInKitty);
+      });
+      
+      
 
     // Adding approved members count
     const kitties = filteredKitties.map(kitty => {
@@ -2311,7 +2454,6 @@ exports.getNearByKitty = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
 
 
 
