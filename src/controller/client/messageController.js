@@ -6,182 +6,227 @@ const { sendPushNotificationsCreateMessage } = require('../../PushNotification/p
 
 
 
-exports.createMessage = async (req, res) => {
-  try {
-    const { groupId, senderId } = req.body;
+  exports.createMessage = async (req, res) => {
+    try {
+      const { groupId, senderId } = req.body;
 
-    if (!groupId || !senderId) {
-      return res.status(400).json({ error: "Group ID and Sender ID are required." });
-    }
-
-    // Initialize message data
-    const newMessageData = { senderId };
-    let mentionedUserData = []; 
-    
-    if (req.body.content) {
-      newMessageData.content = req.body.content;
-
-      // If mentions are provided from frontend, use them directly
-      if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
-        const mentionedUsers = await User.find({
-          _id: { $in: req.body.mentions }
-        }).select("_id fullname");
-
-        newMessageData.mentions = mentionedUsers.map(u => u._id);
-        mentionedUserData = mentionedUsers.map(u => ({
-          _id: u._id,
-          fullname: u.fullname
-        }));
-
-        // Get mentioned user IDs excluding sender
-const mentionedUserIds = mentionedUsers
-.map(u => u._id.toString())
-.filter(id => id !== senderId);
-
-// Fetch FCM tokens for mentioned users
-const mentionTokensDocs = await FcmToken.find({
-userId: { $in: mentionedUserIds },
-deviceType: "Android"
-});
-const mentionTokens = mentionTokensDocs
-.map(doc => doc.fcmToken)
-.filter(Boolean);
-
+      if (!groupId || !senderId) {
+        return res.status(400).json({ error: "Group ID and Sender ID are required." });
       }
-    }
 
+      // Initialize message data
+      const newMessageData = { senderId };
+      let mentionedUserData = []; 
+      let mentionTokens = []; // Declare at the top-level scope inside the try block
 
+        // If mentions are provided from frontend, use them directly
 
-    // if (req.body.content) newMessageData.content = req.body.content;
-    if (req.body.document) newMessageData.document = req.body.document;
-    if (req.body.image) newMessageData.image = req.body.image;
-    if (req.body.video) newMessageData.video = req.body.video;
-    if (req.body.pollOptions) newMessageData.pollOptions = req.body.pollOptions;
+        if (req.body.content) {
+          newMessageData.content = req.body.content;
+        
+//           if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
+//             // const mentionedUsers = await User.find({
+//             //   _id:"67da68cc1dca96d0e830bba5"
+//             // }).select("_id fullname");  
+//             const mentionedUsers = await User.find({
+//   _id: { $in: req.body.mentions }
+// }).select("_id fullname");
 
+            
+//         console.log(mentionedUsers,"mentionedUsersmentionedUsers");
+        
+//             newMessageData.mentions = mentionedUsers.map(u => u._id);
+//             mentionedUserData = mentionedUsers.map(u => ({
+//               _id: u._id,
+//               fullname: u.fullname
+//             }));
+        
+//             const mentionedUserIds = mentionedUsers
+//               .map(u => u._id.toString())
+//               .filter(id => id !== senderId);
+//         console.log(mentionedUserIds,"c");
+        
+//             const mentionTokensDocs = await FcmToken.find({
+//               userId: { $in: mentionedUserIds },
+//               deviceType: "Android"
+//             });
+//         console.log(mentionTokensDocs,"mentionTokensDocsmentionTokensDocs");
+        
+//             mentionTokens = mentionTokensDocs
+//               .map(doc => doc.fcmToken)
+//               .filter(Boolean);
+//           }
+if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
+  const mentionedUsers = await User.find({
+    _id: { $in: req.body.mentions }
+  }).select("_id fullname");
 
+  console.log(mentionedUsers, "mentionedUsers");
 
-    if (req.body.pollOptions) {
-      const pollData = req.body.pollOptions;
-      const msgPollData = pollData ? {
-        question: pollData.question,
-        options: pollData.options.map((option) => ({
-          optionText: option.optionText,
-          votes: option.votes || 0,
-        })),
-      } : null;
+  newMessageData.mentions = mentionedUsers.map(u => u._id);
+  mentionedUserData = mentionedUsers.map(u => ({
+    _id: u._id,
+    fullname: u.fullname
+  }));
 
-      if (msgPollData) newMessageData.pollOptions = msgPollData;
-    }
+  const mentionedUserIds = mentionedUsers
+    .map(u => u._id.toString())
+    .filter(id => id !== senderId);
 
+  console.log(mentionedUserIds, "Mentioned User IDs");
 
-    let messageDoc = await Message.findOne({ groupId });
-    if (!messageDoc) {
-      messageDoc = new Message({
-        groupId,
-        messages: [newMessageData],
-      });
-    } else {
-      messageDoc.messages.push(newMessageData);
-    }
-
-    // Save the message document
-    let savedDoc = await messageDoc.save();
-
-    // Populate relevant fields
-    savedDoc = await savedDoc.populate([
-      { path: "messages.senderId", select: "fullname" },
-      { path: "groupId" },
-    ]);
-
-    // Retrieve the last added message
-    const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
-    if (!newMessage) {
-      return res.status(500).json({ error: "Failed to retrieve the new message." });
-    }
-
-    // Determine users to notify
-    let newUserIds = [];
-    if (savedDoc?.groupId?.userId !== senderId) {
-      newUserIds.push(savedDoc.groupId.userId);
-    }
-
-    if (Array.isArray(savedDoc?.groupId?.userIds)) {
-      savedDoc.groupId.userIds.forEach((item) => {
-        if (item?.userId && item?.status === "approved" && item.userId !== senderId) {
-          newUserIds.push(item.userId);
-        }
-      });
-    }
-
-    // Fetch FCM tokens for notification
-    const fcmTokens = await FcmToken.find({
-      userId: { $in: newUserIds, $ne: senderId }, 
-      deviceType: "Android",
+  const mentionTokensDocs = await FcmToken.find({
+    userId: { $in: mentionedUserIds },
+    deviceType: "Android"
   });
+
+  console.log(mentionTokensDocs, "mentionTokensDocs");
+
+mentionTokens = mentionTokensDocs
+  .flatMap(doc => doc.fcmToken) 
+  .filter(Boolean);
+
+  // mentionTokens=['e-abusY3SeyOh7JQUD6bwA:APA91bG109Dy9Cc3eGeg4bpK99XLHplYQK7yUL_OBuISoV4m5ModEiqC5JkdoIzg4TOBOXYmPQOYkKMDmOAFW7Gj9_Os5cbvgbk6kndWztR2DyUTYwEt-JQ']
+}
+console.log("Mention Tokens:", mentionTokens);
+
+        }
+        
+      
+
+
+
+      // if (req.body.content) newMessageData.content = req.body.content;
+      if (req.body.document) newMessageData.document = req.body.document;
+      if (req.body.image) newMessageData.image = req.body.image;
+      if (req.body.video) newMessageData.video = req.body.video;
+      if (req.body.pollOptions) newMessageData.pollOptions = req.body.pollOptions;
+
+
+
+      if (req.body.pollOptions) {
+        const pollData = req.body.pollOptions;
+        const msgPollData = pollData ? {
+          question: pollData.question,
+          options: pollData.options.map((option) => ({
+            optionText: option.optionText,
+            votes: option.votes || 0,
+          })),
+        } : null;
+
+        if (msgPollData) newMessageData.pollOptions = msgPollData;
+      }
+
+
+      let messageDoc = await Message.findOne({ groupId });
+      if (!messageDoc) {
+        messageDoc = new Message({
+          groupId,
+          messages: [newMessageData],
+        });
+      } else {
+        messageDoc.messages.push(newMessageData);
+      }
+
+      // Save the message document
+      let savedDoc = await messageDoc.save();
+
+      // Populate relevant fields
+      savedDoc = await savedDoc.populate([
+        { path: "messages.senderId", select: "fullname" },
+        { path: "groupId" },
+      ]);
+
+      // Retrieve the last added message
+      const newMessage = savedDoc.messages[savedDoc.messages.length - 1];
+      if (!newMessage) {
+        return res.status(500).json({ error: "Failed to retrieve the new message." });
+      }
+
+      // Determine users to notify
+      let newUserIds = [];
+      if (savedDoc?.groupId?.userId !== senderId) {
+        newUserIds.push(savedDoc.groupId.userId);
+      }
+
+      if (Array.isArray(savedDoc?.groupId?.userIds)) {
+        savedDoc.groupId.userIds.forEach((item) => {
+          if (item?.userId && item?.status === "approved" && item.userId !== senderId) {
+            newUserIds.push(item.userId);
+          }
+        });
+      }
+
+      // Fetch FCM tokens for notification
+      const fcmTokens = await FcmToken.find({
+        userId: { $in: newUserIds, $ne: senderId }, 
+        deviceType: "Android",
+    });
+    
+
+      // const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
+      const tokens = fcmTokens
+    .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of tokens
+    .filter(Boolean); // Remove null or undefined values
+
+      // Prepare response
+      const response = {
+        fullname: newMessage.senderId?.fullname || "",
+        content: newMessage.content || "",
+        image: newMessage.image || "",
+        video: newMessage.video || "",
+        document: newMessage.document || "",
+        mentions: mentionedUserData,
+        timestamp: newMessage.timestamp || new Date(),
+        _id: newMessage._id,
+        pollOptions:  newMessage?.pollOptions || "",
+        groupId,
+        senderId,
+        userIds: newUserIds,
+      };
+      
+      // Send notifications if tokens exist
+      
+      // await sendPushNotificationsCreateMessage({
+      //   title: savedDoc?.groupId?.name || "New Message",
+      //   message: newMessage.content || "You have a new message",
+      //     response,
+      //   userTokens: tokens,
+        
+      // });
+      // console.log(tokens,'tttttttttttttt')
+      //     console.log("Notification sent successfully.");
+    
+  // if (tokens.length > 0) {
+  console.log(tokens,"tokenstokenstokens");
   
-
-    // const tokens = fcmTokens.map((tokenDoc) => tokenDoc.fcmToken).filter(Boolean);
-    const tokens = fcmTokens
-  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of tokens
-  .filter(Boolean); // Remove null or undefined values
-
-    // Prepare response
-    const response = {
-      fullname: newMessage.senderId?.fullname || "",
-      content: newMessage.content || "",
-      image: newMessage.image || "",
-      video: newMessage.video || "",
-      document: newMessage.document || "",
-      mentions: mentionedUserData,
-      timestamp: newMessage.timestamp || new Date(),
-      _id: newMessage._id,
-      pollOptions:  newMessage?.pollOptions || "",
-      groupId,
-      senderId,
-      userIds: newUserIds,
-    };
-    
-    // Send notifications if tokens exist
-    
     await sendPushNotificationsCreateMessage({
       title: savedDoc?.groupId?.name || "New Message",
       message: newMessage.content || "You have a new message",
-        response,
+      responseData: response,
       userTokens: tokens,
-      
     });
-    console.log(tokens,'tttttttttttttt')
-        console.log("Notification sent successfully.");
-  
-// Notify group members
-// if (tokens.length > 0) {
-//   await sendPushNotificationsCreateMessage({
-//     title: savedDoc?.groupId?.name || "New Message",
-//     message: newMessage.content || "You have a new message",
-//     responseData: response,
-//     userTokens: tokens,
-//   });
-//   console.log("Notification sent to group users.");
-// }
+    console.log("Notification sent to group users.");
+  // }
+  console.log(mentionTokens,"mentionTokensmentionTokens");
 
-// Notify mentioned users
-if (mentionTokens.length > 0) {
-  await sendPushNotificationsCreateMessage({
-    title: "You were mentioned",
-    message: `${response.fullname} mentioned you: ${newMessage.content || ""}`,
-    responseData: response,
-    userTokens: mentionTokens,
-  });
-  console.log("Notification sent to mentioned users.");
-}
+  // Notify mentioned users
+    await sendPushNotificationsCreateMessage({
+      title: "You were mentioned",
+      message: `${response.fullname} mentioned you: ${newMessage.content || ""}`,
+      responseData: response,
+      userTokens: mentionTokens,
+    });
+    console.log("Notification sent to mentioned users.");
 
-    // Respond with the created message
-    res.status(200).json(response);
-  } catch (error) {
-    console.error("Error creating message:", error.message);
-    res.status(500).json({ error: "Internal Server Error", details: error.message });
-  }
-};
+
+      // Respond with the created message
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("Error creating message:", error.message);
+      res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
+  };
 
 
 
