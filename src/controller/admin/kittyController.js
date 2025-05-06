@@ -2263,12 +2263,22 @@ exports.getNearByKitty = async (req, res) => {
         Array.isArray(kitty.groupId) &&
         kitty.groupId.some(group => group.groupType === 'public');
 
-        const isUserMember = kitty.members.some(
-          // member => member.userId.toString() === userId
-          member => member.userId && member.userId.toString() === userId
+        // const isUserMember = kitty.members.some(
+        //   // member => member.userId.toString() === userId
+        //   member => member.userId && member.userId.toString() === userId
 
+        // );
+        const isUserRequestedInGroup = kitty.groupId?.some(group =>
+          group.userIds?.some(userObj =>
+            userObj.userId?.toString() === userId && userObj.status === 'isrequesteduser'
+          )
+        );
+        const isUserRequestedInMembers = kitty.members?.some(
+          member => member.userId?.toString() === userId && member.status === 'isrequesteduser'
         );
 
+        const isUserNotInKitty = !kitty.members.some(member => member.userId?.toString() === userId) && 
+        !kitty.groupId.some(group => group.userIds?.some(userObj => userObj.userId?.toString() === userId));
         // const isUserGroupCreator = kitty.groupId?.some(group =>
         //   group.userId?._id?.toString() === userId
         // );
@@ -2280,8 +2290,9 @@ exports.getNearByKitty = async (req, res) => {
           )
         );
   
+        return isFutureKitty && isPublicGroup && (isUserRequestedInGroup || isUserRequestedInMembers || isUserNotInKitty);
 
-      return isFutureKitty && isPublicGroup  && !isUserMember && !isUserGroupMember && !isUserCreatorOfKitty;
+      // return isFutureKitty && isPublicGroup  && !isUserMember && !isUserGroupMember && !isUserCreatorOfKitty;
     });
 
     // Adding approved members count
@@ -2299,7 +2310,6 @@ exports.getNearByKitty = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
 
 
 
