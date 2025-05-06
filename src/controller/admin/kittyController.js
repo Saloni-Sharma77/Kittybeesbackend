@@ -844,7 +844,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
   }
 };
 
-//past kitties below
 exports.getAllKittiesForUser = async (req, res) => {
   try {
     const { page = 1, limit = 20, userId, type } = req.query;
@@ -859,8 +858,19 @@ exports.getAllKittiesForUser = async (req, res) => {
 
     const now = moment();
 
+    // Fetch kitties where user is either creator or member (with limited statuses)
     const userKitties = await Kitty.find({
-      $or: [{ userId }, { "members.userId": userId, "members.status": "approved" }],
+      $or: [
+        { userId }, // user is the creator
+        {
+          members: {
+            $elemMatch: {
+              userId,
+              status: { $in: ["deciding", "approved", "rejected"] }
+            }
+          }
+        }
+      ],
     })
       .populate("userId")
       .populate("groupId")
@@ -873,23 +883,24 @@ exports.getAllKittiesForUser = async (req, res) => {
 
     const filteredKitties = userKitties.filter((kitty) => {
       if (!kitty.date || !kitty.time) return false;
-    
+
       const kittyDateTime = moment(`${kitty.date} ${kitty.time}`, "DD/MM/YYYY hh:mm A");
       const isRightTime = type === "past"
         ? kittyDateTime.isBefore(now)
         : kittyDateTime.isAfter(now);
-    
-      const isUserCreator = kitty.userId?._id?.toString() === userId;
-    
-      const isApprovedMember = kitty.members?.some(
-        (member) =>
-          member.userId?.toString() === userId && member.status === "approved"
-      );
-    
-      return isRightTime && (isUserCreator || isApprovedMember);
-    });    
 
-    // Sort kitties:
+      const isUserCreator = kitty.userId?._id?.toString() === userId;
+
+      const isAllowedMember = kitty.members?.some(
+        (member) =>
+          member.userId?.toString() === userId &&
+          ["deciding", "approved", "rejected"].includes(member.status)
+      );
+
+      return isRightTime && (isUserCreator || isAllowedMember);
+    });
+
+    // Sort
     const sortedKitties = filteredKitties.sort((a, b) => {
       const dateTimeA = moment(`${a.date} ${a.time}`, "DD/MM/YYYY hh:mm A");
       const dateTimeB = moment(`${b.date} ${b.time}`, "DD/MM/YYYY hh:mm A");
@@ -918,6 +929,8 @@ exports.getAllKittiesForUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
+
 
 
 
@@ -1886,7 +1899,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     const tokens = fcmTokens
       .flatMap((t) => t?.fcmToken)
       .filter((token) => token && token.trim() !== "");
-
     const payload = {
       notification: {
         title: findWhichKitty.name,
