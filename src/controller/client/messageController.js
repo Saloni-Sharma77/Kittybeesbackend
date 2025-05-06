@@ -143,26 +143,26 @@ const mentionTokens = mentionTokensDocs
     
     // Send notifications if tokens exist
     
-    // await sendPushNotificationsCreateMessage({
-    //   title: savedDoc?.groupId?.name || "New Message",
-    //   message: newMessage.content || "You have a new message",
-    //     response,
-    //   userTokens: tokens,
+    await sendPushNotificationsCreateMessage({
+      title: savedDoc?.groupId?.name || "New Message",
+      message: newMessage.content || "You have a new message",
+        response,
+      userTokens: tokens,
       
-    // });
-    // console.log(tokens,'tttttttttttttt')
-    //     console.log("Notification sent successfully.");
+    });
+    console.log(tokens,'tttttttttttttt')
+        console.log("Notification sent successfully.");
   
 // Notify group members
-if (tokens.length > 0) {
-  await sendPushNotificationsCreateMessage({
-    title: savedDoc?.groupId?.name || "New Message",
-    message: newMessage.content || "You have a new message",
-    responseData: response,
-    userTokens: tokens,
-  });
-  console.log("Notification sent to group users.");
-}
+// if (tokens.length > 0) {
+//   await sendPushNotificationsCreateMessage({
+//     title: savedDoc?.groupId?.name || "New Message",
+//     message: newMessage.content || "You have a new message",
+//     responseData: response,
+//     userTokens: tokens,
+//   });
+//   console.log("Notification sent to group users.");
+// }
 
 // Notify mentioned users
 if (mentionTokens.length > 0) {
