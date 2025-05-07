@@ -703,24 +703,7 @@ Object.assign(group, updateData);
 // Save the updated group
 await group.save();
 
-if (newUserIds.length > 0) {
-  const futureKitties = await KittySchema.find({
-    groupId: group._id,
-    date: { $gte: new Date().toISOString().split('T')[0] }
-  });
 
-  for (const kitty of futureKitties) {
-    const existingMemberIds = kitty.members.map(m => String(m.userId));
-    const membersToAdd = newUserIds.filter(id => !existingMemberIds.includes(String(id)));
-
-    if (membersToAdd.length > 0) {
-      membersToAdd.forEach(id => {
-        kitty.members.push({ userId: id, status: 'pending' });
-      });
-      await kitty.save();
-    }
-  }
-}
 res.status(200).json({ message: "Group updated successfully", group });
 
 
@@ -729,6 +712,7 @@ res.status(200).json({ message: "Group updated successfully", group });
     res.status(500).json({ error: "Failed to update group" });
   }
 };    
+   
 
   
 exports.deleteGroup = async (req, res) => {
