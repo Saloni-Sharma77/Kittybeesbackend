@@ -691,16 +691,6 @@ if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
     group.userNumbers.push(...newNumbers);
     group.markModified("userNumbers"); 
   }
-
-    // Fetch or create users
-    for (let number of newNumbers) {
-      let user = await Users.findOne({ phoneNumber: number }); // Change field name if different
-      if (!user) {
-        user = new User({ phoneNumber: number }); // Add defaults as needed
-        await user.save();
-      }
-      newUserIds.push(user._id);
-    }
 }
 
 
@@ -713,20 +703,24 @@ Object.assign(group, updateData);
 // Save the updated group
 await group.save();
 
-const kitties = await KittySchema.find({ groupId: req.params.id });
+if (newUserIds.length > 0) {
+  const futureKitties = await KittySchema.find({
+    groupId: group._id,
+    date: { $gte: new Date().toISOString().split('T')[0] }
+  });
 
-    for (let kitty of kitties) {
-      newUserIds.forEach(userId => {
-        const alreadyMember = kitty.members.some(member => String(member.userId) === String(userId));
-        if (!alreadyMember) {
-          kitty.members.push({ userId, status: 'pending' });
-        }
+  for (const kitty of futureKitties) {
+    const existingMemberIds = kitty.members.map(m => String(m.userId));
+    const membersToAdd = newUserIds.filter(id => !existingMemberIds.includes(String(id)));
+
+    if (membersToAdd.length > 0) {
+      membersToAdd.forEach(id => {
+        kitty.members.push({ userId: id, status: 'pending' });
       });
       await kitty.save();
     }
-
-
-
+  }
+}
 res.status(200).json({ message: "Group updated successfully", group });
 
 
