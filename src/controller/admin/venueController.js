@@ -409,10 +409,17 @@ console.log(filterData,'filterData')
                     {
                       $lt: [
                         {
+                          // $dateFromString: {
+                          //   dateString: '$date', // Convert string 'date' to a Date object
+                          //   format: '%d/%m/%Y' 
+                          // }
                           $dateFromString: {
-                            dateString: '$date', // Convert string 'date' to a Date object
-                            format: '%d/%m/%Y' 
+                            dateString: '$date',
+                            format: '%d/%m/%Y',
+                            onError: null,
+                            onNull: null
                           }
+                          
                         },
                         new Date() // Compare with current date
                       ]
@@ -456,7 +463,9 @@ console.log(filterData,'filterData')
                 parsedDate: {
                   $dateFromString: {
                     dateString: '$date',
-                    format: '%d/%m/%Y'
+                    format: '%d/%m/%Y',
+                    onError: null,
+  onNull: null
                   }
                 }
               }

@@ -76,17 +76,17 @@ const saltRounds = 10;
 //   }
 // };
 exports.sendotptest = async (req, res) => {
-  const { phoneNumber, fcmToken } = req.body;
+  const { phoneNumber} = req.body;
 
   if (!phoneNumber) {
     return res.status(400).send({ error: 'Phone number is required' });
   }
-  if (!fcmToken) {
-    return res.status(400).send({ error: 'FCM Token is required' });
-  }
+  // if (!fcmToken) {
+  //   return res.status(400).send({ error: 'FCM Token is required' });
+  // }
 
   // Bypass number check
-  if (phoneNumber === '7568450276') {
+  if (phoneNumber == '7568450276') {
     return res.status(200).send({
       success: true,
       message: 'OTP sent successfully',
@@ -105,10 +105,8 @@ exports.sendotptest = async (req, res) => {
   }
 
   try {
-    const user = await User.findOneAndUpdate(
+    const user = await User.findOne(
       { phoneNumber },
-      { phoneNumber },
-      { upsert: true, new: true }
     );
     if (!user) throw new Error('Failed to retrieve or create user');
 
@@ -120,21 +118,21 @@ exports.sendotptest = async (req, res) => {
     }
 
     // Save fcm token
-    const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType: 'Android' });
+    // const fcmRecord = await FcmTokenModel.findOne({ userId: user._id, deviceType: 'Android' });
 
-    if (fcmRecord) {
-      if (!fcmRecord.fcmToken.includes(fcmToken)) {
-        fcmRecord.fcmToken.push(fcmToken);
-        fcmRecord.updatedAt = new Date();
-        await fcmRecord.save();
-      }
-    } else {
-      await FcmTokenModel.create({
-        userId: user._id,
-        deviceType: 'Android',
-        fcmToken: [fcmToken],
-      });
-    }
+    // if (fcmRecord) {
+    //   if (!fcmRecord.fcmToken.includes(fcmToken)) {
+    //     fcmRecord.fcmToken.push(fcmToken);
+    //     fcmRecord.updatedAt = new Date();
+    //     await fcmRecord.save();
+    //   }
+    // } else {
+    //   await FcmTokenModel.create({
+    //     userId: user._id,
+    //     deviceType: 'Android',
+    //     fcmToken: [fcmToken],
+    //   });
+    // }
 
     const axiosResponse = await axios.post(
       `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGE_CENTRAL_USER_ID}&flowType=SMS&mobileNumber=${phoneNumber}`,
@@ -228,12 +226,14 @@ exports.sendotptest = async (req, res) => {
 //   }
 // };
 exports.verifyotptest = async (req, res) => {
-  const { phoneNumber, otp, verificationId } = req.body;
+  const { phoneNumber, otp, verificationId,fcmToken } = req.body;
 
   if (!phoneNumber || !otp) {
     return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
   }
-
+  if (!fcmToken) {
+    return res.status(400).send({ error: 'FCM Token is required' });
+  }
   if (phoneNumber === '7568450276') {
     return res.status(200).send({
       success: true,
@@ -296,7 +296,6 @@ exports.verifyotptest = async (req, res) => {
 
   if (phoneNumber === '9999999999' && otp === '1234') {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const userdetail = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
     const userInfo = await User.find({ phoneNumber });
 
     return res.status(200).send({
@@ -326,7 +325,21 @@ exports.verifyotptest = async (req, res) => {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
+    const fcmRecord = await FcmTokenModel.findOne({ userId: otpRecord._id, deviceType: 'Android' });
 
+    if (fcmRecord) {
+      if (!fcmRecord.fcmToken.includes(fcmToken)) {
+        fcmRecord.fcmToken.push(fcmToken);
+        fcmRecord.updatedAt = new Date();
+        await fcmRecord.save();
+      }
+    } else {
+      await FcmTokenModel.create({
+        userId: otpRecord._id,
+        deviceType: 'Android',
+        fcmToken: [fcmToken],
+      });
+    }
     const userInfo = await User.find({ phoneNumber });
 
     res.status(200).send({
