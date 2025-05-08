@@ -777,10 +777,18 @@ exports.updateGroup = async (req, res) => {
         );
 
         if (newKittyMembers.length > 0) {
-          kitty.members.push(...newKittyMembers);
+          // Ensure members are added with status 'pending' and not duplicated
+          newKittyMembers.forEach(newMemberId => {
+            const alreadyMember = kitty.members.some(member => member.userId.toString() === newMemberId.toString());
+            if (!alreadyMember) {
+              kitty.members.push({ userId: newMemberId, status: 'pending' });
+            }
+          });
+        
           kitty.markModified('members');
           await kitty.save();
         }
+        
       }
     }
 
