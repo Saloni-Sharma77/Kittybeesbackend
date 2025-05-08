@@ -763,7 +763,7 @@ exports.getKittyAttendance = async (req, res) => {
 //   }
 // };
 
-//past and future
+
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     const now = new Date();
