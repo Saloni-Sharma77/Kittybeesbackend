@@ -86,7 +86,7 @@ exports.sendotptest = async (req, res) => {
   }
 
   // Bypass number check
-  if (phoneNumber === '7568450276') {
+  if (phoneNumber == '7568450276') {
     return res.status(200).send({
       success: true,
       message: 'OTP sent successfully',
@@ -105,10 +105,8 @@ exports.sendotptest = async (req, res) => {
   }
 
   try {
-    const user = await User.findOneAndUpdate(
+    const user = await User.findOne(
       { phoneNumber },
-      { phoneNumber },
-      { upsert: true, new: true }
     );
     if (!user) throw new Error('Failed to retrieve or create user');
 
@@ -296,7 +294,6 @@ exports.verifyotptest = async (req, res) => {
 
   if (phoneNumber === '9999999999' && otp === '1234') {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const userdetail = await User.findOneAndUpdate({ phoneNumber }, { phoneNumber }, { upsert: true, new: true });
     const userInfo = await User.find({ phoneNumber });
 
     return res.status(200).send({
