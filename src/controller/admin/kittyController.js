@@ -545,6 +545,7 @@ exports.updateKitty = async (req, res) => {
       theamepoll,
       locationpoll,
       venuepoll,
+      customTheme
     } = req.body;
 
     const { kittyId } = req.params;
@@ -558,9 +559,7 @@ exports.updateKitty = async (req, res) => {
     if (name && typeof name !== "string") {
       return res.status(400).json({ error: "Name must be a string" });
     }
-    // if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
-    //   return res.status(400).json({ error: "Invalid groupId" });
-    // }
+
     let updatedGroupId = groupId;
     if (groupId && mongoose.Types.ObjectId.isValid(groupId)) {
       updatedGroupId = [groupId]; // Ensure it's an array with a valid ObjectId
@@ -573,6 +572,29 @@ exports.updateKitty = async (req, res) => {
     if (time && typeof time !== "string") {
       return res.status(400).json({ error: "Time must be a string" });
     }
+
+    let finalThemeId = themeId;
+
+    if (customTheme && customTheme.name) {
+      const existingTheme = await CustomTheme.findOne({
+        name: customTheme.name,
+        createdBy: userId,
+      });
+
+      if (existingTheme) {
+        finalThemeId = existingTheme._id;
+      } else {
+        const newTheme = new CustomTheme({
+          name: customTheme.name,
+          createdBy: userId,
+          isCustom: true,
+        });
+
+        await newTheme.save();
+        finalThemeId = newTheme._id;
+      }
+    }
+
 
     // Validate and structure the poll data
     const theamePollData = theamepoll
@@ -616,7 +638,7 @@ exports.updateKitty = async (req, res) => {
       ...(date && { date }),
       ...(time && { time }),
       ...(image && { image }),
-      ...(themeId && { themeId }),
+      ...(finalThemeId && { themeId: finalThemeId }),
       ...(instructions && { instructions }),
       ...(colorId && { colorId }),
       ...(venueId && { venueId }),
