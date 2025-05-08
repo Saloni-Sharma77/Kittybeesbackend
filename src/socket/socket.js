@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const Message = require('../schema/messageSchema'); // Import the Message schema
+const User = require('../schema/userSchema'); // Make sure to import your User model
 
 module.exports = (wss) => {
   const clients = new Map();
@@ -23,6 +24,17 @@ module.exports = (wss) => {
             clients.get(groupId).add(ws); // Add the client to the group
             break;
 
+            // Utility to extract @mentions from content
+            const extractMentions = (text) => {
+              const regex = /@([\w\s]+)/g; // matches @Full Name with spaces
+              const mentions = [];
+              let match;
+              while ((match = regex.exec(text)) !== null) {
+                mentions.push(match[1].trim());
+              }
+              return mentions;
+            }
+
           case 'sendMessage':
             const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
             
@@ -33,6 +45,13 @@ module.exports = (wss) => {
               return;
             }
 
+              // 🧠 Extract mentions from the content
+            const mentionedFullnames = extractMentions(content || "");
+            const mentionedUsers = await User.find({ fullname: { $in: mentionedFullnames } }).select("_id fullname");
+            const mentionedUserIds = mentionedUsers.map(u => u._id.toString());
+
+
+
             // Create a new message object
             const newMessageData = {
               senderId: senderIdSend,
@@ -41,6 +60,7 @@ module.exports = (wss) => {
               video,
               document,
               pollOptions,
+              mentions: mentionedUserIds,  // 💡 Store mentioned user IDs if your schema supports it
               timestamp: new Date() // Add timestamp here
             };
 
@@ -75,6 +95,7 @@ module.exports = (wss) => {
               document: newMessage.document || '',
               timestamp: newMessage.timestamp,
               pollOptions: newMessage.pollOptions || null,
+              mentions: mentionedUserIds,
               _id: newMessage._id
             };
 

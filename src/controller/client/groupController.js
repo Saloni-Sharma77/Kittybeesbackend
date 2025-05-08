@@ -657,61 +657,154 @@ exports.getGroupById = async (req, res) => {
 
 
 
+// exports.updateGroup = async (req, res) => {
+
+//   try {
+
+//    const updateData = {}; 
+//    Object.keys(req.body).forEach((key) => {
+//     if (req.body[key] !== undefined && req.body[key] !== null) {
+//       updateData[key] = req.body[key];
+//   }
+// });
+// //Validating fields 
+// if (Object.keys(updateData).length === 0) {
+//   return res.status(400).json({ error: "No valid fields provided for update" });
+// } 
+
+
+// // add new member to group 
+// const group = await Group.findById(req.params.id);
+// if (!group) {
+//   return res.status(404).json({ error: "Group not found" });
+// }
+
+
+// if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
+//   const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+
+//   const newNumbers = uniqueNewNumbers.filter(num => 
+//     !group.userNumbers.map(String).includes(num)
+//   );
+
+//   if (newNumbers.length > 0) {
+//     group.userNumbers.push(...newNumbers);
+//     group.markModified("userNumbers"); 
+//   }
+// }
+
+
+// delete updateData.userNumbers
+
+
+// // Update other fields
+// Object.assign(group, updateData);
+
+// // Save the updated group
+// await group.save();
+
+
+// res.status(200).json({ message: "Group updated successfully", group });
+
+
+//   } catch (err) {
+//     console.error("Error updating group:", err);
+//     res.status(500).json({ error: "Failed to update group" });
+//   }
+// };    
+   
 exports.updateGroup = async (req, res) => {
-
   try {
+    const updateData = {};
+    Object.keys(req.body).forEach((key) => {
+      if (req.body[key] !== undefined && req.body[key] !== null) {
+        updateData[key] = req.body[key];
+      }
+    });
 
-   const updateData = {}; 
-   Object.keys(req.body).forEach((key) => {
-    if (req.body[key] !== undefined && req.body[key] !== null) {
-      updateData[key] = req.body[key];
-  }
-});
-//Validating fields 
-if (Object.keys(updateData).length === 0) {
-  return res.status(400).json({ error: "No valid fields provided for update" });
-} 
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No valid fields provided for update" });
+    }
 
+    const group = await Group.findById(req.params.id);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
 
-// add new member to group 
-const group = await Group.findById(req.params.id);
-if (!group) {
-  return res.status(404).json({ error: "Group not found" });
-}
+    // ✅ Update userNumbers
+    if (Array.isArray(req.body.userNumbers)) {
+      const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+      const newNumbers = uniqueNewNumbers.filter(num =>
+        !group.userNumbers.map(String).includes(num)
+      );
+      if (newNumbers.length > 0) {
+        group.userNumbers.push(...newNumbers);
+        group.markModified("userNumbers");
+      }
+    }
 
+    // ✅ Handle userIds (members)
+    if (Array.isArray(req.body.userIds)) {
+      const newMembers = req.body.userIds.map(user => ({
+        userId: user.userId,
+        status: user.status || 'pending',
+        _id: user._id || undefined
+      }));
 
-if (req.body.userNumbers && Array.isArray(req.body.userNumbers)) {
-  const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+      const existingUserIds = group.userIds?.map(u => String(u.userId)) || [];
 
-  const newNumbers = uniqueNewNumbers.filter(num => 
-    !group.userNumbers.map(String).includes(num)
-  );
+      const uniqueNewMembers = newMembers.filter(
+        m => !existingUserIds.includes(String(m.userId))
+      );
 
-  if (newNumbers.length > 0) {
-    group.userNumbers.push(...newNumbers);
-    group.markModified("userNumbers"); 
-  }
-}
+      if (!group.userIds) group.userIds = [];
+      group.userIds.push(...uniqueNewMembers);
+      group.markModified("userIds");
 
+      // ✅ Update future kitties for this group (date is in "DD/MM/YYYY" format)
+      const today = new Date();
 
-delete updateData.userNumbers
+      const allKitties = await KittySchema.find({
+        groupId: { $in: [group._id] }
+      });
 
+      const futureKitties = allKitties.filter(kitty => {
+        const [day, month, year] = kitty.date.split('/');
+        const kittyDate = new Date(`${year}-${month}-${day}`);
+        return kittyDate > today;
+      });
 
-// Update other fields
-Object.assign(group, updateData);
+      for (const kitty of futureKitties) {
+        const existingKittyUserIds = kitty.members.map(m => String(m.userId));
 
-// Save the updated group
-await group.save();
+        const newKittyMembers = newMembers
+          .filter(m => !existingKittyUserIds.includes(String(m.userId)))
+          .map(m => ({
+            userId: m.userId,
+            status: 'pending' // static status
+          }));
 
+        if (newKittyMembers.length > 0) {
+          kitty.members.push(...newKittyMembers);
+          kitty.markModified('members');
+          await kitty.save();
+        }
+      }
+    }
 
-res.status(200).json({ message: "Group updated successfully", group });
+    delete updateData.userNumbers;
+    delete updateData.userIds;
 
+    // Update other fields
+    Object.assign(group, updateData);
+    await group.save();
 
+    res.status(200).json({ message: "Group and future kitties updated successfully", group });
   } catch (err) {
     console.error("Error updating group:", err);
     res.status(500).json({ error: "Failed to update group" });
   }
-};    
+};
 
   
 exports.deleteGroup = async (req, res) => {

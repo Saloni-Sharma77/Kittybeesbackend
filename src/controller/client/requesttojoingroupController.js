@@ -1,7 +1,10 @@
 // controllers/groupController.js
 const Group = require('../../schema/requesttojoingroupSchema');
+const GroupSchema = require('../../schema/groupSchema');
+
 const NotificationSchema = require('../../schema/notificationSchema');
 const UserSchema = require('../../schema/userSchema');
+const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 
 
 
@@ -89,6 +92,9 @@ const updateUserStatus = async (req, res) => {
 
     let groupcopy = JSON.parse(JSON.stringify(group));
 
+    const onwerGroupData = await GroupSchema.findById(groupId)
+    const groupOwner = onwerGroupData?.userId;
+    const userName = await UserSchema.findById(groupOwner).select('fullname');
     // Find the user in the group
     const user = group.userIds.find(u => u.userId.toString() === userId.toString());
 
@@ -109,8 +115,6 @@ const updateUserStatus = async (req, res) => {
       ? `You have accepted the invitation for group: ${groupcopy.name}.`
       : `You have rejected the invitation for group: ${groupcopy.name}.`;
 
-    console.log(notificationMessage, hostNotificationMessage);
-
     // Update the notification for the host, including the status update
     const notificationStatus = status === 'approved' ? 'accepted' : 'rejected';
 
@@ -119,7 +123,6 @@ const updateUserStatus = async (req, res) => {
       { message: hostNotificationMessage, type: 'group', status: notificationStatus },
       { new: true, upsert: true }
     );
-
     // Send a new notification to the user
     const userNotification = new NotificationSchema({
       userId, 
@@ -130,7 +133,20 @@ const updateUserStatus = async (req, res) => {
     });
 
     await userNotification.save();
+    const fcmTokens = await FcmToken.find({ userId: userId});
+    const tokens = fcmTokens
+  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of fcmTokens
+  .filter((token) => token && token.trim() !== '');
 
+  const notification = {
+    title: 'Group Status Notification',
+    message: `${userName?.fullname} has ${notificationStatus} your request`,
+    userId: userId.toString(),
+    type:"group",
+    objectId:groupId
+  };
+  await sendPushNotifications(notification);
+  
     res.status(200).json({ message: 'User status and notification updated successfully', group });
   } catch (error) {
     console.error('Error updating user status:', error);
