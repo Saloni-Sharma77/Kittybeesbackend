@@ -10,7 +10,7 @@ const UserSchema = require("../../schema/userSchema");
 const GroupSchema = require("../../schema/groupSchema");
 const WalletSchema = require("../../schema/walletSchema");
 const moment = require("moment-timezone");
-
+const CustomTheme = require("../../schema/customtheme");
 const mongoose = require("mongoose");
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
 const { default: axios } = require('axios');
@@ -293,6 +293,7 @@ exports.addKitty = async (req, res) => {
       planKittypoll,
       activityKittypoll,
       tampimage,
+      customTheme
     } = req.body;
 
     // Validation checks
@@ -313,8 +314,34 @@ exports.addKitty = async (req, res) => {
         .status(400)
         .json({ error: "Time is required and must be a string" });
     }
+
+// to handle custom theme 
+    let finalThemeId = themeId; // Default to the provided themeId
+    
+    if (customTheme && customTheme.name) {
+      const existingTheme = await CustomTheme.findOne({
+        name: customTheme.name,
+        createdBy: userId,
+      });
+
+      if (existingTheme) {
+        finalThemeId = existingTheme._id;
+      } else {
+        // Create a new custom theme with only the name
+        const newTheme = new CustomTheme({
+          name: customTheme.name,
+          createdBy: userId, // Store the user who created the theme
+          isCustom: true, // Flag it as a custom theme
+        });
+
+        await newTheme.save(); // Save the new theme
+        finalThemeId = newTheme._id; // Assign the new theme ID to the kitty
+      }
+    }
     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
+
+    
     // Create members array from userIds
     const members = group.userIds
     .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
@@ -389,7 +416,7 @@ exports.addKitty = async (req, res) => {
       date,
       time,
       image,
-      themeId,
+      themeId: finalThemeId,
       instructions,
       colorId,
       venueId,
