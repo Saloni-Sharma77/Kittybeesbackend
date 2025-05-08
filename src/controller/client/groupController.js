@@ -17,9 +17,9 @@ exports.addGroup = async (req, res) => {
   try {
     const {
       name,
-      userId, 
+      userId,
       userNumbers,
-      userIds,
+      userIds = [],
       groupInterestId,
       groupFrequencyId,
       groupType,
@@ -36,12 +36,8 @@ exports.addGroup = async (req, res) => {
       { name: 'name', value: name },
       { name: 'userId', value: userId },
       { name: 'groupType', value: groupType },
-      // { name: 'description', value: description },
-      // { name: 'rulesAndRegulation', value: rulesAndRegulation },
       { name: 'groupFrequencyId', value: groupFrequencyId },
       { name: 'groupCityArea', value: groupCityArea },
-      // { name: 'contributionAmount', value: contributionAmount },
-      // { name: 'image', value: image },
       { name: 'referralCode', value: referralCode }
     ];
 
@@ -49,14 +45,18 @@ exports.addGroup = async (req, res) => {
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
       }
-    } 
+    }
 
+    // Set status for userIds as 'approved' (if present)
+    const processedUserIds = Array.isArray(userIds)
+      ? userIds.map(user => ({ ...user, status: 'approved' }))
+      : [];
 
     // Create a new group instance
     const newGroup = new Group({
       name,
       userId,
-      userIds,
+      userIds: processedUserIds,
       userNumbers,
       groupInterestId,
       groupFrequencyId,
@@ -69,89 +69,51 @@ exports.addGroup = async (req, res) => {
       referralCode
     });
 
-    // Set status for userIds as 'approved'
-    newGroup.userIds.forEach(item => {
-      item.status = 'approved';
-    });
-
     await newGroup.save();
 
-    // Notification work ------------------------->>>>
-    const creatorNotification = {
-      userId, // the creator's userId
-      groupId: newGroup._id,
-      message: `You have created the group: ${newGroup.name}`,
-      type: 'group',
-    };
-    console.log(userId == newGroup?.userId,userId, newGroup?.userId,'ksdjkdsjksdjkjksd')
-console.log(creatorNotification,"creatorNotificationcreatorNotification");
+    // Notification logic starts here
+    const approvedUserIds = processedUserIds.map(item => item.userId);
 
-    // Save notifications for users with status 'approved'
-    const approvedUserIds = newGroup.userIds
-      .filter(item => item.status === 'approved')
-      .map(item => item.userId);
+    const notificationUsers = [...approvedUserIds, userId]; // include creator
 
-    const userNotifications = approvedUserIds.map(userId => ({
-      userId,
+    // Create notification messages
+    const notifications = notificationUsers.map(uid => ({
+      userId: uid,
       groupId: newGroup._id,
       type: 'group',
-      message:userId?.toString() == newGroup?.userId?.toString() ? `You have created the group: ${newGroup.name}` : `You have been added to the group: ${newGroup.name}`,
+      message:
+        uid.toString() === userId.toString()
+          ? `You have created the group: ${newGroup.name}`
+          : `You have been added to the group: ${newGroup.name}`
     }));
 
-    // Combine notifications for the creator and the users
-    const allNotifications = [creatorNotification, ...userNotifications];
+    // Save all notifications to DB
+    await NotificationSchema.insertMany(notifications);
 
-    // Insert all notifications into the database
-    await NotificationSchema.insertMany(allNotifications);
-
-    // Fetch FCM tokens for approved users
-    const fcmTokens = await FcmToken.find({ userId: { $in: approvedUserIds } });
-    console.log(fcmTokens, 'ffffff');
-
+    // Fetch FCM tokens for all notification users
+    const fcmTokens = await FcmToken.find({ userId: { $in: notificationUsers } });
 
     const tokens = fcmTokens
-  .flatMap((tokenDoc) => tokenDoc?.fcmToken) // Flatten nested arrays of fcmTokens
-  .filter((token) => token && token.trim() !== ''); // Ensure tokens are valid and non-empty
-
+      .flatMap(doc => doc?.fcmToken)
+      .filter(token => token && token.trim() !== '');
 
     console.log(tokens, 'Filtered Tokens');
 
-    if (tokens?.length > 0) {
-      // Send notification to all the tokens
-      const notifications = approvedUserIds.map(memberId => ({
-        title: 'Group Notification',
-        message: memberId.toString() === newGroup.userId.toString()
-          ? `You have created the group: ${newGroup.name}`
-          : `You have been added to the group: ${newGroup.name}`,
-        userId: memberId,
-        type:"group",
-        objectId:newGroup._id
-      }));
-      console.log(notifications,"notificationsnotifications");
-      
-      // Add notification for the creator separately
-      notifications.push({
-        title: 'Group Notification',
-        message: `You have created the group: ${newGroup.name}`,
-        userId: newGroup.userId.toString(),
-        type:"group",
-        objectId:newGroup._id
-      });
-      
-      // Send notifications to all users (creator + added members)
-      for (const notification of notifications) {
-        await sendPushNotifications(notification);
+    if (tokens.length > 0) {
+      for (const notif of notifications) {
+        await sendPushNotifications({
+          title: 'Group Notification',
+          message: notif.message,
+          userId: notif.userId,
+          type: 'group',
+          objectId: newGroup._id
+        });
       }
-      
       console.log('Notifications sent to creator & members');
-      
-
-      console.log('Notification sent');
     } else {
-      console.log('No tokens found');
+      console.log('No FCM tokens found');
     }
 
-    // Send the response only once, after everything is done
     res.status(201).json({ message: 'Group added successfully', group: newGroup });
   } catch (err) {
     console.error("Error adding group:", err);
@@ -160,6 +122,7 @@ console.log(creatorNotification,"creatorNotificationcreatorNotification");
     }
   }
 };
+
 
 
 // exports.getAllGroups = async (req, res) => {
