@@ -89,6 +89,7 @@ admin.initializeApp({
 // }
 
 async function sendPushNotifications({ title, message, userId, image, type, objectId }) {
+    console.log(title, message, userId, image, type, objectId,"fffff")
     try {
         const userTokensDoc = await FcmModel.find({
             userId,

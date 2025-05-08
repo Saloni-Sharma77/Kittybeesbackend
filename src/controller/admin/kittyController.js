@@ -1812,73 +1812,78 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
 
+    console.log("➡️ Request body:", req.body);
+
     if (!kittyId || !userId || !status || !notificationId) {
+      console.warn("⚠️ Missing required fields");
       return res.status(400).json({
         message: "kittyId, userId, status, and notificationId are required",
       });
     }
 
-    // Find the Kitty document
     const findWhichKitty = await Kitty.findById(kittyId);
     if (!findWhichKitty) {
+      console.warn("❌ Kitty not found:", kittyId);
       return res.status(404).json({ message: "Kitty not found" });
     }
 
-    // Find member index in Kitty
+    console.log("✅ Found Kitty:", findWhichKitty.name);
+
     const memberIndex = findWhichKitty.members.findIndex(
       (member) => member.userId.toString() === userId.toString()
     );
+
     if (memberIndex === -1) {
+      console.warn("❌ Member not found in Kitty");
       return res.status(404).json({ message: "Member not found in the Kitty" });
     }
 
-    // Fetch Notification
     const existingNotification = await NotificationSchema.findById(notificationId);
     if (!existingNotification) {
+      console.warn("❌ Notification not found:", notificationId);
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    // Convert "approved" to "accepted" for notification schema
+    console.log("✅ Found Notification:", existingNotification.type);
+
     const notificationStatus = status === "approved" ? "accepted" : status;
 
-    // Avoid duplicate acceptance
     if (
       findWhichKitty.members[memberIndex].status === "approved" &&
       existingNotification.status === "accepted"
     ) {
+      console.warn("⚠️ Request already approved");
       return res.status(400).json({ message: "Request has already been approved" });
     }
 
     // ✅ Update kitty member status
     findWhichKitty.members[memberIndex].status = status;
     await findWhichKitty.save();
+    console.log("🔄 Updated kitty member status to:", status);
 
-    // ✅ If notification type is `group-kitty-join-request`, update group user status
+    // ✅ Update group user status
     if (existingNotification.type === "group-kitty-join-request") {
-      const group = await GroupSchema.findById(findWhichKitty.groupId[0]);
-
-
+      const group = await GroupSchema.findById(findWhichKitty.groupId?.[0]);
       if (group) {
         const groupUserIndex = group.userIds.findIndex(
           (entry) => entry.userId.toString() === userId.toString()
         );
-
         if (groupUserIndex !== -1) {
-          // Update the status
           group.userIds[groupUserIndex].status = status;
           await group.save();
+          console.log("🔄 Updated group member status to:", status);
+        } else {
+          console.warn("❌ User not found in group");
         }
+      } else {
+        console.warn("❌ Group not found:", findWhichKitty.groupId?.[0]);
       }
-    }
+      
+    // ✅ Delete original notification
+    await NotificationSchema.findByIdAndDelete(notificationId);
+    console.log("🗑️ Deleted original notification");
 
-    // ✅ Update the original notification
-    await NotificationSchema.findByIdAndUpdate(notificationId, {
-      message: `Your request to join the Kitty: ${findWhichKitty.name} has been ${status}.`,
-      type: "kitty",
-      status: notificationStatus,
-    });
-
-    // ✅ New notification to user
+    // ✅ Create user notification
     const userMessage =
       status === "approved"
         ? `Your request to join the Kitty: ${findWhichKitty.name} has been approved.`
@@ -1891,19 +1896,22 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       type: "kitty",
       status: notificationStatus,
     });
-
     await userNotification.save();
+    console.log("📩 User notified with message:", userMessage);
 
-    // ✅ FCM Push Notification
-    const fcmTokens = await FcmToken.find({ userId, deviceType: "Android" });
+    // ✅ Send FCM notification to user
+    const fcmTokens = await FcmToken.find({ userId: userId });
     const tokens = fcmTokens
       .flatMap((t) => t?.fcmToken)
       .filter((token) => token && token.trim() !== "");
+
+    console.log("📱 FCM Tokens to send to user:", tokens);
+
     const payload = {
       notification: {
         title: findWhichKitty.name,
         body: userMessage,
-        image: "your_image_url", // Optional
+        image: "your_image_url",
       },
       data: {
         route: "your_route",
@@ -1924,24 +1932,96 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
               data: payload.data,
               android: { priority: options.priority },
             });
+            console.log(`📤 Sent FCM to user token: ${token}`);
           } catch (error) {
-            console.error(`FCM error for token ${token}:`, error);
-
+            console.error(`❌ FCM error for token ${token}:`, error);
             if (error.code === "messaging/registration-token-not-registered") {
               await FcmToken.findOneAndDelete({ fcmToken: token });
-              console.log(`Removed invalid FCM token: ${token}`);
+              console.log(`🧹 Removed invalid FCM token: ${token}`);
             }
           }
         })
       );
     }
+    }
+    const user = await UserSchema.findById(userId).select("fullname");
+    console.log(user,"user")
+    // ✅ Notify Kitty Creator
+    if (
+      existingNotification.type === "kitty-join-request" &&
+      findWhichKitty.userId.toString() !== userId.toString()
+    ) {
+      const hostMessage = `${user.fullname} has ${notificationStatus} the Kitty: ${findWhichKitty.name}`;
 
+      await NotificationSchema.findByIdAndDelete(notificationId);
+      const hostNotification = new NotificationSchema({
+        userId: findWhichKitty.userId,
+        kittyId,
+        message: hostMessage,
+        type: "kitty-join-request",
+        status: notificationStatus,
+      });
+      await hostNotification.save();
+      console.log("📩 Host notified with message:", hostMessage);
+
+      const hostTokens = await FcmToken.find({
+        userId: findWhichKitty.userId,
+      });
+
+      const hostFcmTokens = hostTokens
+        .flatMap((t) => t?.fcmToken)
+        .filter((token) => token && token.trim() !== "");
+
+      console.log("📱 Host FCM Tokens:", hostFcmTokens);
+
+      const hostPayload = {
+        notification: {
+          title: findWhichKitty.name,
+          body: hostMessage,
+          image: "your_image_url",
+        },
+        data: {
+          route: "your_route",
+          title: findWhichKitty.name,
+          body: hostMessage,
+        },
+      };
+
+      const options = { priority: "high" };
+
+      if (hostFcmTokens.length > 0) {
+        await Promise.all(
+          hostFcmTokens.map(async (token) => {
+            try {
+              await admin.messaging().send({
+                token,
+                notification: hostPayload.notification,
+                data: hostPayload.data,
+                android: { priority: options.priority },
+              });
+              console.log(`📤 Sent FCM to host token: ${token}`);
+            } catch (error) {
+              console.error(`❌ FCM error for host token ${token}:`, error);
+              if (error.code === "messaging/registration-token-not-registered") {
+                await FcmToken.findOneAndDelete({ fcmToken: token });
+                console.log(`🧹 Removed invalid host FCM token: ${token}`);
+              }
+            }
+          })
+        );
+      }
+    }
+
+    console.log("✅ Completed processing request.");
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
-    console.error("Error in acceptOrRejectRequestOfKitty:", error);
+    console.error("❌ Error in acceptOrRejectRequestOfKitty:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
+
+
+
 
 
 exports.addKittyMemories = async (req, res) => {

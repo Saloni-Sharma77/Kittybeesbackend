@@ -84,6 +84,7 @@ exports.addGroup = async (req, res) => {
       type: 'group',
     };
     console.log(userId == newGroup?.userId,userId, newGroup?.userId,'ksdjkdsjksdjkjksd')
+console.log(creatorNotification,"creatorNotificationcreatorNotification");
 
     // Save notifications for users with status 'approved'
     const approvedUserIds = newGroup.userIds
@@ -126,6 +127,7 @@ exports.addGroup = async (req, res) => {
         type:"group",
         objectId:newGroup._id
       }));
+      console.log(notifications,"notificationsnotifications");
       
       // Add notification for the creator separately
       notifications.push({
