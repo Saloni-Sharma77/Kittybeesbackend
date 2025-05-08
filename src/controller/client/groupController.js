@@ -742,55 +742,94 @@ exports.updateGroup = async (req, res) => {
         group.markModified("userNumbers");
       }
     }
+// ✅ Handle userIds (members)
+if (req.body.userIds && Array.isArray(req.body.userIds)) {
+  // Add to group with status from request body
+  const newMembersForGroup = req.body.userIds.map(user => ({
+    userId: user.userId,
+    status: user.status || 'pending',
+    _id: user._id || undefined
+  }));
+
+  const existingUserIds = group.userIds?.map(u => String(u.userId)) || [];
+
+  const uniqueNewMembersForGroup = newMembersForGroup.filter(
+    m => !existingUserIds.includes(String(m.userId))
+  );
+
+  if (!group.userIds) group.userIds = [];
+  group.userIds.push(...uniqueNewMembersForGroup);
+  group.markModified("userIds");
+
+  // Prepare new members for kitty, override status to 'pending'
+  const newMembersForKitty = uniqueNewMembersForGroup.map(member => ({
+    userId: member.userId,
+    status: 'pending'
+  }));
+
+  // ✅ Update future kitties
+  const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+
+  const kitties = await KittySchema.find({
+    groupId: group._id,
+    date: { $gt: today } // Only future kitties
+  });
+
+  for (const kitty of kitties) {
+    const existingKittyUserIds = kitty.members.map(m => String(m.userId));
+
+    const newKittyMembers = newMembersForKitty.filter(
+      m => !existingKittyUserIds.includes(String(m.userId))
+    );
+
+    if (newKittyMembers.length > 0) {
+      kitty.members.push(...newKittyMembers);
+      kitty.markModified('members');
+      await kitty.save();
+    }
+  }
+}
 
     // ✅ Handle userIds (members)
-    if (req.body.userIds && Array.isArray(req.body.userIds)) {
-      const newMembers = req.body.userIds.map(user => ({
-        userId: user.userId,
-        status: user.status || 'pending',
-        _id: user._id || undefined
-      }));
+    // if (req.body.userIds && Array.isArray(req.body.userIds)) {
+    //   const newMembers = req.body.userIds.map(user => ({
+    //     userId: user.userId,
+    //     status: user.status || 'pending',
+    //     _id: user._id || undefined
+    //   }));
 
-      const existingUserIds = group.userIds?.map(u => String(u.userId)) || [];
+    //   const existingUserIds = group.userIds?.map(u => String(u.userId)) || [];
 
-      const uniqueNewMembers = newMembers.filter(
-        m => !existingUserIds.includes(String(m.userId))
-      );
+    //   const uniqueNewMembers = newMembers.filter(
+    //     m => !existingUserIds.includes(String(m.userId))
+    //   );
 
-      if (!group.userIds) group.userIds = [];
-      group.userIds.push(...uniqueNewMembers);
-      group.markModified("userIds");
+    //   if (!group.userIds) group.userIds = [];
+    //   group.userIds.push(...uniqueNewMembers);
+    //   group.markModified("userIds");
 
-      // ✅ Update future kitties for this group
-      const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    //   // ✅ Update future kitties for this group
+    //   const today = new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
 
-      const kitties = await KittySchema.find({
-        groupId: group._id,
-        date: { $gt: today } // Only future kitties
-      });
+    //   const kitties = await KittySchema.find({
+    //     groupId: group._id,
+    //     date: { $gt: today } // Only future kitties
+    //   });
 
-      for (const kitty of kitties) {
-        const existingKittyUserIds = kitty.members.map(m => String(m.userId));
+    //   for (const kitty of kitties) {
+    //     const existingKittyUserIds = kitty.members.map(m => String(m.userId));
 
-        const newKittyMembers = newMembers.filter(
-          m => !existingKittyUserIds.includes(String(m.userId))
-        );
+    //     const newKittyMembers = newMembers.filter(
+    //       m => !existingKittyUserIds.includes(String(m.userId))
+    //     );
 
-        if (newKittyMembers.length > 0) {
-          // Ensure members are added with status 'pending' and not duplicated
-          newKittyMembers.forEach(newMemberId => {
-            const alreadyMember = kitty.members.some(member => member.userId.toString() === newMemberId.toString());
-            if (!alreadyMember) {
-              kitty.members.push({ userId: newMemberId, status: 'pending' });
-            }
-          });
-        
-          kitty.markModified('members');
-          await kitty.save();
-        }
-        
-      }
-    }
+    //     if (newKittyMembers.length > 0) {
+    //       kitty.members.push(...newKittyMembers);
+    //       kitty.markModified('members');
+    //       await kitty.save();
+    //     }
+    //   }
+    // }
 
     delete updateData.userNumbers;
     delete updateData.userIds;
