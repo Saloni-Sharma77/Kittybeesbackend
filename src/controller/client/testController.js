@@ -231,9 +231,9 @@ exports.verifyotptest = async (req, res) => {
   if (!phoneNumber || !otp) {
     return res.status(400).send({ error: 'Phone number,verificationId and OTP are required' });
   }
-  if (!fcmToken) {
-    return res.status(400).send({ error: 'FCM Token is required' });
-  }
+  // if (!fcmToken) {
+  //   return res.status(400).send({ error: 'FCM Token is required' });
+  // }
   if (phoneNumber === '7568450276') {
     return res.status(200).send({
       success: true,
@@ -326,20 +326,36 @@ exports.verifyotptest = async (req, res) => {
       expiresIn: '1h',
     });
     const fcmRecord = await FcmTokenModel.findOne({ userId: otpRecord._id, deviceType: 'Android' });
-
-    if (fcmRecord) {
-      if (!fcmRecord.fcmToken.includes(fcmToken)) {
-        fcmRecord.fcmToken.push(fcmToken);
-        fcmRecord.updatedAt = new Date();
-        await fcmRecord.save();
+    if (fcmToken) {
+      const fcmRecord = await FcmTokenModel.findOne({ userId: otpRecord._id, deviceType: 'Android' });
+    
+      if (fcmRecord) {
+        if (!fcmRecord.fcmToken.includes(fcmToken)) {
+          fcmRecord.fcmToken.push(fcmToken);
+          fcmRecord.updatedAt = new Date();
+          await fcmRecord.save();
+        }
+      } else {
+        await FcmTokenModel.create({
+          userId: otpRecord._id,
+          deviceType: 'Android',
+          fcmToken: [fcmToken],
+        });
       }
-    } else {
-      await FcmTokenModel.create({
-        userId: otpRecord._id,
-        deviceType: 'Android',
-        fcmToken: [fcmToken],
-      });
     }
+    // if (fcmRecord) {
+    //   if (!fcmRecord.fcmToken.includes(fcmToken)) {
+    //     fcmRecord.fcmToken.push(fcmToken);
+    //     fcmRecord.updatedAt = new Date();
+    //     await fcmRecord.save();
+    //   }
+    // } else {
+    //   await FcmTokenModel.create({
+    //     userId: otpRecord._id,
+    //     deviceType: 'Android',
+    //     fcmToken: [fcmToken],
+    //   });
+    // }
     const userInfo = await User.find({ phoneNumber });
 
     res.status(200).send({
