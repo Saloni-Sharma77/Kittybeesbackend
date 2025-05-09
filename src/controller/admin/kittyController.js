@@ -443,13 +443,13 @@ exports.addKitty = async (req, res) => {
     }
 
     // (kitty creator) Create notifications for host (kitty creator)
-    // const creatorNotification = {
-    //   userId,
-    //   kittyId: newKitty._id,
-    //   message: `You have created a kitty: ${newKitty.name}`,
-    //   type: "kitty",
-    //   image: tampimage,
-    // };
+    const creatorNotification = {
+      userId,
+      kittyId: newKitty._id,
+      message: `You have created a kitty: ${newKitty.name}`,
+      type: "kitty",
+      image: tampimage,
+    };
 
     // Create notifications for all users in the group, excluding the creator
     const userNotifications = group.userIds
@@ -463,7 +463,7 @@ exports.addKitty = async (req, res) => {
         image: tampimage,
       }));
 
-    const allNotifications = [...userNotifications];
+    const allNotifications = [creatorNotification, ...userNotifications];
 
     // ✅ Fix: Only send admin notification if admin is not the creator
     if (group.userId.toString() !== userId.toString()) {
@@ -476,7 +476,7 @@ exports.addKitty = async (req, res) => {
       };
       allNotifications.push(adminnotify);
     }    
-console.log(adminnotify,"notfy")
+
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
 
@@ -500,7 +500,6 @@ console.log(adminnotify,"notfy")
 
     // Send push notifications to all users
     for (const notification of notificationsWithPush) {
-      console.log(notification,"notifcation")
       await sendPushNotifications({
         title: notification.title,
         message: notification.message,
@@ -1663,10 +1662,10 @@ exports.joinKitty = async (req, res) => {
     // Notification logic
     if (["isrequesteduser", "approved", "rejected"].includes(status)) {
       let message = "";
-      let route = ""
+      
       if (status === "isrequesteduser") {
         message = `${user.fullname} has requested to join your Kitty: ${kitty.name}`;
-        route = "/invitation"
+
       } else if (status === "approved") {
         message = `${user.fullname} has accepted your invitation to join your Kitty: ${kitty.name}`;
         notificationType = "kitty"
