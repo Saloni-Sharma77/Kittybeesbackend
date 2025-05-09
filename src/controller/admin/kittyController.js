@@ -349,7 +349,7 @@ exports.addKitty = async (req, res) => {
 
     // Add the admin (group.userId) to members if not already included
     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
-      members.push({ userId: group.userId, status: "approved" }); // Admin has a different status
+      members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
     }
 
     // Validate and structure the poll data
