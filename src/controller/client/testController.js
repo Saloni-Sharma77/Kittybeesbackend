@@ -325,7 +325,6 @@ exports.verifyotptest = async (req, res) => {
     const token = jwt.sign({ phoneNumber }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
-    const fcmRecord = await FcmTokenModel.findOne({ userId: otpRecord._id, deviceType: 'Android' });
     if (fcmToken) {
       const fcmRecord = await FcmTokenModel.findOne({ userId: otpRecord._id, deviceType: 'Android' });
     
