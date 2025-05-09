@@ -346,8 +346,8 @@ exports.addKitty = async (req, res) => {
     const members = group.userIds
     .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
     .map(user => ({ userId: user.userId, status: "pending" }));
+    members.push({ userId: userId, status: "approved" });
 
-    // Add the admin (group.userId) to members if not already included
     if (!members.some(member => member.userId.toString() === group.userId.toString())) {
       members.push({ userId: group.userId, status: "pending" }); // Admin has a different status
     }
