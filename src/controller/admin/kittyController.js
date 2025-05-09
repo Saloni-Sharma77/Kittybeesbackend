@@ -1963,7 +1963,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         image: "your_image_url",
       },
       data: {
-        route: "your_route",
+        route: "/invitation",
         title: findWhichKitty.name,
         body: userMessage,
       },
@@ -2030,7 +2030,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
           image: "your_image_url",
         },
         data: {
-          route: "your_route",
+          route: "/invitiation",
           title: findWhichKitty.name,
           body: hostMessage,
         },
