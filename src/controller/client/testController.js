@@ -108,7 +108,7 @@ exports.sendotptest = async (req, res) => {
     const user = await User.findOneAndUpdate(
       { phoneNumber },
       { phoneNumber },
-
+      { upsert: true, new: true }
     );
     if (!user) throw new Error('Failed to retrieve or create user');
 
