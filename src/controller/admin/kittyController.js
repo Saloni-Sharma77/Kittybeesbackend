@@ -432,7 +432,7 @@ exports.addKitty = async (req, res) => {
       tampimage
 
     });
-
+console.log(members,"members")
     // Save the new Kitty to the database
     await newKitty.save();
 
@@ -442,14 +442,7 @@ exports.addKitty = async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // (kitty creator) Create notifications for host (kitty creator)
-    const creatorNotification = {
-      userId,
-      kittyId: newKitty._id,
-      message: `You have created a kitty: ${newKitty.name}`,
-      type: "kitty",
-      image: tampimage,
-    };
+
 
     // Create notifications for all users in the group, excluding the creator
     const userNotifications = group.userIds
@@ -462,8 +455,8 @@ exports.addKitty = async (req, res) => {
         type: "kitty-join-request",
         image: tampimage,
       }));
-
-    const allNotifications = [creatorNotification, ...userNotifications];
+console.log(userNotifications,"alluser")
+    const allNotifications = [ ...userNotifications];
 
     // ✅ Fix: Only send admin notification if admin is not the creator
     if (group.userId.toString() !== userId.toString()) {
@@ -475,8 +468,10 @@ exports.addKitty = async (req, res) => {
         image: tampimage,
       };
       allNotifications.push(adminnotify);
-    }    
+console.log(adminnotify,"adminnotify")
 
+    }    
+    console.log(group.userId,"group",group.userIds)
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
 
@@ -497,6 +492,8 @@ exports.addKitty = async (req, res) => {
         .filter(user => user.userId.toString() !== userId.toString()) 
         .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId, type: "kitty-join-request" }))
     ];
+    console.log(notificationsWithPush,"notificationsWithPush")
+
 
     // Send push notifications to all users
     for (const notification of notificationsWithPush) {

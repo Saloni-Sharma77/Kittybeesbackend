@@ -447,7 +447,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Initialize counts
     let hostedCount = 0;
     let joinedCount = 0;
-console.log(groups,"groupsgroupsgroups");
+// console.log(groups,"groupsgroupsgroups");
 
     // Process the groups and remove duplicate entries
     const groupMap = new Map();
