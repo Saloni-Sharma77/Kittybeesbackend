@@ -2007,7 +2007,7 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         userId: findWhichKitty.userId,
         kittyId,
         message: hostMessage,
-        type: "kitty-join-request",
+        type: "kitty",
         status: notificationStatus,
       });
       await hostNotification.save();
