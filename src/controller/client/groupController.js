@@ -17,9 +17,9 @@ exports.addGroup = async (req, res) => {
   try {
     const {
       name,
-      userId,
+      userId, 
       userNumbers,
-      userIds = [],
+      userIds,
       groupInterestId,
       groupFrequencyId,
       groupType,
@@ -47,16 +47,11 @@ exports.addGroup = async (req, res) => {
       }
     }
 
-    // Set status for userIds as 'approved' (if present)
-    const processedUserIds = Array.isArray(userIds)
-      ? userIds.map(user => ({ ...user, status: 'approved' }))
-      : [];
-
     // Create a new group instance
     const newGroup = new Group({
       name,
       userId,
-      userIds: processedUserIds,
+      userIds,
       userNumbers,
       groupInterestId,
       groupFrequencyId,
@@ -69,52 +64,65 @@ exports.addGroup = async (req, res) => {
       referralCode
     });
 
+    // Set status for userIds as 'approved'
+    newGroup.userIds.forEach(item => {
+      item.status = 'approved';
+    });
+
     await newGroup.save();
 
-    // Notification logic starts here
-    const approvedUserIds = processedUserIds.map(item => item.userId);
+    // Notification logic (excluding creator)
+    const approvedUserIds = newGroup.userIds
+      .filter(item => item.status === 'approved')
+      .map(item => item.userId);
 
-    const notificationUsers = [...approvedUserIds, userId]; // include creator
+    // Remove creator from notifications
+    const memberUserIds = approvedUserIds.filter(
+      id => id.toString() !== newGroup.userId.toString()
+    );
 
-    // Create notification messages
-    const notifications = notificationUsers.map(uid => ({
-      userId: uid,
+    // Notifications for members only (not creator)
+    const userNotifications = memberUserIds.map(userId => ({
+      userId,
       groupId: newGroup._id,
       type: 'group',
-      message:
-        uid.toString() === userId.toString()
-          ? `You have created the group: ${newGroup.name}`
-          : `You have been added to the group: ${newGroup.name}`
+      message: `You have been added to the group: ${newGroup.name}`,
     }));
 
-    // Save all notifications to DB
-    await NotificationSchema.insertMany(notifications);
+    // Insert member notifications into the database
+    await NotificationSchema.insertMany(userNotifications);
 
-    // Fetch FCM tokens for all notification users
-    const fcmTokens = await FcmToken.find({ userId: { $in: notificationUsers } });
+    // Fetch FCM tokens for approved members only
+    const fcmTokens = await FcmToken.find({ userId: { $in: memberUserIds } });
+    console.log(fcmTokens, 'Fetched FCM tokens');
 
     const tokens = fcmTokens
-      .flatMap(doc => doc?.fcmToken)
+      .flatMap((doc) => doc.fcmToken)
       .filter(token => token && token.trim() !== '');
 
     console.log(tokens, 'Filtered Tokens');
 
     if (tokens.length > 0) {
-      for (const notif of notifications) {
-        await sendPushNotifications({
-          title: 'Group Notification',
-          message: notif.message,
-          userId: notif.userId,
-          type: 'group',
-          objectId: newGroup._id
-        });
+      const notifications = memberUserIds.map(memberId => ({
+        title: 'Group Notification',
+        message: `You have been added to the group: ${newGroup.name}`,
+        userId: memberId,
+        type: "group",
+        objectId: newGroup._id
+      }));
+
+      for (const notification of notifications) {
+        await sendPushNotifications(notification);
       }
-      console.log('Notifications sent to creator & members');
+
+      console.log('Notifications sent to group members');
     } else {
-      console.log('No FCM tokens found');
+      console.log('No tokens found for group members');
     }
 
+    // Final response
     res.status(201).json({ message: 'Group added successfully', group: newGroup });
+
   } catch (err) {
     console.error("Error adding group:", err);
     if (!res.headersSent) {
@@ -691,6 +699,7 @@ exports.updateGroup = async (req, res) => {
       return res.status(400).json({ error: "No valid fields provided for update" });
     }
 
+    // Find the group
     const group = await Group.findById(req.params.id);
     if (!group) {
       return res.status(404).json({ error: "Group not found" });

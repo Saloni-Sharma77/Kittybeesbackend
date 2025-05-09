@@ -443,13 +443,13 @@ exports.addKitty = async (req, res) => {
     }
 
     // (kitty creator) Create notifications for host (kitty creator)
-    const creatorNotification = {
-      userId,
-      kittyId: newKitty._id,
-      message: `You have created a kitty: ${newKitty.name}`,
-      type: "kitty",
-      image: tampimage,
-    };
+    // const creatorNotification = {
+    //   userId,
+    //   kittyId: newKitty._id,
+    //   message: `You have created a kitty: ${newKitty.name}`,
+    //   type: "kitty",
+    //   image: tampimage,
+    // };
 
     // Create notifications for all users in the group, excluding the creator
     const userNotifications = group.userIds
@@ -463,7 +463,7 @@ exports.addKitty = async (req, res) => {
         image: tampimage,
       }));
 
-    const allNotifications = [creatorNotification, ...userNotifications];
+    const allNotifications = [...userNotifications];
 
     // ✅ Fix: Only send admin notification if admin is not the creator
     if (group.userId.toString() !== userId.toString()) {
@@ -476,7 +476,7 @@ exports.addKitty = async (req, res) => {
       };
       allNotifications.push(adminnotify);
     }    
-
+console.log(adminnotify,"notfy")
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
 
@@ -500,6 +500,7 @@ exports.addKitty = async (req, res) => {
 
     // Send push notifications to all users
     for (const notification of notificationsWithPush) {
+      console.log(notification,"notifcation")
       await sendPushNotifications({
         title: notification.title,
         message: notification.message,
@@ -1597,7 +1598,7 @@ exports.joinKitty = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(requestUserId) || !mongoose.Types.ObjectId.isValid(kittyId)) {
       return res.status(400).json({ message: "Invalid userId or kittyId" });
     }
-
+    console.log(status,"statuss")
     const requestUserIdObj = new mongoose.Types.ObjectId(requestUserId);
 
     const kitty = await Kitty.findById(kittyId);
@@ -1611,7 +1612,6 @@ exports.joinKitty = async (req, res) => {
 
     if (!group) return res.status(404).json({ message: "Group not found for this kitty" });
 
-    // 3. Check if user exists in Kitty or Group
     const isInKitty = kitty.members.some(
       (member) => member.userId.toString() === requestUserIdObj.toString()
     );
@@ -1622,23 +1622,19 @@ exports.joinKitty = async (req, res) => {
 
     let notificationType = "kitty-join-request";
 
-    // 4. If user is not in group and not in kitty, add to both
     if (!isInKitty && !isInGroup) {
-      // Add to group.userIds
       group.userIds = group.userIds || [];
       group.userIds.push({
         userId: requestUserIdObj,
         status: status || "isrequesteduser"
       });
       await group.save();
-      
 
       kitty.members.push({ userId: requestUserIdObj, status: status || "isrequesteduser" });
       await kitty.save();
 
       notificationType = "group-kitty-join-request";
     } else {
-      // 5. If already in kitty or group, just update status in kitty
       const existingIndex = kitty.members.findIndex(
         (member) => member.userId.toString() === requestUserIdObj.toString()
       );
@@ -1664,46 +1660,62 @@ exports.joinKitty = async (req, res) => {
     const user = await UserSchema.findById(requestUserId).select("fullname");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const adminNotification = new NotificationSchema({
-      userId: kitty.userId,
-      kittyId,
-      requestUserId,
-      message: `${user.fullname} has requested to join your Kitty: ${kitty.name}`,
-      type: notificationType,
-    });
+    // Notification logic
+    if (["isrequesteduser", "approved", "rejected"].includes(status)) {
+      let message = "";
+      let route = ""
+      if (status === "isrequesteduser") {
+        message = `${user.fullname} has requested to join your Kitty: ${kitty.name}`;
+        route = "/invitation"
+      } else if (status === "approved") {
+        message = `${user.fullname} has accepted your invitation to join your Kitty: ${kitty.name}`;
+        notificationType = "kitty"
+      } else if (status === "rejected") {
+        message = `${user.fullname} has declined the invitation to join your Kitty: ${kitty.name}`;
+        notificationType = "kitty"
 
-    await adminNotification.save();
+      }
 
-    // 9. Send FCM Notification
-    const fcmTokens = await FcmToken.find({ userId: kitty.userId, deviceType: "Android" });
-    const tokens = fcmTokens
-      .flatMap((tokenDoc) => tokenDoc?.fcmToken)
-      .filter((token) => token && token.trim() !== "");
+      const adminNotification = new NotificationSchema({
+        userId: kitty.userId,
+        kittyId,
+        requestUserId,
+        message,
+        type: notificationType,
+      });
 
-    const payload = {
-      notification: {
-        title: kitty.name,
-        body: adminNotification.message,
-        image: "your_image_url", // Optional
-      },
-      data: {
-        route: "your_route",
-        title: kitty.name,
-        body: adminNotification.message,
-      },
-    };
+      await adminNotification.save();
 
-    if (tokens.length > 0) {
-      const responses = await Promise.allSettled(
-        tokens.map((token) =>
-          admin.messaging().send({
-            token,
-            notification: payload.notification,
-            data: payload.data,
-            android: { priority: "high" },
-          })
-        )
-      );
+      const fcmTokens = await FcmToken.find({ userId: kitty.userId, deviceType: "Android" });
+      const tokens = fcmTokens
+        .flatMap((tokenDoc) => tokenDoc?.fcmToken)
+        .filter((token) => token && token.trim() !== "");
+
+      const payload = {
+        notification: {
+          title: kitty.name,
+          body: message,
+          image: "your_image_url",
+        },
+        data: {
+          route: "your_route",
+          title: kitty.name,
+          body: message,
+        },
+      };
+
+      if (tokens.length > 0) {
+        await Promise.allSettled(
+          tokens.map((token) =>
+            admin.messaging().send({
+              token,
+              notification: payload.notification,
+              data: payload.data,
+              android: { priority: "high" },
+            })
+          )
+        );
+      }
     }
 
     return res.status(200).json({
@@ -1715,6 +1727,7 @@ exports.joinKitty = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong" });
   }
 };
+
 
 
 // exports.acceptOrRejectRequestOfKitty = async (req, res) => {
