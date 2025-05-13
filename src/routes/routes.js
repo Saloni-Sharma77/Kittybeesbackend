@@ -6533,9 +6533,8 @@ router.get('/group/:groupId/summary', walletController.getGroupFinancialSummary)
 
 router.post("/createContactList", contactController.createContactList);   // Create contact list
 router.post("/adaddContactd", contactController.addContact);             
-// router.get("/getContactsByUserId/:userId", contactController.getContactsByUserId); 
+router.put("/updateContactList/:userId/:uid", contactController.updateContactList); 
 router.get("/getContactsByUserId/:userId/:uid", contactController.getContactsByUserId);
-
 router.delete("deleteContact/delete", contactController.deleteContact); 
 router.get("/getcommoncontacts/:userId/:uid", contactController.getCommonContacts);
 router.get("/searchcontacts", contactController.searchUserContacts);

@@ -52,8 +52,30 @@ exports.createContactList = async (req, res) => {
   }
 };
 
+
+exports.updateContactList = async (req, res) =>{
+  try{
+    const { contacts } = req.body; 
+    const { userId,uid } = req.params; 
+
+    const uniqueContacts = contacts.filter(
+      (contact, index, self) =>
+        index === self.findIndex((c) => c.name.trim().toLowerCase() === contact.name.trim().toLowerCase())
+    );
+
+    const updatedContact = await Contact.findOneAndUpdate(
+      { userId, uid }, 
+      { contacts: uniqueContacts },
+      { new: true, runValidators: true }
+    );
+    return res.status(200).json({ message: "Contact list updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 // Add a contact to the user's contact list
-exports.addContact = async (req, res) => {
+exports.addContact = async (req, res) => { 
   try {
     const { userId, name, number } = req.body;
 
