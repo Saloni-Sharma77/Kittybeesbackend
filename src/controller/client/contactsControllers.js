@@ -57,17 +57,18 @@ exports.updateContactList = async (req, res) =>{
   try{
     const { contacts } = req.body; 
     const { id } = req.params; 
-    const contactList = await Contact.findById(id);
-    if (!contactList) {
-      return res.status(404).json({ message: "Contact list not found" });
-    }
+
     const uniqueContacts = contacts.filter(
       (contact, index, self) =>
         index === self.findIndex((c) => c.name.trim().toLowerCase() === contact.name.trim().toLowerCase())
     );
-    contactList.contacts = uniqueContacts;
-    await contactList.save();
 
+    // Find draft by ID and update it
+    const updatedContact = await Contact.findByIdAndUpdate(
+      id,
+      {contacts : uniqueContacts},
+      { new: true, runValidators: true } // Return updated document & validate
+    );
     return res.status(200).json({ message: "Contact list updated successfully" });
   } catch (error) {
     console.error(error);
