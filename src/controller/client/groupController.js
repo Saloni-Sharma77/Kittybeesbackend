@@ -719,25 +719,33 @@ exports.updateGroup = async (req, res) => {
 
 
     // ✅ Update userNumbers
-if (Array.isArray(req.body.userNumbers)) {
-  const incomingNumbers = req.body.userNumbers.map(num => ({
+    if (Array.isArray(req.body.userNumbers)) {
+  group.userNumbers = req.body.userNumbers.map(num => ({
     name: String(num.name),
     phoneNumber: String(num.phoneNumber)
   }));
-
-  const existingNumbers = group.userNumbers?.map(n => n.phoneNumber) || [];
-
-  // Filter only new unique numbers (by phone number)
-  const newNumbers = incomingNumbers.filter(
-    num => !existingNumbers.includes(num.phoneNumber)
-  );
-
-  if (newNumbers.length > 0) {
-    if (!group.userNumbers) group.userNumbers = [];
-    group.userNumbers.push(...newNumbers);
-    group.markModified("userNumbers");
-  }
+  group.markModified("userNumbers");
 }
+
+// if (Array.isArray(req.body.userNumbers)) {
+//   const incomingNumbers = req.body.userNumbers.map(num => ({
+//     name: String(num.name),
+//     phoneNumber: String(num.phoneNumber)
+//   }));
+
+//   const existingNumbers = group.userNumbers?.map(n => n.phoneNumber) || [];
+
+//   // Filter only new unique numbers (by phone number)
+//   const newNumbers = incomingNumbers.filter(
+//     num => !existingNumbers.includes(num.phoneNumber)
+//   );
+
+//   if (newNumbers.length > 0) {
+//     if (!group.userNumbers) group.userNumbers = [];
+//     group.userNumbers.push(...newNumbers);
+//     group.markModified("userNumbers");
+//   }
+// }
 
 
     // ✅ Handle userIds (members)
