@@ -343,9 +343,12 @@ exports.addKitty = async (req, res) => {
 
     
     // Create members array from userIds
-    const members = group.userIds
-    .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
-    .map(user => ({ userId: user.userId, status: "pending" }));
+   const members = group.userIds
+  .filter(user => 
+    user.userId.toString() !== userId.toString() &&
+    user.status !== 'rejected'
+  )
+  .map(user => ({ userId: user.userId, status: "pending" }));
     members.push({ userId: userId, status: "approved" });
 
     if (!members.some(member => member.userId.toString() === group.userId.toString())) {

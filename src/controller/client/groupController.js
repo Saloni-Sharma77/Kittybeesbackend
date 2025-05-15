@@ -40,7 +40,7 @@ exports.addGroup = async (req, res) => {
       { name: 'groupCityArea', value: groupCityArea },
       { name: 'referralCode', value: referralCode }
     ];
-
+console.log(req.body);
     for (const field of requiredFields) {
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
@@ -573,7 +573,7 @@ exports.getGroupById = async (req, res) => {
     
     const users = await Users.find({ 
       phoneNumber: { 
-        $in: group.userNumbers.map(num => num.replace(/\s+/g, '')) // Remove spaces 
+       $in: group.userNumbers.map(entry => entry.phoneNumber.replace(/\s+/g, '')) // Remove spaces 
       } 
     });
     
@@ -589,7 +589,7 @@ exports.getGroupById = async (req, res) => {
     
         // Remove the matched number from group.userNumbers after normalizing both formats
         group.userNumbers = group.userNumbers.filter(
-          num => num.replace(/\s+/g, '') !== normalizedPhoneNumber
+          entry => entry.phoneNumber.replace(/\s+/g, '') !== normalizedPhoneNumber
         );
       }
     });
@@ -706,16 +706,47 @@ exports.updateGroup = async (req, res) => {
     }
 
     // ✅ Update userNumbers
+    // if (Array.isArray(req.body.userNumbers)) {
+    //   const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
+    //   const newNumbers = uniqueNewNumbers.filter(num =>
+    //     !group.userNumbers.map(String).includes(num)
+    //   );
+    //   if (newNumbers.length > 0) {
+    //     group.userNumbers.push(...newNumbers);
+    //     group.markModified("userNumbers");
+    //   }
+    // }
+
+
+    // ✅ Update userNumbers
     if (Array.isArray(req.body.userNumbers)) {
-      const uniqueNewNumbers = [...new Set(req.body.userNumbers.map(num => String(num)))];
-      const newNumbers = uniqueNewNumbers.filter(num =>
-        !group.userNumbers.map(String).includes(num)
-      );
-      if (newNumbers.length > 0) {
-        group.userNumbers.push(...newNumbers);
-        group.markModified("userNumbers");
-      }
-    }
+  group.userNumbers = req.body.userNumbers.map(num => ({
+    name: String(num.name),
+    phoneNumber: String(num.phoneNumber)
+  }));
+  group.markModified("userNumbers");
+}
+
+// if (Array.isArray(req.body.userNumbers)) {
+//   const incomingNumbers = req.body.userNumbers.map(num => ({
+//     name: String(num.name),
+//     phoneNumber: String(num.phoneNumber)
+//   }));
+
+//   const existingNumbers = group.userNumbers?.map(n => n.phoneNumber) || [];
+
+//   // Filter only new unique numbers (by phone number)
+//   const newNumbers = incomingNumbers.filter(
+//     num => !existingNumbers.includes(num.phoneNumber)
+//   );
+
+//   if (newNumbers.length > 0) {
+//     if (!group.userNumbers) group.userNumbers = [];
+//     group.userNumbers.push(...newNumbers);
+//     group.markModified("userNumbers");
+//   }
+// }
+
 
     // ✅ Handle userIds (members)
     if (Array.isArray(req.body.userIds)) {

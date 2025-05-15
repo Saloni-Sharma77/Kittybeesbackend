@@ -8,8 +8,8 @@ const GroupSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     userIds: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      status: { type: String, enum: ['pending', 'approved','rejected','isrequesteduser'], default: 'approved' }
-  }],
+      status: { type: String, enum: ['pending', 'approved', 'rejected', 'isrequesteduser'], default: 'approved' }
+    }],
     groupType: {
       type: String,
       enum: ["private", "public"],
@@ -20,21 +20,27 @@ const GroupSchema = new mongoose.Schema(
     groupCityArea: { type: String },
     image: { type: String },
     contributionAmount: { type: String },
-    isActive:{type:Boolean,default : true},
-    interests: {type:String,},
+    isActive: { type: Boolean, default: true },
+    interests: { type: String, },
     // GroupStatus: {type: String,enum: ['JoiniSatus', 'Requested'],required: true },
     winners: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
       winnerNumber: { type: Number }
     }],
-    groupMemories:[{
+    groupMemories: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      memoryimage: { type: String }, 
-      }],
-      referralCode:{type:String},
-      userNumbers:[
-        { type: String }
-      ],
+      memoryimage: { type: String },
+    }],
+    referralCode: { type: String },
+    userNumbers: [
+      {
+        name: { type: String, required: true },
+        phoneNumber: { type: String, required: true }
+      }
+    ]
+    // userNumbers:[
+    //   { type: String }
+    // ],
 
     // newUser:{
     //  type:String
