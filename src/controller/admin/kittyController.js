@@ -863,7 +863,24 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
           (member) => member.userId == userId && member.status === "approved"
         );
 
-      return isCorrectTime && !isCreatedByCurrentUser && !isCurrentUserApproved;
+        const isRequestedInMembers =
+        Array.isArray(kitty.members) &&
+        kitty.members.some(
+          (member) => member.userId == userId && member.status === "isrequesteduser"
+        );
+
+        const isRequestedInGroup =
+        Array.isArray(kitty.groupId) &&
+        kitty.groupId.some((group) =>
+          Array.isArray(group.userIds) &&
+          group.userIds.some(
+            (user) => user.userId == userId && user.status === "isrequesteduser"
+          )
+        );
+
+        const shouldExclude = isRequestedInMembers && isRequestedInGroup;
+
+      return isCorrectTime && !isCreatedByCurrentUser && !isCurrentUserApproved && !shouldExclude;
     });
     // Sort kitties based on date
     const sortedKitties = filteredKitties.sort((a, b) => {

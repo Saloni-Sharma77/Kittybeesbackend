@@ -195,15 +195,17 @@ console.log(responseData,"responseDataresponseData");
             // for (const [key, value] of Object.entries(responseData)) {
             //     sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
             // }
-          for (const [key, value] of Object.entries(responseData)) {
-  if (typeof value === 'string') {
+        for (const [key, value] of Object.entries(responseData)) {
+  if (key === '_id') {
+    sanitizedResponseData[key] = String(value); // ✅ Never use JSON.stringify here
+  } else if (typeof value === 'string') {
     sanitizedResponseData[key] = value;
   } else if (Array.isArray(value)) {
-    sanitizedResponseData[key] = JSON.stringify(value); // fine, Flutter will jsonDecode
+    sanitizedResponseData[key] = JSON.stringify(value);
   } else if (value instanceof Date) {
-    sanitizedResponseData[key] = value.toISOString(); // best for timestamp
+    sanitizedResponseData[key] = value.toISOString();
   } else if (value !== null && typeof value === 'object') {
-    sanitizedResponseData[key] = JSON.stringify(value); // OK for mentions, pollOptions
+    sanitizedResponseData[key] = JSON.stringify(value);
   } else {
     sanitizedResponseData[key] = String(value);
   }
@@ -247,6 +249,7 @@ console.log(responseData,"responseDataresponseData");
         // Log results for sent notifications
         const successfulNotifications = responses.filter(r => r.status === 'fulfilled');
         const failedNotifications = responses.filter(r => r.status === 'rejected');
+console.log(successfulNotifications,"successfulNotificationssuccessfulNotificationssuccessfulNotifications");
 
         console.log(`Successfully sent notifications: ${successfulNotifications.length}`);
         if (failedNotifications.length > 0) {
