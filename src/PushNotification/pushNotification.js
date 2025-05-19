@@ -195,7 +195,7 @@ console.log(responseData,"responseDataresponseData");
                 sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
             }
         }
-         const route = getRouteForType(responseData?.type);
+        const route = getRouteForType(responseData?.type);
         const payload = {
             notification: {
                 title: title,
@@ -203,7 +203,7 @@ console.log(responseData,"responseDataresponseData");
                 image: 'your_image_url', // Optional: replace with actual image URL if needed
             },
             data: {
-                route: 'your_route', // Adjust to the route you need to pass
+                route: 'route', // Adjust to the route you need to pass
                 title: title,
                 body: message,
                 ...sanitizedResponseData,
