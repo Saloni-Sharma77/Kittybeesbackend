@@ -882,7 +882,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
 
       return isCorrectTime && !isCreatedByCurrentUser && !isCurrentUserApproved && !shouldExclude;
     });
-    // Sort kitties based on date
+    // Sort kitties based on date 
     const sortedKitties = filteredKitties.sort((a, b) => {
       const aTime = combineDateAndTime(a.date, a.time);
       const bTime = combineDateAndTime(b.date, b.time);
