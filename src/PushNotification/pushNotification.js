@@ -195,7 +195,7 @@ console.log(responseData,"responseDataresponseData");
                 sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
             }
         }
-        
+         const route = getRouteForType(responseData?.type);
         const payload = {
             notification: {
                 title: title,
