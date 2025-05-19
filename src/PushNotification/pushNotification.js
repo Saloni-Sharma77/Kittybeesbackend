@@ -203,7 +203,7 @@ console.log(responseData,"responseDataresponseData");
                 image: 'your_image_url', // Optional: replace with actual image URL if needed
             },
             data: {
-                route: 'route', // Adjust to the route you need to pass
+                route:route , // Adjust to the route you need to pass
                 title: title,
                 body: message,
                 ...sanitizedResponseData,
