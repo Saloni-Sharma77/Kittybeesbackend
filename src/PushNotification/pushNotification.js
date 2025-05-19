@@ -189,13 +189,21 @@ console.log(responseData,"responseDataresponseData");
             console.log('No valid FCM tokens available for sending notifications.');
             return { message: 'No valid tokens found. No notifications sent.' };
         }
-        // const sanitizedResponseData = {};
+        const sanitizedResponseData = {};
         if (responseData && typeof responseData === 'object') {
             // for (const [key, value] of Object.entries(responseData)) {
             //     sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
             // }
             for (const [key, value] of Object.entries(responseData)) {
-    sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
+    if (typeof value === 'string') {
+        sanitizedResponseData[key] = value;
+    } else if (Array.isArray(value)) {
+        sanitizedResponseData[key] = JSON.stringify(value); // Optional: or join(',') if you control both ends
+    } else if (value !== null && typeof value === 'object') {
+        sanitizedResponseData[key] = JSON.stringify(value);
+    } else {
+        sanitizedResponseData[key] = String(value);
+    }
 }
 
         }
