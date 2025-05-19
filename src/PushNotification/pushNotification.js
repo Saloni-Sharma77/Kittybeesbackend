@@ -169,7 +169,7 @@ function getRouteForType(type) {
             return '/GroupDetailsscreen';
         case 'post':
             return '/FourmComments';
-        case 'message':
+        case 'GroupChatscreen':
             return '/GroupChatscreen';    
         default:
             return '/unknown';
@@ -177,7 +177,8 @@ function getRouteForType(type) {
 }
 
 
-async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens }) {
+async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens, type })
+ {
 console.log(responseData,"responseDataresponseData");
 
     try {
@@ -194,20 +195,23 @@ console.log(responseData,"responseDataresponseData");
             // for (const [key, value] of Object.entries(responseData)) {
             //     sanitizedResponseData[key] = typeof value === 'string' ? value : JSON.stringify(value);
             // }
-            for (const [key, value] of Object.entries(responseData)) {
-    if (typeof value === 'string') {
-        sanitizedResponseData[key] = value;
-    } else if (Array.isArray(value)) {
-        sanitizedResponseData[key] = JSON.stringify(value); // Optional: or join(',') if you control both ends
-    } else if (value !== null && typeof value === 'object') {
-        sanitizedResponseData[key] = JSON.stringify(value);
-    } else {
-        sanitizedResponseData[key] = String(value);
-    }
+          for (const [key, value] of Object.entries(responseData)) {
+  if (typeof value === 'string') {
+    sanitizedResponseData[key] = value;
+  } else if (Array.isArray(value)) {
+    sanitizedResponseData[key] = JSON.stringify(value); // fine, Flutter will jsonDecode
+  } else if (value instanceof Date) {
+    sanitizedResponseData[key] = value.toISOString(); // best for timestamp
+  } else if (value !== null && typeof value === 'object') {
+    sanitizedResponseData[key] = JSON.stringify(value); // OK for mentions, pollOptions
+  } else {
+    sanitizedResponseData[key] = String(value);
+  }
 }
 
+
         }
-        const route = getRouteForType(message);
+       const route = getRouteForType(type);
         const payload = {
             notification: {
                 title: title,

@@ -205,6 +205,8 @@ console.log("Mention Tokens:", mentionTokens);
       message: newMessage.content || "You have a new message",
       responseData: response,
       userTokens: tokens,
+      type: 'GroupChatscreen',
+
     });
     console.log("Notification sent to group users.");
   // }
@@ -216,6 +218,8 @@ console.log("Mention Tokens:", mentionTokens);
       message: `${response.fullname} mentioned you: ${newMessage.content || ""}`,
       responseData: response,
       userTokens: mentionTokens,
+      type: 'GroupChatscreen',
+
     });
     console.log("Notification sent to mentioned users.");
 
