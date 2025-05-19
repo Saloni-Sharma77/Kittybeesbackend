@@ -169,6 +169,8 @@ function getRouteForType(type) {
             return '/GroupDetailsscreen';
         case 'post':
             return '/FourmComments';
+        case 'message':
+            return '/GroupChatscreen';    
         default:
             return '/unknown';
     }
