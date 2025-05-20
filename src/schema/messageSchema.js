@@ -38,7 +38,11 @@ const messageArray = new Schema({
   name: { type: String, default: '' }, // Store name
   message: { type: String, default: '' }, // Store name
   mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
-
+  messageType: {
+    type: String,
+    enum: ['KittyInvitation', 'Poll', ],
+    default: 'KittyInvitation'
+  },
 
 })
 

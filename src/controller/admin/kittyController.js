@@ -3,7 +3,7 @@ const Kitty = require("../../schema/kittySchema");
 const Venue = require("../../schema/venueSchema");
 const FcmToken = require('../../schema/FcmSchema'); // Your FCM schema
 const admin = require("firebase-admin");
-
+const Message = require("../../schema/messageSchema");
 const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
 const UserSchema = require("../../schema/userSchema");
@@ -504,7 +504,7 @@ console.log(adminnotify,"adminnotify")
         title: notification.title,
         message: notification.message,
         userId: notification.userId,
-        image: tampimage, // Include the image for the notification
+        image: tampimage, 
         type:notification.type,
         objectId: newKitty._id
       });
@@ -517,7 +517,38 @@ console.log(adminnotify,"adminnotify")
       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
     });
     await wallet.save();
-    res
+    const sender = await UserSchema.findById(userId).select('fullname');
+
+
+  const newMessage = {
+    senderId: userId,
+    name: sender.fullname || "Unknown User",
+    message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
+    // messageType: 'KittyInvitation',
+    timestamp: Date.now(),
+  };
+  //  const newMessage = {
+  //     senderId: userId,
+  //     amount,
+  //     amountType: transactionType,
+  //     name: userName,
+  //     message: `${userName} added ${amount} ${transactionType}`,
+  //     timestamp: Date.now(),
+  //   };
+
+ let messageDoc = await Message.findOne({ groupId });
+
+    if (!messageDoc) {
+      messageDoc = new Message({
+        groupId,
+        messages: [newMessage],
+      });
+    } else {
+      messageDoc.messages.push(newMessage);
+    }
+  await messageDoc.save();
+
+ res
       .status(201)
       .json({ message: "Kitty added successfully", data: newKitty });
   } catch (err) {
