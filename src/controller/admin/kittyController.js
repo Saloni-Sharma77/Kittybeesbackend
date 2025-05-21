@@ -524,7 +524,6 @@ console.log(adminnotify,"adminnotify")
     senderId: userId,
     name: sender.fullname || "Unknown User",
     message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
-    // messageType: 'KittyInvitation',
     timestamp: Date.now(),
   };
   //  const newMessage = {
@@ -547,7 +546,31 @@ console.log(adminnotify,"adminnotify")
       messageDoc.messages.push(newMessage);
     }
   await messageDoc.save();
+const groupClients = req.clients.get(groupId);
+    if (groupClients) {
+      const response = {
+        type: 'receiveMessage',
+        content: '',
+        groupId: groupId,
+        senderId: userId,
+        fullname: sender.fullname || 'Unknown User',
+        profileImage: sender.profileImage || '',
+        image: '',
+        video: '',
+        document: '',
+        poll: '',
+        pollOptions: '',
+        mentions: [],
+        message: newMessage.message,
+        timestamp: newMessage.timestamp,
+      };
 
+      groupClients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(response));
+        }
+      });
+    }
  res
       .status(201)
       .json({ message: "Kitty added successfully", data: newKitty });
