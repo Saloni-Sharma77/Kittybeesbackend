@@ -554,7 +554,7 @@ console.log(adminnotify,"adminnotify")
     );
 
   if (global.clients && global.clients.has(groupId)) {
-      const groupClients = global.clients.get(groupId);
+      const groupClients = global.clients.get(groaupId);
       const response = {
         type: 'receiveMessage',
         // content: newMessage.content,
