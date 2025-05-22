@@ -3,7 +3,9 @@ const Message = require('../schema/messageSchema'); // Import the Message schema
 const User = require('../schema/userSchema'); // Make sure to import your User model
 
 module.exports = (wss) => {
-  const clients = new Map();
+  // const clients = new Map();
+    const clients = new Map(); 
+ global.clients = clients;
 
   wss.on('connection', (ws) => {
     console.log('New client connected');

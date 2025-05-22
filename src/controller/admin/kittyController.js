@@ -517,23 +517,22 @@ console.log(adminnotify,"adminnotify")
       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
     });
     await wallet.save();
+ 
     const sender = await UserSchema.findById(userId).select('fullname');
 
 
+  // const newMessage = {
+  //   senderId: userId,
+  //   name: sender.fullname || "Unknown User",
+  //   message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
+  //   timestamp: Date.now(),
+  // };
   const newMessage = {
-    senderId: userId,
-    name: sender.fullname || "Unknown User",
-    message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
-    timestamp: Date.now(),
-  };
-  //  const newMessage = {
-  //     senderId: userId,
-  //     amount,
-  //     amountType: transactionType,
-  //     name: userName,
-  //     message: `${userName} added ${amount} ${transactionType}`,
-  //     timestamp: Date.now(),
-  //   };
+  senderId: userId,
+  message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
+  timestamp: Date.now(),
+};
+
 
  let messageDoc = await Message.findOne({ groupId });
 
@@ -546,23 +545,31 @@ console.log(adminnotify,"adminnotify")
       messageDoc.messages.push(newMessage);
     }
   await messageDoc.save();
-const groupClients = req.clients.get(groupId);
-    if (groupClients) {
+
+
+  await Message.findOneAndUpdate(
+      { groupId },
+      { $push: { message: newMessage } },
+      { upsert: true, new: true }
+    );
+
+  if (global.clients && global.clients.has(groupId)) {
+      const groupClients = global.clients.get(groupId);
       const response = {
         type: 'receiveMessage',
-        content: '',
-        groupId: groupId,
-        senderId: userId,
-        fullname: sender.fullname || 'Unknown User',
-        profileImage: sender.profileImage || '',
+        // content: newMessage.content,
+        // content: '',
+
+        groupId,
+      senderId: userId,
+        profileImage: '',
         image: '',
         video: '',
         document: '',
-        poll: '',
-        pollOptions: '',
+        message: newMessage.message, 
         mentions: [],
-        message: newMessage.message,
-        timestamp: newMessage.timestamp,
+           timestamp: Date.now(),
+
       };
 
       groupClients.forEach(client => {
