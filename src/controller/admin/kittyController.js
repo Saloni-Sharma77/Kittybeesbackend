@@ -8,6 +8,7 @@ const VenueReviewSchema = require("../../schema/venueReviewSchema");
 const NotificationSchema = require("../../schema/notificationSchema");
 const UserSchema = require("../../schema/userSchema");
 const GroupSchema = require("../../schema/groupSchema");
+const WebSocket = require('ws');
 const WalletSchema = require("../../schema/walletSchema");
 const moment = require("moment-timezone");
 const CustomTheme = require("../../schema/customtheme");
@@ -439,8 +440,6 @@ console.log(members,"members")
     // Save the new Kitty to the database
     await newKitty.save();
 
-    //notification work------------>>>
-    // Fetch group details to get userIds
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
     }
@@ -512,8 +511,8 @@ console.log(adminnotify,"adminnotify")
     const wallet = new WalletSchema({
       userId: userId,
       kittyId: newKitty._id,
-      amount: group.contributionAmount, // The amount for this particular user
-      transactionType: "Contribution", // Or dynamically set based on your needs
+      amount: group.contributionAmount, 
+      transactionType: "Contribution", 
       description: `Initial contribution for group ${group.name}, ${newKitty.name}`,
     });
     await wallet.save();

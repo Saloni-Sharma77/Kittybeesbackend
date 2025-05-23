@@ -38,7 +38,7 @@ module.exports = (wss) => {
             }
 
           case 'sendMessage':
-            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions,message } = data;
             
 
             // Ensure at least one of content, image, video, or document and poll options is provided
@@ -101,6 +101,11 @@ module.exports = (wss) => {
               _id: newMessage._id
             };
 
+
+            if (message && message.trim() !== '') {
+      response.message = message;
+    }
+ 
             // Broadcast the new message to everyone in the group
             clients.get(groupIdSend).forEach(client => {
               if (client.readyState === WebSocket.OPEN) {
