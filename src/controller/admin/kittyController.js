@@ -12,6 +12,7 @@ const WalletSchema = require("../../schema/walletSchema");
 const moment = require("moment-timezone");
 const CustomTheme = require("../../schema/customtheme");
 const mongoose = require("mongoose");
+// const moment = require('moment-timezone')
 const { sendPushNotifications } = require('../../PushNotification/pushNotification');
 const { default: axios } = require('axios');
 
@@ -876,8 +877,9 @@ exports.getKittyAttendance = async (req, res) => {
 
 exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
-    const now = new Date();
-    // Extracting filters and pagination parameters
+    // const now = new Date();
+   const now = moment.tz(new Date(), 'Asia/Kolkata');
+    console.log('Current time (IST):', now.format('YYYY-MM-DD HH:mm:ss Z'));
     const userId = req.query.userId || req.params.userId;
     const type = req.query.type; // 'past' or 'future'
     const page = parseInt(req.query.page) || 1;
@@ -889,8 +891,17 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
       let [hours, minutes] = rawTime.split(":").map(Number);
       if (modifier === "PM" && hours !== 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
-      return new Date(year, month - 1, day, hours, minutes);
+      // return new Date(year, month - 1, day, hours, minutes);
+      const dateTime = moment.tz(
+        `${year}-${month}-${day} ${hours}:${minutes}`,
+        'YYYY-M-D H:m',
+        'Asia/Kolkata'
+      );
+      return dateTime;
+  
     };
+
+
     // Construct filter to find kitties created by or joined by this user
     const filter = userId
       ? {
@@ -914,6 +925,10 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     // Filter out kitties based on date and remove ones created by this user
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
+      console.log(
+        `Kitty ${kitty.name} DateTime (IST):`,
+        kittyDateTime.format('YYYY-MM-DD HH:mm:ss Z')
+      );
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
       // Exclude kitties where the creator's ID matches current user

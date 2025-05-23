@@ -27,7 +27,12 @@ module.exports = (wss) => {
             break;
 
             // Utility to extract @mentions from content
-            const extractMentions = (text) => {
+          
+
+          case 'sendMessage':
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions ,message} = data;
+            
+  const extractMentions = (text) => {
               const regex = /@([\w\s]+)/g; // matches @Full Name with spaces
               const mentions = [];
               let match;
@@ -36,11 +41,12 @@ module.exports = (wss) => {
               }
               return mentions;
             }
+             const userData = await UserModel.findById(senderId); 
 
-          case 'sendMessage':
-            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
-            
-
+              if (!userData) {
+                ws.send(JSON.stringify({ error: 'User not found' }));
+                return;
+              }
             // Ensure at least one of content, image, video, or document and poll options is provided
             if (!content && !image && !video && !document && !pollOptions) {
               ws.send(JSON.stringify({ error: 'At least one of content, image, video, document and poll options must be provided' }));
