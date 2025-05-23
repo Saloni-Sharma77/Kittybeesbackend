@@ -5,7 +5,7 @@ const User = require('../schema/userSchema'); // Make sure to import your User m
 module.exports = (wss) => {
   // const clients = new Map();
     const clients = new Map(); 
-//  global.clients = clients;
+ global.clients = clients;
 
   wss.on('connection', (ws) => {
     console.log('New client connected');
@@ -27,12 +27,7 @@ module.exports = (wss) => {
             break;
 
             // Utility to extract @mentions from content
-          
-
-          case 'sendMessage':
-            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions } = data;
-            
-  const extractMentions = (text) => {
+            const extractMentions = (text) => {
               const regex = /@([\w\s]+)/g; // matches @Full Name with spaces
               const mentions = [];
               let match;
@@ -41,7 +36,11 @@ module.exports = (wss) => {
               }
               return mentions;
             }
-         
+
+          case 'sendMessage':
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions,message } = data;
+            
+
             // Ensure at least one of content, image, video, or document and poll options is provided
             if (!content && !image && !video && !document && !pollOptions) {
               ws.send(JSON.stringify({ error: 'At least one of content, image, video, document and poll options must be provided' }));
@@ -102,6 +101,11 @@ module.exports = (wss) => {
               _id: newMessage._id
             };
 
+
+            if (message && message.trim() !== '') {
+      response.message = message;
+    }
+ 
             // Broadcast the new message to everyone in the group
             clients.get(groupIdSend).forEach(client => {
               if (client.readyState === WebSocket.OPEN) {
