@@ -121,39 +121,69 @@ exports.signup = async (req, res) => {
   };
 
 
-  exports.getCountOfGroupAndInvolveByme = async (req, res) => {
-    try {
-      const userId = req.params.userId;
+  // exports.getCountOfGroupAndInvolveByme = async (req, res) => {
+  //   try {
+  //     const userId = req.params.userId;
   
-      // Get the count of groups created by the user
-      const groupCount = await GroupModel.countDocuments({ userId });
+  //     // Get the count of groups created by the user
+  //     const groupCount = await GroupModel.countDocuments({ userId });
   
-      // Get the count of groups the user is involved in (with status 'approved')
-      const joinedGroupsCount = await GroupModel.countDocuments({
-        userIds: {
-          $elemMatch: { userId: userId, status: 'approved' },
-        },
-      });
+  //     // Get the count of groups the user is involved in (with status 'approved')
+  //     const joinedGroupsCount = await GroupModel.countDocuments({
+  //       userIds: {
+  //         $elemMatch: { userId: userId, status: 'approved' },
+  //       },
+  //     });
       
   
-      // Calculate total count
-      const totalCount = groupCount + joinedGroupsCount;
+  //     // Calculate total count
+  //     const totalCount = groupCount + joinedGroupsCount;
   
-      // Respond with the total count
-      res.status(200).json({
-        success: true,
-        count: totalCount,
+  //     // Respond with the total count
+  //     res.status(200).json({
+  //       success: true,
+  //       count: totalCount,
  
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Something went wrong',
-        error: error.message,
-      });
-    }
-  };
+  //     });
+  //   } catch (error) {
+  //     res.status(500).json({
+  //       success: false,
+  //       message: 'Something went wrong',
+  //       error: error.message,
+  //     });
+  //   }
+  // };
   
+exports.getCountOfGroupAndInvolveByme = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Fetch groups hosted by the user
+    const hostedGroups = await GroupModel.find({ userId }).select('_id');
+
+    // Fetch groups where the user is an approved member
+    const joinedGroups = await GroupModel.find({
+      userIds: { $elemMatch: { userId: userId, status: 'approved' } },
+    }).select('_id');
+
+    // Combine and deduplicate using a Set
+    const groupIds = new Set();
+
+    hostedGroups.forEach(group => groupIds.add(group._id.toString()));
+    joinedGroups.forEach(group => groupIds.add(group._id.toString()));
+
+    res.status(200).json({
+      success: true,
+      count: groupIds.size,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Something went wrong',
+      error: error.message,
+    });
+  }
+};
 
 
   exports.getuserById = async(req,res)=>{

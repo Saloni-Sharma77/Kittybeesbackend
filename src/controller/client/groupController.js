@@ -422,7 +422,74 @@ exports.getAllGroups = async (req, res) => {
 //     res.status(500).json({ message: "Server error" });
 //   }
 // };
-
+exports.getGroupHostedByMe = async (req, res) => {
+  try {
+    const { name = '' } = req.query;
+    const userId = req.params.id;
+ 
+    // Build search filter for group name
+    const nameFilter = name ? { name: { $regex: name, $options: 'i' } } : {};
+ 
+    // Fetch both hosted and joined groups in a single query
+    const groups = await Group.find({
+      $or: [
+        { userId }, // Hosted groups
+        { userIds: { $elemMatch: { userId: userId, status: "approved" } } }, // Only approved members
+      ],
+      ...nameFilter,
+    })
+      .sort({ createdAt: -1 })
+      .populate('groupInterestId')
+      .populate('groupFrequencyId')
+      .populate('userIds.userId', '_id fullname');
+ 
+    // Initialize counts
+    let hostedCount = 0;
+    let joinedCount = 0;
+// console.log(groups,"groupsgroupsgroups");
+ 
+    // Process the groups and remove duplicate entries
+    const groupMap = new Map();
+ 
+    groups.forEach(group => {
+      const groupId = group._id.toString();
+      
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, { ...group.toObject(), isHosted: false, isJoined: false });
+      }
+ 
+      if (group.userId.toString() === userId) {
+        groupMap.get(groupId).isHosted = true;
+        hostedCount++;
+      }
+ 
+      if (group.userIds.some(user => user.userId && user.userId._id.toString() === userId)) {
+        groupMap.get(groupId).isJoined = true;
+        joinedCount++;
+      }
+    });
+ 
+    // Convert map values to an array
+    const allGroups = Array.from(groupMap.values());
+ 
+    // Filter out null userIds
+    allGroups.forEach(group => {
+      if (group.userIds && Array.isArray(group.userIds)) {
+        group.userIds = group.userIds.filter(user => user.userId != null);
+      }
+    });
+ 
+    res.status(200).json({
+      message: "Groups fetched successfully",
+      data: allGroups,
+      hostedCount,
+      joinedCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 exports.getGroupHostedByMe = async (req, res) => {
   try {
     const { name = '' } = req.query;
