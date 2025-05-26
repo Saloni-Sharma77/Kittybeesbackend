@@ -545,49 +545,50 @@ console.log(adminnotify,"adminnotify")
       messageDoc.messages.push(newMessage);
     }
   await messageDoc.save();
-const groupClients = req.clients.get(groupId);
-    if (groupClients) {
+
+// const groupClients = req.clients.get(groupId);
+//     if (groupClients) {
+//       const response = {
+//         type: 'receiveMessage',
+//         content: '',
+//         groupId: groupId,
+//         senderId: userId,
+//         fullname: sender.fullname || 'Unknown User',
+//         profileImage: sender.profileImage || '',
+//         image: '',
+//         video: '',
+//         document: '',
+//         poll: '',
+//         pollOptions: '',
+//         mentions: [],
+//         message: newMessage.message,
+//         timestamp: newMessage.timestamp,
+//       };
+
+  await Message.findOneAndUpdate(
+      { groupId },
+      { $push: { message: newMessage } },
+      { upsert: true, new: true }
+    );
+
+  if (global.clients && global.clients.has(groupId)) {
+      const groupClients = global.clients.get(groupId);
       const response = {
         type: 'receiveMessage',
-        content: '',
-        groupId: groupId,
-        senderId: userId,
-        fullname: sender.fullname || 'Unknown User',
-        profileImage: sender.profileImage || '',
+        // content: newMessage.content,
+        // content: '',
+
+        groupId,
+      senderId: userId,
+        profileImage: '',
         image: '',
         video: '',
         document: '',
-        poll: '',
-        pollOptions: '',
+        message: newMessage.message, 
         mentions: [],
-        message: newMessage.message,
-        timestamp: newMessage.timestamp,
+           timestamp: Date.now(),
+
       };
-
-  // await Message.findOneAndUpdate(
-  //     { groupId },
-  //     { $push: { message: newMessage } },
-  //     { upsert: true, new: true }
-  //   );
-
-  // if (global.clients && global.clients.has(groupId)) {
-  //     const groupClients = global.clients.get(groupId);
-  //     const response = {
-  //       type: 'receiveMessage',
-  //       // content: newMessage.content,
-  //       // content: '',
-
-  //       groupId,
-  //     senderId: userId,
-  //       profileImage: '',
-  //       image: '',
-  //       video: '',
-  //       document: '',
-  //       message: newMessage.message, 
-  //       mentions: [],
-  //          timestamp: Date.now(),
-
-  //     };
 
       groupClients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
