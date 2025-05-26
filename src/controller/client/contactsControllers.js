@@ -161,11 +161,16 @@ exports.getCommonContacts = async (req, res) => {
     if (!matchedUsers) {
       return res.status(404).json({ message: "No common contacts found." });
     }
+const filteredUsers = matchedUsers.filter(user => user.fullname && user.fullname.trim() !== "");
 
+    if (filteredUsers.length === 0) {
+      return res.status(404).json({ message: "No common contacts with a full name found." });
+    }
 
     return res.status(200).json({
       message: "Common contacts fetched successfully",
-      matchedUsers,
+      matchedUsers: filteredUsers,
+      // matchedUsers,
     });
 
   } catch (error) {
