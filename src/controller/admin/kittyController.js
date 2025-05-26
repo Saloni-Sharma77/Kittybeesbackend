@@ -1317,7 +1317,8 @@ exports.getAllKittyForMe = async (req, res) => {
 
     let KittyData = await Kitty.find(query)
       .lean()
-      .populate("venueId", "name")
+      // .populate("venueId", "name")
+      .populate("venueId", "name location")
       .populate("groupId", "name contributionAmount groupType")
       .populate("themeId", "name");
 
