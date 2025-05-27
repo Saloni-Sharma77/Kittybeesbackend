@@ -971,7 +971,17 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
           )
         );
 
-        const shouldExclude = isRequestedInMembers && isRequestedInGroup;
+         const isRejectedOrDeclinedInMembers = Array.isArray(kitty.members) &&
+    kitty.members.some(
+      (member) =>
+        member.userId == userId &&
+        (member.status === "rejected" || member.status === "declined")
+    );
+
+       const shouldExclude =
+  (isRequestedInMembers && isRequestedInGroup) ||
+  isRejectedOrDeclinedInMembers;
+
 
       return isCorrectTime && !isCreatedByCurrentUser && !isCurrentUserApproved && !shouldExclude;
     });
