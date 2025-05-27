@@ -31,6 +31,7 @@ const messageArray = new Schema({
   image: { type: String, default: '' },
   video: { type: String, default: '' },
   document: { type: String, default: '' },
+  tamp: String, 
   timestamp: { type: Date, default: Date.now },
   pollOptions: { type: pollSchema, default: null }, // Embed the poll schema
   amount: { type: Number, default: 0 }, // Store amount value

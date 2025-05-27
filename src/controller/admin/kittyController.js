@@ -521,15 +521,10 @@ console.log(adminnotify,"adminnotify")
     const sender = await UserSchema.findById(userId).select('fullname');
 
 
-  // const newMessage = {
-  //   senderId: userId,
-  //   name: sender.fullname || "Unknown User",
-  //   message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
-  //   timestamp: Date.now(),
-  // };
   const newMessage = {
   senderId: userId,
   message: `${sender.fullname} created a new kitty: ${newKitty.name}`,
+  tamp: tampimage,
   timestamp: Date.now(),
 };
 
@@ -546,24 +541,7 @@ console.log(adminnotify,"adminnotify")
     }
   await messageDoc.save();
 
-// const groupClients = req.clients.get(groupId);
-//     if (groupClients) {
-//       const response = {
-//         type: 'receiveMessage',
-//         content: '',
-//         groupId: groupId,
-//         senderId: userId,
-//         fullname: sender.fullname || 'Unknown User',
-//         profileImage: sender.profileImage || '',
-//         image: '',
-//         video: '',
-//         document: '',
-//         poll: '',
-//         pollOptions: '',
-//         mentions: [],
-//         message: newMessage.message,
-//         timestamp: newMessage.timestamp,
-//       };
+
 
   await Message.findOneAndUpdate(
       { groupId },
@@ -585,8 +563,9 @@ console.log(adminnotify,"adminnotify")
         video: '',
         document: '',
         message: newMessage.message, 
+        tamp: tampimage,
         mentions: [],
-           timestamp: Date.now(),
+        timestamp: Date.now(),
 
       };
 
