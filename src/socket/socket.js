@@ -38,7 +38,7 @@ module.exports = (wss) => {
             }
 
           case 'sendMessage':
-            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions,message } = data;
+            const { groupId: groupIdSend, senderId: senderIdSend, content, image, video, document,pollOptions,message,tamp } = data;
             
 
             // Ensure at least one of content, image, video, or document and poll options is provided
@@ -62,11 +62,10 @@ module.exports = (wss) => {
               video,
               document,
               pollOptions,
-              mentions: mentionedUserIds,  // 💡 Store mentioned user IDs if your schema supports it
-              timestamp: new Date() // Add timestamp here
+              mentions: mentionedUserIds, 
+              timestamp: new Date() 
             };
 
-            // Find or create the message document by groupId
             let messageDoc = await Message.findOne({ groupId: groupIdSend });
 
             if (!messageDoc) {
@@ -93,6 +92,7 @@ module.exports = (wss) => {
               fullname: newMessage.senderId.fullname,
               content: newMessage.content || '',
               image: newMessage.image || '',
+              tamp: tamp || '',
               video: newMessage.video || '',
               document: newMessage.document || '',
               timestamp: newMessage.timestamp,

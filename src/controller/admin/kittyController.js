@@ -543,18 +543,12 @@ console.log(adminnotify,"adminnotify")
 
 
 
-  await Message.findOneAndUpdate(
-      { groupId },
-      { $push: { message: newMessage } },
-      { upsert: true, new: true }
-    );
+  
 
   if (global.clients && global.clients.has(groupId)) {
       const groupClients = global.clients.get(groupId);
       const response = {
         type: 'receiveMessage',
-        // content: newMessage.content,
-        // content: '',
 
         groupId,
       senderId: userId,
@@ -563,17 +557,20 @@ console.log(adminnotify,"adminnotify")
         video: '',
         document: '',
         message: newMessage.message, 
-        tamp: tampimage,
+        tamp: newMessage.tamp,
         mentions: [],
         timestamp: Date.now(),
 
       };
 
-      groupClients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(response));
-        }
-      });
+       groupClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(response));
+      console.log("Sent message to a client in group");
+    } else {
+      console.log("Client not open:", client.readyState);
+    }
+  });
     }
  res
       .status(201)
