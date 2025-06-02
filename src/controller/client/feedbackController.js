@@ -20,7 +20,7 @@ exports.createFeedback = async (req, res) => {
 // Get all feedbacks
 exports.getFeedbacks = async (req, res) => {
   try {
-    const feedbacks = await Feedback.find().populate('userId', 'name'); // Assuming the User model has a 'name' field
+    const feedbacks = await Feedback.find().populate('userId', 'fullname email phoneNumber');
     res.status(200).json(feedbacks);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
