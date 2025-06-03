@@ -13,6 +13,8 @@ const TemplateSchema = new mongoose.Schema({
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
    isActive:{type:Boolean,default : true},
 
+    timestamps: true, 
+  
 });
 
 module.exports = mongoose.model('Template', TemplateSchema);
