@@ -6,6 +6,8 @@ const feedbackSchema = new mongoose.Schema({
     ref: 'Users', // Assuming you have a User model
     required: true
   },
+   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   description: {
     type: String,
     required: true

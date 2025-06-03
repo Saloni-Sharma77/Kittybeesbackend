@@ -124,7 +124,7 @@ console.log(req.body);
       console.log('No tokens found for group members');
     }
 
-    // Final response
+   
     res.status(201).json({ message: 'Group added successfully', group: newGroup });
 
   } catch (err) {

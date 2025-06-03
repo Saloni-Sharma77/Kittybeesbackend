@@ -3,14 +3,16 @@ const ColorModel = require('../../schema/colorSchema');
 
 exports.addColor = async (req, res) => {
     try {
-        const { name} = req.body;
+        const { name,  createdBy,
+          updatedBy,} = req.body;
         let alreadyexist = await ColorModel.findOne({name: name});
         if(alreadyexist){
           return res.status(200).json({error:"Color Already Exists"})
         }
         
         const newColor = new ColorModel({
-            name
+            name,  createdBy,
+          updatedBy,
         });
   
         await newColor.save();
@@ -26,11 +28,13 @@ exports.addColor = async (req, res) => {
   exports.updateColor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, createdBy,
+          updatedBy } = req.body;
   
         const updatedColor = await ColorModel.findByIdAndUpdate(
             id,
-            { name},
+            { name, createdBy,
+          updatedBy,},
             { new: true, runValidators: true }
         );
   
@@ -66,7 +70,7 @@ exports.addColor = async (req, res) => {
     
     exports.getAllColor = async (req, res) => {
       try {
-        const getAllColor = await ColorModel.find().sort({ createdAt: -1 });
+        const getAllColor = await ColorModel.find().populate('createdBy','fullname').populate('updatedBy','fullname').sort({ createdAt: -1 });
         res.status(200).json({ 
           message: "Color retrieved successfully", 
           data: {events:getAllColor} 
