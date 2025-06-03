@@ -28,6 +28,8 @@ exports.addGroup = async (req, res) => {
       groupCityArea,
       contributionAmount,
       image,
+       createdBy,
+          updatedBy,
       referralCode
     } = req.body;
 
@@ -61,7 +63,9 @@ console.log(req.body);
       groupCityArea,
       contributionAmount,
       image,
-      referralCode
+      referralCode,
+       createdBy,
+          updatedBy,
     });
 
     // Set status for userIds as 'approved'
@@ -291,7 +295,7 @@ exports.getAllGroups = async (req, res) => {
     const totalGroups = await Group.countDocuments(query);
 
     // Fetch groups with pagination
-    const getAllGroup = await Group.find(query)
+    const getAllGroup = await Group.find(query).populate('createdBy','fullname').populate('updatedBy','fullname')
       .populate('userIds.userId', '_id fullname')
       .populate('userId')
       .populate('groupFrequencyId')

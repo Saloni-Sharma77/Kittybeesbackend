@@ -37,7 +37,9 @@ const GroupSchema = new mongoose.Schema(
         name: { type: String, required: true },
         phoneNumber: { type: String, required: true }
       }
-    ]
+    ],
+     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     // userNumbers:[
     //   { type: String }
     // ],
