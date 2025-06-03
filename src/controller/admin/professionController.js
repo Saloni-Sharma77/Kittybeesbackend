@@ -3,12 +3,14 @@ const profession = require('../../schema/professionSchema')
 //create  new profession 
 exports.createProfession = async(req,res)=>{
     try {
-        const {name} = req.body
+        const {name, createdBy,
+          updatedBy,} = req.body
         const exists = await profession.findOne({name})
         if(exists){
             return res.status(400).json({ message: "profession already exists" });
         }
-        const newProfession = new profession({name})
+        const newProfession = new profession({name, createdBy,
+          updatedBy,})
         await newProfession.save()
         res.status(201).json({ message: "Profesion created successfully", newProfession });
 
@@ -21,7 +23,7 @@ exports.createProfession = async(req,res)=>{
 
 exports.getAllProfessions = async(req,res)=>{
     try {
-        const result = await profession.find()
+        const result = await profession.find().populate('createdBy','fullname').populate('updatedBy','fullname')
         if(result){
             res.status(200).json({res:result})
         }
