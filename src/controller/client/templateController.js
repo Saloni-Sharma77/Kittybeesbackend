@@ -3,8 +3,10 @@ const Template = require('../../schema/templateSchema');
 // Create a new template entry
 exports.createTemplate = async (req, res) => {
     try {
-        const { name, image } = req.body;
-        const newTemplate = new Template({ name, image });
+        const { name, image, createdBy,
+          updatedBy, } = req.body;
+        const newTemplate = new Template({ name, image , createdBy,
+          updatedBy,});
         await newTemplate.save();
         res.status(201).json({ message: 'Template created successfully', data: newTemplate });
     } catch (error) {
@@ -15,7 +17,7 @@ exports.createTemplate = async (req, res) => {
 // Get all templates
 exports.getAllTemplates = async (req, res) => {
     try {
-        const templates = await Template.find();
+        const templates = await Template.find().populate('createdBy','fullname').populate('updatedBy','fullname');
         res.status(200).json({ message: 'Templates fetched successfully', data: templates });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching templates', error });
@@ -38,8 +40,10 @@ exports.getTemplateById = async (req, res) => {
 // Update template by ID
 exports.updateTemplateById = async (req, res) => {
     try {
-        const { name, image } = req.body;
-        const updatedTemplate = await Template.findByIdAndUpdate(req.params.id, { name, image }, { new: true });
+        const { name, image, createdBy,
+          updatedBy, } = req.body;
+        const updatedTemplate = await Template.findByIdAndUpdate(req.params.id, { name, image,  createdBy,
+          updatedBy }, { new: true });
         if (!updatedTemplate) {
             return res.status(404).json({ message: 'Template not found' });
         }

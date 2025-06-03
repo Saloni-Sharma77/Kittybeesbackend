@@ -9,7 +9,9 @@ const TemplateSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-  isActive:{type:Boolean,default : true},
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+   isActive:{type:Boolean,default : true},
 
 });
 
