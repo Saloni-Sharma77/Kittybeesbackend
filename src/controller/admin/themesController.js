@@ -3,11 +3,14 @@ const ThemesModel = require("../../schema/themeSchema");
 
 exports.addThemes = async (req, res) => {
   try {
-      const { name ,image,backgroundimage} = req.body;
+      const { name ,image,backgroundimage,      createdBy,
+          updatedBy,} = req.body;
       const newThemes = new ThemesModel({
           name,
           image,
           backgroundimage,
+          createdBy,
+          updatedBy,
       });
 
       await newThemes.save();
@@ -23,11 +26,13 @@ exports.addThemes = async (req, res) => {
 exports.updateThemes = async (req, res) => {
   try {
       const { id } = req.params;
-      const { name,image ,backgroundimage} = req.body;
+      const { name,image ,backgroundimage,   createdBy,
+          updatedBy,} = req.body;
 
       const updatedThemes = await ThemesModel.findByIdAndUpdate(
           id,
-          { name,image,backgroundimage },
+          { name,image,backgroundimage,   createdBy,
+          updatedBy, },
           { new: true, runValidators: true }
       );
 
@@ -63,10 +68,10 @@ exports.updateThemes = async (req, res) => {
   
   exports.getAllThemes = async (req, res) => {
     try {
-      const getAllThemes = await ThemesModel.find().sort({ createdAt: -1 });
+      const getAllThemes = await ThemesModel.find().populate('createdBy','fullname').populate('updatedBy','fullname').sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "Themes retrieved successfully", 
-        data: {events:getAllThemes} 
+        data: {events:getAllThemes}  
       });
     } catch (err) {
       res.status(500).json({
