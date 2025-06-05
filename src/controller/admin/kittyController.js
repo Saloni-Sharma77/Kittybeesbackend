@@ -282,7 +282,7 @@ exports.addKitty = async (req, res) => {
       date,
       time,
       image,
-      themeId,
+      themeId, 
       instructions,
       colorId,
       venueId,
@@ -295,7 +295,10 @@ exports.addKitty = async (req, res) => {
       planKittypoll,
       activityKittypoll,
       tampimage,
-      customTheme
+      customTheme,
+        createdBy,
+          updatedBy,
+      
     } = req.body;
 
     // Validation checks
@@ -434,7 +437,9 @@ exports.addKitty = async (req, res) => {
       planKittypoll: planKittyPollData,
       activityKittypoll: activityKittyPollData,
       members,
-      tampimage
+      tampimage,
+        createdBy,
+          updatedBy,
 
     });
 console.log(members,"members")
@@ -600,7 +605,12 @@ exports.updateKitty = async (req, res) => {
       theamepoll,
       locationpoll,
       venuepoll,
-      customTheme
+      customTheme,
+           createdBy,
+          updatedBy,
+      
+
+
     } = req.body;
 
     const { kittyId } = req.params;
@@ -725,7 +735,7 @@ exports.updateKitty = async (req, res) => {
 
 exports.getAllKittys = async (req, res) => {
   try {
-    const getAllKitty = await Kitty.find()
+    const getAllKitty = await Kitty.find().populate('createdBy','fullname').populate('updatedBy','fullname')
       .populate({
         path: "groupId",
         populate: {

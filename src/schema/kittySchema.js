@@ -55,6 +55,8 @@ kittyMemories:[{
     comment: { type: String },                                    // Optional comment
     checkboxOptions: [{ type: String }]                           // Checkbox selections
   }],
+      createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
