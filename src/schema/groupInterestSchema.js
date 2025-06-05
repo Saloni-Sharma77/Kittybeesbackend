@@ -5,6 +5,8 @@ const groupInterestSchema = new mongoose.Schema({
         unique: true, // Ensure the name is unique
         trim: true
     },
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+            updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     isActive:{type:Boolean,default : true},
 },{timestamps:true} );
 

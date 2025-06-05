@@ -1017,10 +1017,13 @@ exports.deleteFrequencyGroup = async (req, res) => {
 exports.addGroupInterest = async (req, res) => {
   try {
     const {
-        name ,
+        name ,      createdBy,
+          updatedBy,
     } = req.body;
     const newGroupInt= new GroupInterestModel({
         name ,
+          createdBy,
+          updatedBy,
     });
 
     await newGroupInt.save();
@@ -1032,7 +1035,7 @@ exports.addGroupInterest = async (req, res) => {
 };
 exports.getAllGroupsInterest = async (req, res) => {
   try {
-    const getAllGroupInt = await GroupInterestModel.find().sort({ createdAt: -1 }) ;
+    const getAllGroupInt = await GroupInterestModel.find().populate('createdBy','fullname').populate('updatedBy','fullname').sort({ createdAt: -1 }) ;
    
     res
       .status(200)
