@@ -117,7 +117,9 @@ exports.addVenue = async (req, res) => {
       pricing,
       contactNo,
       kittiesHappened,
-      kittiesBooked
+      kittiesBooked,
+      createdBy,
+      updatedBy,
     } = req.body;
 
     // Validation checks
@@ -149,7 +151,9 @@ exports.addVenue = async (req, res) => {
       pricing,
       contactNo,
       kittiesHappened,
-      kittiesBooked
+      kittiesBooked,
+      createdBy,
+      updatedBy,
     });
 
     await newVenue.save();
@@ -175,7 +179,9 @@ exports.updateVenue = async (req, res) => {
       pricing,
       contactNo,
       kittiesHappened,
-      kittiesBooked
+      kittiesBooked,
+      createdBy,
+      updatedBy,
     } = req.body;
 
     // Validation checks
@@ -202,7 +208,9 @@ exports.updateVenue = async (req, res) => {
         pricing,
         contactNo,
         kittiesHappened,
-        kittiesBooked
+        kittiesBooked,
+        createdBy,
+        updatedBy,
       },
       { new: true }
     );
@@ -492,7 +500,50 @@ console.log(filterData,'filterData')
           kittiesBooked: { $ifNull: [{ $arrayElemAt: ['$bookingRequestCountTemp.count', 0] }, 0] }
         }
       },
-      { $unset: 'bookingRequestCountTemp' },            
+      { $unset: 'bookingRequestCountTemp' },  
+      
+      
+        {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy'
+        }
+      },
+      {
+        $unwind: {
+          path: '$createdBy',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          createdBy: '$createdBy.fullname'
+        }
+      },
+
+      // Populate updatedBy
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'updatedBy',
+          foreignField: '_id',
+          as: 'updatedBy'
+        }
+      },
+      {
+        $unwind: {
+          path: '$updatedBy',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          updatedBy: '$updatedBy.fullname'
+        }
+      },
+
       { $sort: { createdAt: -1 } },
       { $skip: (pageNumber - 1) * pageSize },
       { $limit: pageSize }

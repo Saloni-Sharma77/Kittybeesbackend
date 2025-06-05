@@ -13,6 +13,8 @@ const GroupSchema = new mongoose.Schema({
   pricing: { type: String },
   contactNo: { type: String },
   isActive: { type: Boolean, default: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   venueTypeId: { type: mongoose.Schema.Types.ObjectId, ref: 'VenueType' },
   kittiesHappened: { type: Number, default: 0 },  // New field
   kittiesBooked: { type: Number, default: 0 }     // New field
