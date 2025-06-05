@@ -715,7 +715,8 @@ exports.updateKitty = async (req, res) => {
     };
 
     // Find and update the kitty by ID
-    const updatedKitty = await Kitty.findByIdAndUpdate(kittyId, updatedData, {
+    const updatedKitty = await Kitty.findByIdAndUpdate(kittyId, updatedData, createdBy,
+          updatedBy, {
       new: true,
     });
 
