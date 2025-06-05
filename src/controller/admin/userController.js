@@ -211,7 +211,7 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
       error: "Failed to get user information",
       details: err.message
     });
-  }
+  }t
   }
 
   exports.updateUserInfo = async (req, res) => {
