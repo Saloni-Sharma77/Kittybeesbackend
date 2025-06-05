@@ -66,7 +66,7 @@ exports.signup = async (req, res) => {
         ...(fullname && { fullname: { $regex: fullname, $options: "i" } }), // Add search condition if fullname is provided
       };
       // const query = fullname ? { fullname: { $regex: fullname, $options: "i" } } : {};
-      let getAllUsers = await UsersModel.find(query).sort({ createdAt: -1 });
+      let getAllUsers = await UsersModel.find(query).populate('createdBy','fullname').populate('updatedBy','fullname').sort({ createdAt: -1 });
       getAllUsers = getAllUsers.filter((item)=> item?.role !== 'admin')
       res.status(200).json({ 
         message: "User information retrieved successfully", 
@@ -254,6 +254,8 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
           username,
           about,
           sociallinks,
+          createdBy,
+          updatedBy,
         },
         { new: true, runValidators: true } // Return the updated document
       );

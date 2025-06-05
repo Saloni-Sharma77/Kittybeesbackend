@@ -37,7 +37,8 @@ sociallinks: [
   partyArr:{type:Array},
   activityArr:{type:Array},
   profileImage:{type:String,default : 'https://kittybee.s3.ap-south-1.amazonaws.com/profile_images/defaultProfile.png'},
-
+ createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
 
 
 

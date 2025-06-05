@@ -193,7 +193,8 @@ exports.updateUserInfo = async (req, res) => {
 
   try {
     const updatedUser = await UsersModel.findOneAndUpdate(
-      { phoneNumber }, // Find user by phone number
+      { phoneNumber ,createdBy,
+          updatedBy, }, // Find user by phone number
       { $set: updateData }, // Update only the fields that are present in updateData
       { new: true, upsert: false } // Return the updated document
     );
