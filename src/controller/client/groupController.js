@@ -1064,12 +1064,14 @@ exports.getGroupInterestById = async (req, res) => {
 exports.updateInterestGroup = async (req, res) => {
   try {
     const {
-        name ,
+        name , createdBy,
+          updatedBy,
       } = req.body;
-    const updatedcatGroup = await GroupInterestModel.findByIdAndUpdate(
+    const updatedintGroup = await GroupInterestModel.findByIdAndUpdate(
       req.params.id,
     {
-        name ,
+        name , createdBy,
+          updatedBy,
     },
       { new: true }
     );
