@@ -902,12 +902,14 @@ exports.addGroupFrequency = async (req, res) => {
     const {
         name ,
         userId,
-        createdBy
+     createdBy,
+          updatedBy,
     } = req.body;
     const newGroupCat= new GroupFrequencyModel({
         name ,
         userId,
-        createdBy
+        createdBy,
+          updatedBy,
     });
 
     await newGroupCat.save();
@@ -945,7 +947,7 @@ exports.getAllGroupsFrequencyOfUser = async (req, res) => {
 
 exports.getAllGroupsFrequency = async (req, res) => {
   try {
-    const getAllGroupCat = await GroupFrequencyModel.find().sort({ name: 1 }) ;
+    const getAllGroupCat = await GroupFrequencyModel.find().populate('createdBy','fullname').populate('updatedBy','fullname').sort({ name: 1 }) ;
    
     res
       .status(200)
@@ -974,12 +976,14 @@ exports.getGroupFrequencyById = async (req, res) => {
 exports.updateFrequencyGroup = async (req, res) => {
   try {
     const {
-        name ,
+        name , createdBy,
+          updatedBy
       } = req.body;
     const updatedcatGroup = await GroupFrequencyModel.findByIdAndUpdate(
       req.params.id,
     {
-        name ,
+        name , createdBy,
+          updatedBy
     },
       { new: true }
     );
