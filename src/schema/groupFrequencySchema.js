@@ -6,8 +6,8 @@ const groupFrequencySchema = new mongoose.Schema({
         trim: true
     },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    createdBy: { type: String, enum: ['admin', 'user'], default: 'admin' },
-
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     isActive:{type:Boolean,default : true},
 },{timestamps:true} );
 

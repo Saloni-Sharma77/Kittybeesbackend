@@ -916,6 +916,7 @@ exports.addGroupFrequency = async (req, res) => {
 
     res.status(201).json({ message: "Group Frequency added successfully", task: newGroupCat });
   } catch (err) {
+        console.error("Add GroupFrequency Error:", err);
     res.status(500).json({ error: "Failed to add GroupFrequency" });
   }
 };
