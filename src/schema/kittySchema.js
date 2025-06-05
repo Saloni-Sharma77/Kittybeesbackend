@@ -49,8 +49,8 @@ kittyMemories:[{
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   memoryimage: { type: String }, 
   }],
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
-      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
   kittyReviews: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' }, // Reviewer
     rating: { type: Number, min: 1, max: 5, required: true },      // Star rating

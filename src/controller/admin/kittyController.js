@@ -296,8 +296,8 @@ exports.addKitty = async (req, res) => {
       activityKittypoll,
       tampimage,
       customTheme,
-        createdBy,
-          updatedBy,
+      createdBy,
+      updatedBy,
       
     } = req.body;
 
@@ -438,8 +438,8 @@ exports.addKitty = async (req, res) => {
       activityKittypoll: activityKittyPollData,
       members,
       tampimage,
-        createdBy,
-          updatedBy,
+      createdBy,
+      updatedBy,
 
     });
 console.log(members,"members")
@@ -606,8 +606,8 @@ exports.updateKitty = async (req, res) => {
       locationpoll,
       venuepoll,
       customTheme,
-           createdBy,
-          updatedBy,
+      createdBy,
+      updatedBy,
       
 
 
