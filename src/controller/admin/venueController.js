@@ -119,10 +119,10 @@ exports.addVenue = async (req, res) => {
       kittiesHappened,
       kittiesBooked,
       createdBy,
-      updatedBy,
+      updatedBy
     } = req.body;
 
-    // Validation checks
+   
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: "Name is required and must be a string" });
     }
@@ -502,8 +502,7 @@ console.log(filterData,'filterData')
       },
       { $unset: 'bookingRequestCountTemp' },  
       
-      
-        {
+       {
         $lookup: {
           from: 'users',
           localField: 'createdBy',
@@ -515,11 +514,6 @@ console.log(filterData,'filterData')
         $unwind: {
           path: '$createdBy',
           preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $addFields: {
-          createdBy: '$createdBy.fullname'
         }
       },
 
@@ -536,11 +530,6 @@ console.log(filterData,'filterData')
         $unwind: {
           path: '$updatedBy',
           preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $addFields: {
-          updatedBy: '$updatedBy.fullname'
         }
       },
 
