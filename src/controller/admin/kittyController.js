@@ -712,11 +712,13 @@ exports.updateKitty = async (req, res) => {
       ...(theamepoll && { theamepoll: theamePollData }),
       ...(locationpoll && { locationpoll: locationPollData }),
       ...(venuepoll && { venuepoll: venuePollData }),
+      ...(createdBy && { createdBy }),
+      ...(updatedBy && { updatedBy }),
     };
 
     // Find and update the kitty by ID
-    const updatedKitty = await Kitty.findByIdAndUpdate(kittyId, updatedData, createdBy,
-          updatedBy, {
+    const updatedKitty = await Kitty.findByIdAndUpdate(kittyId, updatedData, 
+           {
       new: true,
     });
 
