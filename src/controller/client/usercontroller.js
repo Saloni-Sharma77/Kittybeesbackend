@@ -158,7 +158,7 @@ exports.adduserInfo = async (req, res) => {
 
 
 exports.updateUserInfo = async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { phoneNumber,createdBy, updatedBy } = req.body;
 
   if (!phoneNumber) {
     return res.status(400).json({ error: "Phone number is required" });

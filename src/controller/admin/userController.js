@@ -232,6 +232,8 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
       username,
       about,
       sociallinks,
+       createdBy,
+          updatedBy,
     } = req.body;
   
     console.log(req.body, "response");
