@@ -4,7 +4,13 @@ const VenueCategory = require('../../schema/venueCategorySchema');
 // Create a new venue category
 exports.createVenueCategory = async (req, res) => {
     try {
-        const venueCategory = new VenueCategory(req.body);
+         const { name, isActive, createdBy, updatedBy } = req.body;
+    const venueCategory = new VenueCategory({
+      name,
+      isActive,
+      createdBy,
+      updatedBy,
+    });
         await venueCategory.save();
         res.status(201).json(venueCategory);
     } catch (error) {
@@ -15,7 +21,7 @@ exports.createVenueCategory = async (req, res) => {
 // Get all venue categories
 exports.getAllVenueCategories = async (req, res) => {
     try {
-        const venueCategories = await VenueCategory.find();
+        const venueCategories = await VenueCategory.find().populate('createdBy','fullname').populate('updatedBy','fullname');
         res.status(200).json(venueCategories);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -36,7 +42,19 @@ exports.getVenueCategoryById = async (req, res) => {
 // Update a venue category by ID
 exports.updateVenueCategory = async (req, res) => {
     try {
-        const venueCategory = await VenueCategory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            const { updatedBy, ...rest } = req.body;
+
+        // const venueCategory = await VenueCategory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+ const venueCategory = await VenueCategory.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...rest,
+        ...(updatedBy && { updatedBy }), // only add if present
+      },
+      { new: true }
+    );
+
+
         if (!venueCategory) return res.status(404).json({ message: 'Venue Category not found' });
         res.status(200).json(venueCategory);
     } catch (error) {

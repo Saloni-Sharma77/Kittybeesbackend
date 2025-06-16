@@ -3,8 +3,8 @@ const PostTag = require('../../schema/postTagSchema');
 // Create new post tag
 exports.createPostTag = async (req, res) => {
     try {
-        const { name, isActive } = req.body;
-        const newPostTag = new PostTag({ name, isActive });
+        const { name, isActive,createdBy,updatedBy } = req.body;
+        const newPostTag = new PostTag({ name, isActive,createdBy,updatedBy });
         await newPostTag.save();
         res.status(201).json(newPostTag);
     } catch (error) {
@@ -15,7 +15,7 @@ exports.createPostTag = async (req, res) => {
 // Get all post tags
 exports.getAllPostTags = async (req, res) => {
     try {
-        const postTags = await PostTag.find();
+        const postTags = await PostTag.find().populate('createdBy','fullname').populate('updatedBy','fullname');
         res.status(200).json(postTags);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -38,10 +38,10 @@ exports.getPostTagById = async (req, res) => {
 // Update post tag by ID
 exports.updatePostTag = async (req, res) => {
     try {
-        const { name, isActive } = req.body;
+        const { name, isActive,createdBy,updatedBy  } = req.body;
         const updatedPostTag = await PostTag.findByIdAndUpdate(
             req.params.id,
-            { name, isActive },
+            { name, isActive,createdBy,updatedBy  },
             { new: true }
         );
         if (!updatedPostTag) {

@@ -3,8 +3,8 @@ const TermsAndServices = require('../../schema/termsandserviceSchema');
 // Create a new Terms and Services document
 exports.createTermsAndServices = async (req, res) => {
   try {
-    const { termsAndServices } = req.body;
-    const termsAndServicesDocument = new TermsAndServices({ termsAndServices });
+    const { termsAndServices,createdBy,updatedBy } = req.body;
+    const termsAndServicesDocument = new TermsAndServices({ termsAndServices,createdBy,updatedBy });
     await termsAndServicesDocument.save();
     res.status(201).json(termsAndServicesDocument);
   } catch (error) {
@@ -15,7 +15,7 @@ exports.createTermsAndServices = async (req, res) => {
 // Get all Terms and Services documents
 exports.getTermsAndServices = async (req, res) => {
   try {
-    const termsAndServices = await TermsAndServices.find();
+    const termsAndServices = await TermsAndServices.find().populate('createdBy','fullname').populate('updatedBy','fullname');
     res.status(200).json(termsAndServices);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,15 +38,15 @@ exports.getTermsAndServicesById = async (req, res) => {
 // Update a Terms and Services document by ID
 exports.updateTermsAndServices = async (req, res) => {
   try {
-    const { termsAndServices } = req.body;
+    const { termsAndServices,createdBy,updatedBy } = req.body;
     const updatedDocument = await TermsAndServices.findByIdAndUpdate(
       req.params.id,
-      { termsAndServices },
+      { termsAndServices,createdBy,updatedBy },
       { new: true }
     );
     if (!updatedDocument) {
       return res.status(404).json({ message: 'Terms and Services not found' });
-    }
+    } 
     res.status(200).json(updatedDocument);
   } catch (error) {
     res.status(500).json({ message: error.message });

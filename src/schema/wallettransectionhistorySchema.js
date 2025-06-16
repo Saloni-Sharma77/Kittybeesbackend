@@ -28,6 +28,8 @@ const walletTransactionSchema = new Schema({
         required: true,
         default: 0
     },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     kittyTransactions: [kittyTransactionSchema]
 }, { timestamps: true });
 

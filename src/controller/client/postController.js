@@ -8,7 +8,8 @@ const { sendPushNotifications } = require('../../PushNotification/pushNotificati
 // Add a new post
 exports.addPost = async (req, res) => {
   try {
-    const { name, userId, description, image, isActive, poll, postTagId, anonymous } = req.body;
+    const { name, userId, description, image, isActive, poll, postTagId, anonymous ,  createdBy,
+      updatedBy,} = req.body;
 
     // Create a new post
     const newPost = new PostModel({
@@ -19,6 +20,8 @@ exports.addPost = async (req, res) => {
       postTagId,
       isActive,
       anonymous,
+      createdBy,
+      updatedBy,
       poll // Add the poll data here
     });
 
@@ -557,6 +560,28 @@ exports.getAllPost = async (req, res) => {
       {
         $unwind: '$userId', // Unwind the userId array to work with the object
       },
+
+
+       {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy',
+        },
+      },
+      { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+
+      // Lookup updatedBy
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'updatedBy',
+          foreignField: '_id',
+          as: 'updatedBy',
+        },
+      },
+      { $unwind: { path: '$updatedBy', preserveNullAndEmptyArrays: true } },
       {
         $match: matchStage, // Apply the search filter on fullname, name, or description
       },
@@ -680,10 +705,14 @@ exports.updatePostById = async (req, res) => {
     const postId = req.params.id;
     const updateData = req.body;
 
-    // Find post by ID and update it
-    const updatedPost = await PostModel.findByIdAndUpdate(postId, updateData, {
-      new: true, // return the updated document
-      runValidators: true, // run schema validation
+    // // Find post by ID and update it
+    // const updatedPost = await PostModel.findByIdAndUpdate(postId,updatedBy, updateData, {
+    //   new: true, // return the updated document
+    //   runValidators: true, // run schema validation
+    // });
+ const updatedPost = await PostModel.findByIdAndUpdate(postId, updateData, {
+      new: true,            
+      runValidators: true,
     });
 
     if (!updatedPost) {

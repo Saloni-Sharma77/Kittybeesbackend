@@ -3,7 +3,12 @@ const BookingRequest = require('../../schema/bookingrequestSchema'); // Adjust p
 // Create a new booking request
 exports.createBookingRequest = async (req, res) => {
     try {
-        const bookingRequest = new BookingRequest(req.body);
+        // const bookingRequest = new BookingRequest(req.body);
+             const bookingRequest = new BookingRequest({
+            ...req.body,
+            createdBy,
+            updatedBy,
+        });
         await bookingRequest.save();
         res.status(201).json({ message: "Booking request created successfully", bookingRequest });
     } catch (err) {
@@ -15,7 +20,7 @@ exports.createBookingRequest = async (req, res) => {
 // Get all booking requests
 exports.getAllBookingRequests = async (req, res) => {
     try {
-        const bookingRequests = await BookingRequest.find();
+        const bookingRequests = await BookingRequest.find().populate('updatedBy','fullname');
         res.status(200).json({ message: "Booking requests fetched successfully", bookingRequests });
     } catch (err) {
         console.error(err);

@@ -8,6 +8,7 @@ const WalletTransaction = require("../../schema/wallettransectionhistorySchema")
 exports.createWalletTransaction = async (req, res) => {
   try {
     const walletTransaction = new WalletTransaction(req.body);
+    
     await walletTransaction.save();
     res.status(201).json(walletTransaction);
   } catch (error) {
@@ -18,7 +19,7 @@ exports.createWalletTransaction = async (req, res) => {
 // Get all wallet transactions
 exports.getAllWalletTransactions = async (req, res) => {
   try {
-    const walletTransactions = await WalletTransaction.find().populate(
+    const walletTransactions = await WalletTransaction.find().populate('createdBy','fullname').populate('updatedBy','fullname').populate(
       "userId"
     );
     res.status(200).json(walletTransactions);
@@ -50,9 +51,15 @@ exports.getWalletTransactionsByUserId = async (req, res) => {
 exports.updateWalletTransaction = async (req, res) => {
   try {
     const { id } = req.params;
+
+  const updateData = {
+      ...req.body,
+      updatedBy: req.body.updatedBy || null, // or set as needed
+    };
     const walletTransaction = await WalletTransaction.findByIdAndUpdate(
       id,
-      req.body,
+            updateData,
+ 
       { new: true }
     );
     if (!walletTransaction) {

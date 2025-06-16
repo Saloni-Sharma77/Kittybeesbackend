@@ -2289,15 +2289,16 @@ exports.getKittyById = async (req, res) => {
 
 exports.getKittyMemoriesById = async (req, res) => {
   const kittyId = req.params.id;
-  const userId = req.params.userId; // Extract userId from params if provided
-  const page = parseInt(req.query.page) || 0; // Default to page 0
-  const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
-  const skip = page * limit; // Calculate the number of items to skip based on the page
+  // const userId = req.params.userId; 
+  const userId = req.query.userId; 
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10; 
+  const skip = page * limit;
 
   try {
     const getKitty = await Kitty.findById(kittyId)
-      .populate("kittyMemories.userId", "fullname profileImage") // Select the fullname field
-      .lean(); // Use .lean() to get plain JavaScript objects instead of Mongoose documents
+      .populate("kittyMemories.userId", "fullname profileImage") 
+      .lean(); 
 
     if (!getKitty) {
       return res.status(404).json({ error: "Kitty not found" });

@@ -42,6 +42,8 @@ const postSchema = new mongoose.Schema(
     image: { type: String },
     isActive: { type: Boolean, default: true },
     anonymous: { type: Boolean, default: false },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     poll: pollSchema, // Poll field
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }], // Array of users who liked the post
     comments: [commentSchema], // Array of comments

@@ -9,6 +9,7 @@ exports.addActivity = async (req, res) => {
           description,
           userId,
           createdBy,
+          updatedBy,
           icon
       });
 
@@ -25,11 +26,11 @@ exports.addActivity = async (req, res) => {
 exports.updateActivity = async (req, res) => {
   try {
       const { id } = req.params;
-      const { name,description ,userId,createdBy,icon} = req.body;
+      const { name,description ,userId,createdBy,updatedBy,icon} = req.body;
 
       const updatedActivity = await ActivityModel.findByIdAndUpdate(
           id,
-          { name,description,userId,createdBy ,icon},
+          { name,description,userId,createdBy ,updatedBy,icon},
           { new: true, runValidators: true }
       );
 
@@ -102,7 +103,7 @@ exports.updateActivity = async (req, res) => {
   exports.getAllActivity = async (req, res) => {
     try {
 
-      const getAllActivity = await ActivityModel.find().sort({ createdAt: -1 });
+      const getAllActivity = await ActivityModel.find().populate('createdBy','fullname').populate('updatedBy','fullname').sort({ createdAt: -1 });
       res.status(200).json({ 
         message: "Activity retrieved successfully", 
         data: {events:getAllActivity} 
@@ -135,7 +136,10 @@ exports.updateActivity = async (req, res) => {
 exports.updateActivityStatus = async (req, res)=>{
   const ActivityId = req.params.id; // Capture the ID from request parameters
   const {
-    isActive
+    isActive,
+    createdBy,
+    updatedBy,
+
   } = req.body;
 
   console.log(req.body, "response");
@@ -144,7 +148,9 @@ exports.updateActivityStatus = async (req, res)=>{
     const updatedActivity = await ActivityModel.findByIdAndUpdate(
       ActivityId,
       {
-        isActive
+        isActive,
+        createdBy,
+    updatedBy,
       },
       { new: true, runValidators: true } 
     );
