@@ -24,7 +24,7 @@ const mongoose = require("mongoose");
 //       queryCondition.transactionType = type; // Match with `type` directly
 //     }
 
-//     // console.log("Query Condition before categoryType:", queryCondition);
+
 
 //     // Fetch transactions
 //     let transactions = await WalletModel.find(queryCondition)
@@ -345,7 +345,6 @@ exports.addExpenseAndContributionForKitty = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    console.log("Fetched user:", user); // Debugging log
 
     // Ensure fullName exists
     const userName = user.fullname || "Unknown User";

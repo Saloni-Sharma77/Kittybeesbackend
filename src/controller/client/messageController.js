@@ -33,7 +33,7 @@ const { sendPushNotificationsCreateMessage } = require('../../PushNotification/p
 // }).select("_id fullname");
 
             
-//         console.log(mentionedUsers,"mentionedUsersmentionedUsers");
+
         
 //             newMessageData.mentions = mentionedUsers.map(u => u._id);
 //             mentionedUserData = mentionedUsers.map(u => ({
@@ -44,13 +44,13 @@ const { sendPushNotificationsCreateMessage } = require('../../PushNotification/p
 //             const mentionedUserIds = mentionedUsers
 //               .map(u => u._id.toString())
 //               .filter(id => id !== senderId);
-//         console.log(mentionedUserIds,"c");
+
         
 //             const mentionTokensDocs = await FcmToken.find({
 //               userId: { $in: mentionedUserIds },
 //               deviceType: "Android"
 //             });
-//         console.log(mentionTokensDocs,"mentionTokensDocsmentionTokensDocs");
+
         
 //             mentionTokens = mentionTokensDocs
 //               .map(doc => doc.fcmToken)
@@ -61,7 +61,7 @@ if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
     _id: { $in: req.body.mentions }
   }).select("_id fullname");
 
-  console.log(mentionedUsers, "mentionedUsers");
+
 
   newMessageData.mentions = mentionedUsers.map(u => u._id);
   mentionedUserData = mentionedUsers.map(u => ({
@@ -73,14 +73,14 @@ if (Array.isArray(req.body.mentions) && req.body.mentions.length > 0) {
     .map(u => u._id.toString())
     .filter(id => id !== senderId);
 
-  console.log(mentionedUserIds, "Mentioned User IDs");
+ 
 
   const mentionTokensDocs = await FcmToken.find({
     userId: { $in: mentionedUserIds },
     deviceType: "Android"
   });
 
-  console.log(mentionTokensDocs, "mentionTokensDocs");
+
 
 mentionTokens = mentionTokensDocs
   .flatMap(doc => doc.fcmToken) 
@@ -88,7 +88,7 @@ mentionTokens = mentionTokensDocs
 
   // mentionTokens=['e-abusY3SeyOh7JQUD6bwA:APA91bG109Dy9Cc3eGeg4bpK99XLHplYQK7yUL_OBuISoV4m5ModEiqC5JkdoIzg4TOBOXYmPQOYkKMDmOAFW7Gj9_Os5cbvgbk6kndWztR2DyUTYwEt-JQ']
 }
-console.log("Mention Tokens:", mentionTokens);
+
 
         }
         
@@ -194,11 +194,9 @@ console.log("Mention Tokens:", mentionTokens);
       //   userTokens: tokens,
         
       // });
-      // console.log(tokens,'tttttttttttttt')
-      //     console.log("Notification sent successfully.");
+
     
   // if (tokens.length > 0) {
-  console.log(tokens,"tokenstokenstokens");
   
     await sendPushNotificationsCreateMessage({
       title: savedDoc?.groupId?.name || "New Message",
@@ -208,9 +206,7 @@ console.log("Mention Tokens:", mentionTokens);
       type: 'GroupChatscreen',
 
     });
-    console.log("Notification sent to group users.");
   // }
-  console.log(mentionTokens,"mentionTokensmentionTokens");
 
   // Notify mentioned users
     await sendPushNotificationsCreateMessage({
@@ -221,7 +217,6 @@ console.log("Mention Tokens:", mentionTokens);
       type: 'GroupChatscreen',
 
     });
-    console.log("Notification sent to mentioned users.");
 
 
       // Respond with the created message

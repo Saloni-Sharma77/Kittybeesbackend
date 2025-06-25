@@ -40,7 +40,6 @@ const saltRounds = 10;
 //          await fcmRecord.save();
 //        }
 //      } else {
-//       console.log('else')
 //        // Create a new FCM record
 //        await FcmTokenModel.create({
 //          userId: user._id,
@@ -57,7 +56,7 @@ const saltRounds = 10;
 //         { headers: { authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN } }
 //       );
 
-//       console.log('MessageCentral Response:', axiosResponse.data);
+
 //       if(axiosResponse.data?.responseCode == 200){
 //       return res.status(200).send({
 //         success: true,
@@ -142,7 +141,7 @@ exports.sendotptest = async (req, res) => {
       { headers: { authToken: process.env.MESSAGE_CENTRAL_AUTH_TOKEN } }
     );
 
-    console.log('MessageCentral Response:', axiosResponse.data);
+
 
     if (axiosResponse.data?.responseCode == 200) {
       return res.status(200).send({
@@ -392,7 +391,7 @@ exports.sendotptestwhatsapp = async (req, res) => {
       }
     });
 
-    console.log('Response from MessageCentral:', axiosResponse.data);
+
 
     // Filter to update or create user with the phone number
     const filter = { phoneNumber };

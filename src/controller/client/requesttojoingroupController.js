@@ -26,7 +26,6 @@ const addUserToGroup = async (req, res) => {
     let groupcopy = JSON.parse(JSON.stringify(group))
 
     const userIds = group.userIds || [];
-    console.log(userIds,"ids for join group")
 
     if (group.userId?.toString() === userId?.toString()) {
       return res.status(400).json({ error: 'You are the Group Admin!' });
@@ -56,7 +55,6 @@ const addUserToGroup = async (req, res) => {
       message: `${user.fullname} has requested to join your group: ${groupcopy.name}`,
       type: 'group-join-request'
     });
-    console.log(adminNotification,"notifications")
     const adminPush = {
       title: 'Group Join Request',
       message: `${user.fullname} has requested to join your group: ${groupcopy.name}`,

@@ -83,7 +83,6 @@ exports.getAllWishlist = async (req, res) => {
 // exports.getAllWishlistByme = async (req, res) => {
 //   try {
 //       const userId = req.params.id;
-//       console.log('Fetching wishlists for user ID:', userId); // Debug log
 
 //       // Validate userId
 //       if (!userId) {

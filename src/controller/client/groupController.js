@@ -42,7 +42,7 @@ exports.addGroup = async (req, res) => {
       { name: 'groupCityArea', value: groupCityArea },
       // { name: 'referralCode', value: referralCode }
     ];
-console.log(req.body);
+
     for (const field of requiredFields) {
       if (!field.value) {
         return res.status(400).json({ error: `${field.name} is required` });
@@ -98,13 +98,13 @@ console.log(req.body);
 
     // Fetch FCM tokens for approved members only
     const fcmTokens = await FcmToken.find({ userId: { $in: memberUserIds } });
-    console.log(fcmTokens, 'Fetched FCM tokens');
+ 
 
     const tokens = fcmTokens
       .flatMap((doc) => doc.fcmToken)
       .filter(token => token && token.trim() !== '');
 
-    console.log(tokens, 'Filtered Tokens');
+   
 
     if (tokens.length > 0) {
       const notifications = memberUserIds.map(memberId => ({
@@ -119,9 +119,8 @@ console.log(req.body);
         await sendPushNotifications(notification);
       }
 
-      console.log('Notifications sent to group members');
-    } else {
-      console.log('No tokens found for group members');
+       } else {
+
     }
 
    
@@ -188,7 +187,7 @@ console.log(req.body);
 //     const matchedGroupIds = matchedGroups.map((group) => group._id);
 
 //     // Log to check matched group IDs
-//     console.log("Matched Group IDs:", matchedGroupIds);
+
 
 //     //Fetch remaining groups if needed
 //     const remainingSlots = pageSize - matchedGroups.length;
@@ -209,7 +208,7 @@ console.log(req.body);
 //         .limit(remainingSlots);
 
 //       // Log remaining groups
-//       console.log("Remaining Groups Count:", remainingGroups.length);
+
 //     }
 
 //     // Combine results and deduplicate
@@ -220,7 +219,7 @@ console.log(req.body);
 //       .map(id => allGroups.find(group => group._id === id));
 
 //     // Log total groups after deduplication
-//     console.log("Total Groups After Deduplication:", uniqueGroups.length);
+
 
 //     const groupsWithUserCount = uniqueGroups.map((group) => ({
 //       ...group.toObject(),
@@ -267,7 +266,7 @@ exports.getAllGroups = async (req, res) => {
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
-    console.log('Page:', pageNumber, 'Limit:', pageSize); // Log page and limit values to debug
+ 
 
     // Build the query object
     const query = {};
@@ -450,7 +449,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Initialize counts
     let hostedCount = 0;
     let joinedCount = 0;
-// console.log(groups,"groupsgroupsgroups");
+
  
     // Process the groups and remove duplicate entries
     const groupMap = new Map();
@@ -518,7 +517,7 @@ exports.getGroupHostedByMe = async (req, res) => {
     // Initialize counts
     let hostedCount = 0;
     let joinedCount = 0;
-// console.log(groups,"groupsgroupsgroups");
+
 
     // Process the groups and remove duplicate entries
     const groupMap = new Map();
@@ -1106,7 +1105,7 @@ exports.updateStatus = async (req, res)=>{
     isActive
   } = req.body;
 
-  console.log(req.body, "response");
+
 
   try {
     const updatedGroup = await Group.findByIdAndUpdate(
@@ -1501,9 +1500,8 @@ exports.removeUserFromGroup = async (req, res) => {
       };
       
       await sendPushNotifications(pushNotification);
-      console.log("Notification sent to removed user");
     } else {
-      console.log("No FCM token found for removed user");
+
     }
 
     res.json({ message: "User removed successfully", data: updatedGroup });

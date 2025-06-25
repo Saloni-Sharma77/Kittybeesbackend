@@ -13,7 +13,7 @@ exports.createReview = async (req, res) => {
 exports.getReviews = async (req, res) => {
     try {
         // Log the venueId for debugging
-        console.log('Fetching reviews for venueId:', req.params.venueId);
+
 
         // Find reviews for the venue and populate the user details
         const reviews = await VenueReview.find({ venueId: req.params.venueId }).populate('userId');

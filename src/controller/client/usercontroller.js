@@ -68,7 +68,7 @@ exports.checkGender = async (req, res) => {
   // Construct the command to execute the Python script
   const command = `python object_detection.py "${base64Image}"`;
 
-  console.log(`Executing command: ${command}`);
+
 
   // Execute the command
   exec(command, (error, stdout, stderr) => {
@@ -81,7 +81,7 @@ exports.checkGender = async (req, res) => {
           return res.status(500).send('An error occurred while detecting gender');
       }
 
-      console.log(`Python script output: ${stdout}`);
+
 
       // Assuming stdout contains the result from the Python script
       res.send(stdout.trim());
@@ -109,7 +109,7 @@ exports.adduserInfo = async (req, res) => {
     
   } = req.body;
 
-  console.log(req.body, "response");
+
 
 
   try {

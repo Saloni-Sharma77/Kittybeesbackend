@@ -242,7 +242,6 @@ exports.addComment = async (req, res) => {
     // Fetch the commenter's details
     const commentingUser = await UserModel.findById(userId).select("fullname phoneNumber profileImage");
 
-    console.log("Commenting User:", commentingUser); // Debugging
 
     // if (!commentingUser || !commentingUser.fullname) {
     //   return res.status(404).json({ message: "Commenting user not found or missing name" });
@@ -253,7 +252,6 @@ exports.addComment = async (req, res) => {
 
     // Save the updated post
     await post.save();
-    console.log(post, "postpost");
 
     // Fetch the post owner's full name
     const postOwner = await UserModel.findById(post.userId._id).select("fullname");
@@ -308,9 +306,8 @@ exports.addComment = async (req, res) => {
         type:"comment",
         objectId:post._id
       });
-      console.log("Notification sent to user who commented");
     } else {
-      console.log("No FCM token found for the commenting user");
+
     }
 
     // Send push notification to the post owner
@@ -322,9 +319,8 @@ exports.addComment = async (req, res) => {
         type:"comment",
         objectId:post._id
       });
-      console.log("Notification sent to post owner");
     } else {
-      console.log("No FCM token found for the post owner");
+
     }
 
     res.status(200).json({ message: "Comment added successfully", post });

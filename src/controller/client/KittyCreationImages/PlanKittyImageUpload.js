@@ -17,7 +17,7 @@ const storage = multer.memoryStorage(); // Store files in memory
 const upload = multer({ storage: storage });
 
 exports.uploadKittyBanner = [upload.single('file'), async (req, res) => {
-  console.log('The kitty banner upload triggered');
+
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -37,7 +37,7 @@ exports.uploadKittyBanner = [upload.single('file'), async (req, res) => {
     const command = new PutObjectCommand(params);
 
     const result = await s3.send(command);
-    console.log('Upload Success:', result);
+
     const imageUrl = `https://${params.Bucket}.s3.amazonaws.com/${params.Key}`;
 
     res.status(201).json({
@@ -54,7 +54,7 @@ exports.uploadKittyBanner = [upload.single('file'), async (req, res) => {
 ];
 
 exports.uploadWalletInvoice = [upload.single('file'), async (req, res) => {
-  console.log('The kitty banner upload triggered');
+
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -74,7 +74,7 @@ exports.uploadWalletInvoice = [upload.single('file'), async (req, res) => {
     const command = new PutObjectCommand(params);
 
     const result = await s3.send(command);
-    console.log('Upload Success:', result);
+
     const imageUrl = `https://${params.Bucket}.s3.amazonaws.com/${params.Key}`;
 
     res.status(201).json({
