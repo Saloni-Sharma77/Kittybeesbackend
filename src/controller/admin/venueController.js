@@ -36,7 +36,6 @@ exports.getPlaceDetails = async (req, res) => {
 
   try {
     const response = await axios.get(apiUrl);
-    console.log(response.data,'rwerwerwerwerwe')
     return res.status(200).json({
       success: true,
       message: 'Place details fetched successfully',
@@ -355,7 +354,6 @@ exports.getAllVenues = async (req, res) => {
         }
       };
     }
-console.log(filterData,'filterData')
     const pageNumber = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
 
@@ -769,7 +767,7 @@ exports.updateStatus = async (req, res)=>{
     isActive
   } = req.body;
 
-  console.log(req.body, "response");
+
 
   try {
     const updatedVenue = await Venue.findByIdAndUpdate(

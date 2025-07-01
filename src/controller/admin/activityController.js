@@ -142,7 +142,6 @@ exports.updateActivityStatus = async (req, res)=>{
 
   } = req.body;
 
-  console.log(req.body, "response");
 
   try {
     const updatedActivity = await ActivityModel.findByIdAndUpdate(

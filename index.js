@@ -43,21 +43,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Start the server
 server.listen(port, () => {
-  console.log(`Your server is running on port ${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+
+
 });
 
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
-  console.log('A client connected.');
+
 
   ws.on('message', (message) => {
-    console.log('Received:', message);
+
     // Handle incoming messages and optionally respond
   });
 
   ws.on('close', () => {
-    console.log('A client disconnected.');
+
   });
 
   ws.send('Welcome to the WebSocket server!'); // Example message to the client
@@ -95,7 +95,7 @@ wss.on('connection', (ws) => {
 
 // // Start server
 // server.listen(port, () => {
-//     console.log(`Your server is running on port ${port}`);
+
 // });
 
 

@@ -236,7 +236,6 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
           updatedBy,
     } = req.body;
   
-    console.log(req.body, "response");
   
     try {
       // Find the user by ID and update with new information
@@ -286,7 +285,7 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
 
   exports.deleteUserById = async (req, res) => {
     const userId = req.params.id; // Capture the ID from request parameters
-  console.log(userId);
+
     try {
       // Find the user by ID and delete
       const deletedUser = await UsersModel.findByIdAndDelete(userId);
@@ -316,8 +315,7 @@ exports.getCountOfGroupAndInvolveByme = async (req, res) => {
     const {
       isActive
     } = req.body;
-  
-    console.log(req.body, "response");
+
   
     try {
       const updatedUser = await UsersModel.findByIdAndUpdate(

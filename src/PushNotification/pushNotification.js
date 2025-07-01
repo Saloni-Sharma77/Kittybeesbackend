@@ -7,14 +7,13 @@ admin.initializeApp({
 });
 
 // async function sendPushNotifications({ title, message, userId,image,type,objectId  }) {
-//     console.log(type,objectId,'otttt')
 //     try {
 //         const userTokensDoc = await FcmModel.find({
 //             userId,
 //             deviceType: 'Android',
 //         });
 
-//         // console.log(userTokensDoc, 'Tokens for the user');
+
 //         const defaultImageUrl = 'https://example.com/default-image.jpg';
 
 //         // Use the provided image if available, otherwise fallback to the default image
@@ -22,7 +21,7 @@ admin.initializeApp({
 //         const userTokens = userTokensDoc
 //             .flatMap((fcm) => fcm?.fcmToken) // Flatten nested arrays of fcmToken
 //             .filter((token) => token && token.trim() !== ''); // Skip empty or invalid tokens
-//             console.log(userTokens,'ustttttttt');
+
 
 //         const payload = {
 //             notification: {
@@ -45,7 +44,7 @@ admin.initializeApp({
 //             priority: "high",
 //         };
 
-//         console.log(payload,'ppppppppp');
+
 
 
 //         // Send notifications using Promise.allSettled
@@ -66,8 +65,8 @@ admin.initializeApp({
 //         const successfulNotifications = responses.filter((r) => r.status === 'fulfilled');
 //         const failedNotifications = responses.filter((r) => r.status === 'rejected');
 
-//         // console.log('Successful Notifications:', successfulNotifications.length);
-//         // console.log('Failed Notifications:', failedNotifications.length);
+
+
 
 //         // Optionally, log failed tokens for further processing or cleanup
 //         if (failedNotifications.length > 0) {
@@ -89,7 +88,6 @@ admin.initializeApp({
 // }
 
 async function sendPushNotifications({ title, message, userId, image, type, objectId }) {
-    console.log(title, message, userId, image, type, objectId,"fffff")
     try {
         const userTokensDoc = await FcmModel.find({
             userId,
@@ -179,7 +177,7 @@ function getRouteForType(type) {
 
 async function sendPushNotificationsCreateMessage({ title, message, responseData, userTokens, type })
  {
-console.log(responseData,"responseDataresponseData");
+
 
     try {
         // Filter out invalid or empty tokens
@@ -187,7 +185,7 @@ console.log(responseData,"responseDataresponseData");
         const validTokens = userTokens?.filter(token => token) || [];
 
         if (validTokens.length === 0) {
-            console.log('No valid FCM tokens available for sending notifications.');
+
             return { message: 'No valid tokens found. No notifications sent.' };
         }
         const sanitizedResponseData = {};
@@ -249,9 +247,9 @@ console.log(responseData,"responseDataresponseData");
         // Log results for sent notifications
         const successfulNotifications = responses.filter(r => r.status === 'fulfilled');
         const failedNotifications = responses.filter(r => r.status === 'rejected');
-console.log(successfulNotifications,"successfulNotificationssuccessfulNotificationssuccessfulNotifications");
 
-        console.log(`Successfully sent notifications: ${successfulNotifications.length}`);
+
+
         if (failedNotifications.length > 0) {
             console.warn(`Failed to send notifications: ${failedNotifications.length}`);
         }
@@ -270,7 +268,6 @@ console.log(successfulNotifications,"successfulNotificationssuccessfulNotificati
 
 async function sendPostCreatedNotifications({ title, message, postId, userIds }) {
     try {
-        console.log(title, message, postId, userIds,'dssssssssssssssssssss')
 
         // Fetch FCM tokens for the specified users who use Android devices
         const userTokensDocs = await FcmModel.find({
@@ -321,7 +318,7 @@ async function sendPostCreatedNotifications({ title, message, postId, userIds })
         // Remove invalid tokens from the database
       
 
-        console.log('Push notifications sent successfully:', responses);
+
         return responses;
     } catch (error) {
         console.error('Error sending post creation notifications:', error);

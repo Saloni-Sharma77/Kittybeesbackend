@@ -104,7 +104,6 @@ exports.updateThemesStatus = async (req, res)=>{
     isActive
   } = req.body;
 
-  console.log(req.body, "response");
 
   try {
     const updatedThemes = await ThemesModel.findByIdAndUpdate(

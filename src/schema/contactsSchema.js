@@ -7,7 +7,7 @@ const contactSchema = new mongoose.Schema({
     required: true,
   },
   contacts: [
-    {
+  {
       name: {
         type: String,
         required: true,

@@ -45,7 +45,7 @@ const imageName = req.params.imageName;
             Key: `frames/${imageName}`, // Use backticks for template literals
           })
           .promise();
-        console.log("Image deleted successfully:", data);
+
       } catch (error) {
         console.error("Error deleting image:", error);
       }

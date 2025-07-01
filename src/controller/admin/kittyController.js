@@ -68,7 +68,7 @@ exports.checkLatestVersion = async (req, res) => {
 //       tampimage,
 //     } = req.body;
 
-//     console.log("req.body ", req.body);
+
     
 
 //     // Validation checks
@@ -91,19 +91,19 @@ exports.checkLatestVersion = async (req, res) => {
 //     }
 //     const group = await GroupSchema.findById(groupId).select("userIds userId name contributionAmount");
 
-//     console.log("group ", group);
+
 
 //     const members = group.userIds
 //       .filter(user => user.userId.toString() !== userId.toString()) // Exclude the creator
 //       .map(user => ({ userId: user.userId, status: "pending" }));
 
-//       console.log("members1 ", members);
+
 
 // if (!members.some(member => member.userId.toString() === group.userId.toString())) {
 //   members.push({ userId: group.userId, status: "approved" }); 
 // }
 
-// console.log("members2 ", members);
+
 
 //     const theamePollData = theamepoll
 //       ? {
@@ -200,7 +200,7 @@ exports.checkLatestVersion = async (req, res) => {
 //       image: tampimage,
 //     };
 
-//     console.log("groupNotification ", groupNotification);
+
     
 
 //     const userNotifications = group.userIds
@@ -210,13 +210,13 @@ exports.checkLatestVersion = async (req, res) => {
 //         ...groupNotification,
 //       }));
 
-//     console.log("userNotifications ", userNotifications);
+
     
 //     const isHostInUserIds = group.userIds.some(
 //       (user) => user.userId.toString() === group.userId.toString()
 //     );
 
-//     console.log("isHostInUserIds ", isHostInUserIds);
+
     
     
 //     if (!isHostInUserIds) {
@@ -226,7 +226,7 @@ exports.checkLatestVersion = async (req, res) => {
 //       });
 //     }
     
-//     console.log("userNotifications22 ", userNotifications);
+
 
 //     // Insert all notifications into the database (only one type of notification)
 //     await NotificationSchema.insertMany(userNotifications);
@@ -442,7 +442,6 @@ exports.addKitty = async (req, res) => {
       updatedBy,
 
     });
-console.log(members,"members")
     // Save the new Kitty to the database
     await newKitty.save();
 
@@ -463,7 +462,6 @@ console.log(members,"members")
         type: "kitty-join-request",
         image: tampimage,
       }));
-console.log(userNotifications,"alluser")
     const allNotifications = [ ...userNotifications];
 
     // ✅ Fix: Only send admin notification if admin is not the creator
@@ -476,10 +474,8 @@ console.log(userNotifications,"alluser")
         image: tampimage,
       };
       allNotifications.push(adminnotify);
-console.log(adminnotify,"adminnotify")
 
     }    
-    console.log(group.userId,"group",group.userIds)
     // Insert all notifications into the database
     await NotificationSchema.insertMany(allNotifications);
 
@@ -500,7 +496,6 @@ console.log(adminnotify,"adminnotify")
         .filter(user => user.userId.toString() !== userId.toString()) 
         .map(user => ({ title: 'New Kitty Created', message: `A new kitty has been created in your group: ${newKitty.name}`, userId: user.userId, type: "kitty-join-request" }))
     ];
-    console.log(notificationsWithPush,"notificationsWithPush")
 
 
     // Send push notifications to all users
@@ -571,9 +566,7 @@ console.log(adminnotify,"adminnotify")
        groupClients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(response));
-      console.log("Sent message to a client in group");
     } else {
-      console.log("Client not open:", client.readyState);
     }
   });
     }
@@ -885,7 +878,6 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
   try {
     // const now = new Date();
    const now = moment.tz(new Date(), 'Asia/Kolkata');
-    console.log('Current time (IST):', now.format('YYYY-MM-DD HH:mm:ss Z'));
     const userId = req.query.userId || req.params.userId;
     const type = req.query.type; // 'past' or 'future'
     const page = parseInt(req.query.page) || 1;
@@ -931,10 +923,7 @@ exports.getAllPastAndFutureKitties = async (req, res) => {
     // Filter out kitties based on date and remove ones created by this user
     const filteredKitties = allKitties.filter((kitty) => {
       const kittyDateTime = combineDateAndTime(kitty.date, kitty.time);
-      console.log(
-        `Kitty ${kitty.name} DateTime (IST):`,
-        kittyDateTime.format('YYYY-MM-DD HH:mm:ss Z')
-      );
+  
       const isCorrectTime =
         type === "past" ? kittyDateTime < now : kittyDateTime > now;
       // Exclude kitties where the creator's ID matches current user
@@ -1483,7 +1472,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //         userId: requestUserId,
 //         status: status, // Set the status
 //       };
-//       console.log(newMember,"newMembernewMembernewMember");
+
 
 //       kitty.members.push(newMember); // Push the new member to the array
 //     }
@@ -1548,7 +1537,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //     // Send notification to each token using the send method
 //     if (tokens?.length > 0) {
 
-//       console.log(tokens, "tokenstokens");
+
 //       const response = await Promise.allSettled(tokens.map(token =>
 //         admin.messaging().send({
 //           token: token,
@@ -1559,7 +1548,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //           },
 //         })
 //       ));
-//       console.log(response, "responseresponse");
+
 
 //     }
 
@@ -1568,7 +1557,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //       .status(200)
 //       .json({ message: "Member status updated successfully", updatedKitty });
 //   } catch (error) {
-//     console.log("the error is", error);
+
 //     return res.status(500).json({ error: "Something went wrong" });
 //   }
 // };
@@ -1597,7 +1586,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //       kitty.members = [];
 //     }
 
-//     console.log("Before update:", kitty.members);
+
 
 //     // Find if user exists in members
 //     const existingMemberIndex = kitty.members.findIndex(
@@ -1612,7 +1601,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //       kitty.members.push({ userId: requestUserIdObj, status });
 //     }
 
-//     console.log("After update:", kitty.members);
+
 
 //     // Save the updated kitty document
 //     await kitty.save();
@@ -1679,7 +1668,7 @@ exports.getAllKittyForMe = async (req, res) => {
 
 //     // Send notifications if tokens exist
 //     if (tokens.length > 0) {
-//       console.log("Sending notifications to tokens:", tokens);
+
 //       const responses = await Promise.allSettled(
 //         tokens.map((token) =>
 //           admin.messaging().send({
@@ -1690,7 +1679,7 @@ exports.getAllKittyForMe = async (req, res) => {
 //           })
 //         )
 //       );
-//       console.log("Notification responses:", responses);
+
 //     }
 
 //     return res.status(200).json({ message: "Member status updated successfully", updatedKitty: kitty });
@@ -1707,7 +1696,6 @@ exports.joinKitty = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(requestUserId) || !mongoose.Types.ObjectId.isValid(kittyId)) {
       return res.status(400).json({ message: "Invalid userId or kittyId" });
     }
-    console.log(status,"statuss")
     const requestUserIdObj = new mongoose.Types.ObjectId(requestUserId);
 
     const kitty = await Kitty.findById(kittyId);
@@ -1964,7 +1952,7 @@ exports.joinKitty = async (req, res) => {
 
 //             if (error.code === "messaging/registration-token-not-registered") {
 //               await FcmToken.findOneAndDelete({ fcmToken: token });
-//               console.log(`Removed invalid FCM token: ${token}`);
+
 //             }
 //           }
 //         })
@@ -1983,7 +1971,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
   try {
     const { notificationId, status, kittyId, userId } = req.body;
 
-    console.log("➡️ Request body:", req.body);
 
     if (!kittyId || !userId || !status || !notificationId) {
       console.warn("⚠️ Missing required fields");
@@ -1998,7 +1985,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       return res.status(404).json({ message: "Kitty not found" });
     }
 
-    console.log("✅ Found Kitty:", findWhichKitty.name);
 
     const memberIndex = findWhichKitty.members.findIndex(
       (member) => member.userId.toString() === userId.toString()
@@ -2015,7 +2001,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    console.log("✅ Found Notification:", existingNotification.type);
 
     const notificationStatus = status === "approved" ? "accepted" : status;
 
@@ -2030,7 +2015,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     // ✅ Update kitty member status
     findWhichKitty.members[memberIndex].status = status;
     await findWhichKitty.save();
-    console.log("🔄 Updated kitty member status to:", status);
 
     // ✅ Update group user status
     if (existingNotification.type === "group-kitty-join-request") {
@@ -2042,7 +2026,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         if (groupUserIndex !== -1) {
           group.userIds[groupUserIndex].status = status;
           await group.save();
-          console.log("🔄 Updated group member status to:", status);
         } else {
           console.warn("❌ User not found in group");
         }
@@ -2052,7 +2035,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       
     // ✅ Delete original notification
     await NotificationSchema.findByIdAndDelete(notificationId);
-    console.log("🗑️ Deleted original notification");
 
     // ✅ Create user notification
     const userMessage =
@@ -2068,7 +2050,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       status: notificationStatus,
     });
     await userNotification.save();
-    console.log("📩 User notified with message:", userMessage);
 
     // ✅ Send FCM notification to user
     const fcmTokens = await FcmToken.find({ userId: userId });
@@ -2076,7 +2057,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       .flatMap((t) => t?.fcmToken)
       .filter((token) => token && token.trim() !== "");
 
-    console.log("📱 FCM Tokens to send to user:", tokens);
 
     const payload = {
       notification: {
@@ -2103,12 +2083,10 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
               data: payload.data,
               android: { priority: options.priority },
             });
-            console.log(`📤 Sent FCM to user token: ${token}`);
           } catch (error) {
             console.error(`❌ FCM error for token ${token}:`, error);
             if (error.code === "messaging/registration-token-not-registered") {
               await FcmToken.findOneAndDelete({ fcmToken: token });
-              console.log(`🧹 Removed invalid FCM token: ${token}`);
             }
           }
         })
@@ -2116,7 +2094,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
     }
     }
     const user = await UserSchema.findById(userId).select("fullname");
-    console.log(user,"user")
     // ✅ Notify Kitty Creator
     if (
       existingNotification.type === "kitty-join-request" &&
@@ -2133,7 +2110,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         status: notificationStatus,
       });
       await hostNotification.save();
-      console.log("📩 Host notified with message:", hostMessage);
 
       const hostTokens = await FcmToken.find({
         userId: findWhichKitty.userId,
@@ -2143,7 +2119,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
         .flatMap((t) => t?.fcmToken)
         .filter((token) => token && token.trim() !== "");
 
-      console.log("📱 Host FCM Tokens:", hostFcmTokens);
 
       const hostPayload = {
         notification: {
@@ -2170,12 +2145,9 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
                 data: hostPayload.data,
                 android: { priority: options.priority },
               });
-              console.log(`📤 Sent FCM to host token: ${token}`);
             } catch (error) {
-              console.error(`❌ FCM error for host token ${token}:`, error);
               if (error.code === "messaging/registration-token-not-registered") {
                 await FcmToken.findOneAndDelete({ fcmToken: token });
-                console.log(`🧹 Removed invalid host FCM token: ${token}`);
               }
             }
           })
@@ -2183,7 +2155,6 @@ exports.acceptOrRejectRequestOfKitty = async (req, res) => {
       }
     }
 
-    console.log("✅ Completed processing request.");
     res.status(200).json({ message: `Request ${status}` });
   } catch (error) {
     console.error("❌ Error in acceptOrRejectRequestOfKitty:", error);

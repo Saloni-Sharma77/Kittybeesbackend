@@ -8,17 +8,16 @@ module.exports = (wss) => {
  global.clients = clients;
 
   wss.on('connection', (ws) => {
-    console.log('New client connected');
+
 
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message); // Parse the incoming message
-        console.log(data,'ddddddddddddddddddddddddd')
         
         switch (data.type) {
           case 'joinGroup':
             const { groupId, senderId, fullname } = data; // Extract data
-            console.log(`${fullname} joined group: ${groupId}`);
+
 
             if (!clients.has(groupId)) {
               clients.set(groupId, new Set()); // Create a new Set for groupId if it doesn't exist
@@ -115,7 +114,7 @@ module.exports = (wss) => {
             break;
 
           default:
-            console.log('Unknown message type:', data.type);
+
         }
       } catch (error) {
         console.error("Error processing message:", error);
@@ -124,12 +123,12 @@ module.exports = (wss) => {
     });
 
     ws.on('close', () => {
-      console.log('Client disconnected');
+
       // Remove the client from all groups
       clients.forEach((groupClients, groupId) => {
         if (groupClients.has(ws)) {
           groupClients.delete(ws);
-          console.log(`Client removed from group: ${groupId}`);
+
           if (groupClients.size === 0) {
             clients.delete(groupId); // Remove the group if empty
           }

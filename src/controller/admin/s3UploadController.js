@@ -39,16 +39,14 @@ exports.uploadImage = [upload.single('file'), async (req, res) => {
     const command = new PutObjectCommand(params);
 
     const result = await s3.send(command);
-    // console.log('Upload Success:', result);
+
     // res.status(201).json(result);
     if (result) {    
     const requestUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
     const modifiedUrl = requestUrl.replace('/postImage', '');
-    console.log('The requested url is ',modifiedUrl)
     const response = await axios.get(`${modifiedUrl}/detectGender/${key}`)
 
 
-    console.log('The response is ',response.data)
     res.status(201).json(response.data);
     }
 

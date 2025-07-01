@@ -178,6 +178,7 @@ const filteredUsers = matchedUsers.filter(user => user.fullname && user.fullname
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 exports.searchUserContacts = async (req, res) => {
   try {
     const { userId, uid, search, page = 1, limit = 20 } = req.query;
@@ -193,7 +194,7 @@ exports.searchUserContacts = async (req, res) => {
     }
 
     const skip = (pageNum - 1) * limitNum;
-
+ const searchLower = search.toLowerCase();
     const userContactDoc = await Contact.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       uid: uid,
@@ -205,20 +206,45 @@ exports.searchUserContacts = async (req, res) => {
 
     const contactNumbers = userContactDoc.contacts.map(c => c.number);
 
-    const filteredContacts = userContactDoc.contacts.filter(contact =>
-      new RegExp(search, 'i').test(contact.name) ||
-      new RegExp(search, 'i').test(contact.number)
-    );
+    // const filteredContacts = userContactDoc.contacts.filter(contact =>
+    //   new RegExp(search, 'i').test(contact.name) ||
+    //   new RegExp(search, 'i').test(contact.number)
+    // );
+  const filteredContacts = userContactDoc.contacts
+      .filter(contact =>
+        contact.name.toLowerCase().includes(searchLower) ||
+        contact.number.includes(search)
+      ) .sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+
+        const startsWithA = nameA.startsWith(searchLower);
+        const startsWithB = nameB.startsWith(searchLower);
+
+        if (startsWithA && !startsWithB) return -1;
+        if (!startsWithA && startsWithB) return 1;
+
+        const indexA = nameA.indexOf(searchLower);
+        const indexB = nameB.indexOf(searchLower);
+
+        if (indexA !== indexB) return indexA - indexB;
+
+        return nameA.localeCompare(nameB);
+      });
+
+    const paginatedContacts = filteredContacts.slice(skip, skip + limitNum);
 
     const matchedUsers = await User.find({
       phoneNumber: { $in: contactNumbers },
     }).select("fullname phoneNumber userId").lean();
-
-    const filteredMatchedUsers = matchedUsers.filter(user =>
-      user.fullname && new RegExp(search, 'i').test(user.fullname)
+ const filteredMatchedUsers = matchedUsers.filter(user =>
+      user.fullname && user.fullname.toLowerCase().includes(searchLower)
     );
+    // const filteredMatchedUsers = matchedUsers.filter(user =>
+    //   user.fullname && new RegExp(search, 'i').test(user.fullname)
+    // );
 
-    const paginatedContacts = filteredContacts.slice(skip, skip + limitNum);
+    // const paginatedContacts = filteredContacts.slice(skip, skip + limitNum);
 
     return res.status(200).json({
       message: "Search results fetched successfully",
