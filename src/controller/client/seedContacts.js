@@ -10,10 +10,12 @@ const { faker } = require('@faker-js/faker');
     console.log("MONGODB_URL:", process.env.MONGODB_URL);
 
     const userId = "68300d42cbbfe4bbdd575c76"; 
-    const uid = "UP1A.231005.007";
+    // const uid = "UKQ1.230924.001";
+    const uid = "QP1A.190711.020";
+
 
     const contacts = [];
-    for (let i = 1; i <= 4000; i++) {
+    for (let i = 1; i <= 5000; i++) {
       contacts.push({
         name: faker.person.fullName(),
         number: faker.phone.number('##########')

@@ -178,112 +178,58 @@ const filteredUsers = matchedUsers.filter(user => user.fullname && user.fullname
     return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
-
 exports.searchUserContacts = async (req, res) => {
   try {
     const { userId, uid, search, page = 1, limit = 20 } = req.query;
 
-    // Validate required parameters
     if (!userId || !uid || !search) {
       return res.status(400).json({ message: "userId, uid, and search are required" });
     }
 
-    // Parse and validate pagination parameters
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     if (isNaN(pageNum) || pageNum < 1 || isNaN(limitNum) || limitNum < 1) {
       return res.status(400).json({ message: "Invalid page or limit parameter" });
     }
 
-    // Calculate skip for pagination
     const skip = (pageNum - 1) * limitNum;
 
-    // Perform aggregation with pagination
-    const contactsData = await Contact.aggregate([
-      {
-        $match: { 
-          userId: new mongoose.Types.ObjectId(userId),
-          uid: uid
-        },
-      },
-      {
-        $project: {
-          contacts: {
-            $filter: {
-              input: "$contacts",
-              as: "contact",
-              cond: {
-                $regexMatch: {
-                  input: "$$contact.name",
-                  regex: search,
-                  options: "i",
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        $unwind: "$contacts" // Unwind the contacts array to apply pagination
-      },
-      {
-        $skip: skip // Skip records for pagination
-      },
-      {
-        $limit: limitNum // Limit the number of records
-      },
-      {
-        $group: {
-          _id: null,
-          contacts: { $push: "$contacts" } // Re-group the filtered contacts
-        }
-      }
-    ]);
+    const userContactDoc = await Contact.findOne({
+      userId: new mongoose.Types.ObjectId(userId),
+      uid: uid,
+    });
 
-    // Extract contacts
-    const contacts = contactsData.length ? contactsData[0].contacts : [];
+    if (!userContactDoc) {
+      return res.status(404).json({ message: "No contacts found for the user." });
+    }
 
-    // Get total count of matching contacts (without pagination)
-    const totalCountData = await Contact.aggregate([
-      {
-        $match: { 
-          userId: new mongoose.Types.ObjectId(userId),
-          uid: uid
-        },
-      },
-      {
-        $project: {
-          contacts: {
-            $filter: {
-              input: "$contacts",
-              as: "contact",
-              cond: {
-                $regexMatch: {
-                  input: "$$contact.name",
-                  regex: search,
-                  options: "i",
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          total: { $size: "$contacts" }
-        }
-      }
-    ]);
+    const contactNumbers = userContactDoc.contacts.map(c => c.number);
 
-    const total = totalCountData.length ? totalCountData[0].total : 0;
+    const filteredContacts = userContactDoc.contacts.filter(contact =>
+      new RegExp(search, 'i').test(contact.name) ||
+      new RegExp(search, 'i').test(contact.number)
+    );
+
+    const matchedUsers = await User.find({
+      phoneNumber: { $in: contactNumbers },
+    }).select("fullname phoneNumber userId").lean();
+
+    const filteredMatchedUsers = matchedUsers.filter(user =>
+      user.fullname && new RegExp(search, 'i').test(user.fullname)
+    );
+
+    const paginatedContacts = filteredContacts.slice(skip, skip + limitNum);
 
     return res.status(200).json({
-      message: "Contacts fetched successfully",
-      total,
+      message: "Search results fetched successfully",
+      totalContacts: filteredContacts.length,
+      totalMatchedUsers: filteredMatchedUsers.length,
       page: pageNum,
       limit: limitNum,
-      contacts,
+      contacts: paginatedContacts,
+      matchedUsers: filteredMatchedUsers,
     });
+
   } catch (error) {
     console.error("Error searching contacts:", error);
     return res.status(500).json({
@@ -292,14 +238,29 @@ exports.searchUserContacts = async (req, res) => {
     });
   }
 };
+
+
+// ---------------------------------------------------searchUserContacts.js--------------------------------
 // exports.searchUserContacts = async (req, res) => {
 //   try {
-//     const { userId, uid, search } = req.query;
+//     const { userId, uid, search, page = 1, limit = 20 } = req.query;
 
+//     // Validate required parameters
 //     if (!userId || !uid || !search) {
 //       return res.status(400).json({ message: "userId, uid, and search are required" });
 //     }
 
+//     // Parse and validate pagination parameters
+//     const pageNum = parseInt(page, 10);
+//     const limitNum = parseInt(limit, 10);
+//     if (isNaN(pageNum) || pageNum < 1 || isNaN(limitNum) || limitNum < 1) {
+//       return res.status(400).json({ message: "Invalid page or limit parameter" });
+//     }
+
+//     // Calculate skip for pagination
+//     const skip = (pageNum - 1) * limitNum;
+
+//     // Perform aggregation with pagination
 //     const contactsData = await Contact.aggregate([
 //       {
 //         $match: { 
@@ -324,13 +285,66 @@ exports.searchUserContacts = async (req, res) => {
 //           },
 //         },
 //       },
+//       {
+//         $unwind: "$contacts" // Unwind the contacts array to apply pagination
+//       },
+//       {
+//         $skip: skip // Skip records for pagination
+//       },
+//       {
+//         $limit: limitNum // Limit the number of records
+//       },
+//       {
+//         $group: {
+//           _id: null,
+//           contacts: { $push: "$contacts" } // Re-group the filtered contacts
+//         }
+//       }
 //     ]);
 
+//     // Extract contacts
 //     const contacts = contactsData.length ? contactsData[0].contacts : [];
+
+//     // Get total count of matching contacts (without pagination)
+//     const totalCountData = await Contact.aggregate([
+//       {
+//         $match: { 
+//           userId: new mongoose.Types.ObjectId(userId),
+//           uid: uid
+//         },
+//       },
+//       {
+//         $project: {
+//           contacts: {
+//             $filter: {
+//               input: "$contacts",
+//               as: "contact",
+//               cond: {
+//              $regexMatch: {
+//   input: "$$contact.name",
+//   regex: `^${search}`,
+//   options: "i",
+// },
+
+//               },
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           total: { $size: "$contacts" }
+//         }
+//       }
+//     ]);
+
+//     const total = totalCountData.length ? totalCountData[0].total : 0;
 
 //     return res.status(200).json({
 //       message: "Contacts fetched successfully",
-//       total: contacts.length,
+//       total,
+//       page: pageNum,
+//       limit: limitNum,
 //       contacts,
 //     });
 //   } catch (error) {
